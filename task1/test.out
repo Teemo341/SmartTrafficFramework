@@ -1,0 +1,1670 @@
+Loading trajectories: 0it [00:00, ?it/s]Loading trajectories: 1000it [00:00, 30500.70it/s]
+{'VehicleID': 0, 'TripID': 0, 'Points': [[2836, 76506.0], [6211, 76521.7], [8786, 76532.8], [8719, 76546.4], [2564, 76565.1], [2832, 76583.7], [2326, 76612.3], [2829, 76630.5], [2825, 76665.5], [8697, 76671.6], [8728, 76677.2], [2828, 76695.8], [3435, 76734.2], [3451, 76764.9], [3487, 76798.0]], 'DepartureTime': 76506.0, 'Duration': 292.0}
+33 60 358.8000000000029 0.19999999999708962
+torch.Size([15])
+torch.Size([6])
+torch.Size([4])
+torch.Size([12])
+torch.Size([7])
+torch.Size([4])
+torch.Size([4])
+torch.Size([2])
+torch.Size([3])
+torch.Size([5])
+torch.Size([23])
+torch.Size([10])
+torch.Size([36])
+torch.Size([16])
+torch.Size([25])
+torch.Size([16])
+torch.Size([5])
+torch.Size([7])
+torch.Size([34])
+torch.Size([11])
+torch.Size([13])
+torch.Size([7])
+torch.Size([3])
+torch.Size([4])
+torch.Size([4])
+torch.Size([8])
+torch.Size([19])
+torch.Size([4])
+torch.Size([11])
+torch.Size([5])
+torch.Size([3])
+torch.Size([5])
+torch.Size([3])
+torch.Size([17])
+torch.Size([18])
+torch.Size([2])
+torch.Size([7])
+torch.Size([21])
+torch.Size([10])
+torch.Size([35])
+torch.Size([4])
+torch.Size([13])
+torch.Size([3])
+torch.Size([12])
+torch.Size([23])
+torch.Size([3])
+torch.Size([15])
+torch.Size([14])
+torch.Size([8])
+torch.Size([4])
+torch.Size([7])
+torch.Size([4])
+torch.Size([9])
+torch.Size([3])
+torch.Size([13])
+torch.Size([29])
+torch.Size([4])
+torch.Size([3])
+torch.Size([8])
+torch.Size([19])
+torch.Size([27])
+torch.Size([19])
+torch.Size([36])
+torch.Size([6])
+torch.Size([39])
+torch.Size([12])
+torch.Size([7])
+torch.Size([15])
+torch.Size([9])
+torch.Size([20])
+torch.Size([3])
+torch.Size([8])
+torch.Size([23])
+torch.Size([36])
+torch.Size([14])
+torch.Size([15])
+torch.Size([8])
+torch.Size([23])
+torch.Size([6])
+torch.Size([25])
+torch.Size([7])
+torch.Size([19])
+torch.Size([20])
+torch.Size([5])
+torch.Size([12])
+torch.Size([7])
+torch.Size([23])
+torch.Size([4])
+torch.Size([6])
+torch.Size([4])
+torch.Size([6])
+torch.Size([3])
+torch.Size([5])
+torch.Size([14])
+torch.Size([19])
+torch.Size([17])
+torch.Size([32])
+torch.Size([26])
+torch.Size([2])
+torch.Size([3])
+torch.Size([10])
+torch.Size([5])
+torch.Size([6])
+torch.Size([5])
+torch.Size([7])
+torch.Size([5])
+torch.Size([20])
+torch.Size([18])
+torch.Size([16])
+torch.Size([5])
+torch.Size([6])
+torch.Size([21])
+torch.Size([21])
+torch.Size([8])
+torch.Size([3])
+torch.Size([3])
+torch.Size([17])
+torch.Size([13])
+torch.Size([9])
+torch.Size([3])
+torch.Size([5])
+torch.Size([14])
+torch.Size([20])
+torch.Size([12])
+torch.Size([8])
+torch.Size([4])
+torch.Size([12])
+torch.Size([9])
+torch.Size([11])
+torch.Size([5])
+torch.Size([8])
+torch.Size([4])
+torch.Size([10])
+torch.Size([7])
+torch.Size([5])
+torch.Size([4])
+torch.Size([8])
+torch.Size([17])
+torch.Size([4])
+torch.Size([38])
+torch.Size([15])
+torch.Size([8])
+torch.Size([9])
+torch.Size([7])
+torch.Size([18])
+torch.Size([27])
+torch.Size([20])
+torch.Size([10])
+torch.Size([14])
+torch.Size([19])
+torch.Size([9])
+torch.Size([21])
+torch.Size([2])
+torch.Size([26])
+torch.Size([47])
+torch.Size([13])
+torch.Size([5])
+torch.Size([4])
+torch.Size([17])
+torch.Size([8])
+torch.Size([8])
+torch.Size([30])
+torch.Size([20])
+torch.Size([3])
+torch.Size([27])
+torch.Size([12])
+torch.Size([3])
+torch.Size([3])
+torch.Size([16])
+torch.Size([12])
+torch.Size([22])
+torch.Size([22])
+torch.Size([9])
+torch.Size([11])
+torch.Size([3])
+torch.Size([8])
+torch.Size([17])
+torch.Size([3])
+torch.Size([7])
+torch.Size([21])
+torch.Size([3])
+torch.Size([19])
+torch.Size([4])
+torch.Size([13])
+torch.Size([10])
+torch.Size([12])
+torch.Size([34])
+torch.Size([20])
+torch.Size([17])
+torch.Size([3])
+torch.Size([42])
+torch.Size([7])
+torch.Size([15])
+torch.Size([23])
+torch.Size([26])
+torch.Size([35])
+torch.Size([4])
+torch.Size([10])
+torch.Size([21])
+torch.Size([20])
+torch.Size([20])
+torch.Size([10])
+torch.Size([19])
+torch.Size([21])
+torch.Size([3])
+torch.Size([43])
+torch.Size([43])
+torch.Size([2])
+torch.Size([2])
+torch.Size([5])
+torch.Size([24])
+torch.Size([6])
+torch.Size([27])
+torch.Size([21])
+torch.Size([16])
+torch.Size([24])
+torch.Size([3])
+torch.Size([32])
+torch.Size([2])
+torch.Size([11])
+torch.Size([9])
+torch.Size([17])
+torch.Size([9])
+torch.Size([7])
+torch.Size([12])
+torch.Size([11])
+torch.Size([12])
+torch.Size([27])
+torch.Size([27])
+torch.Size([8])
+torch.Size([21])
+torch.Size([5])
+torch.Size([40])
+torch.Size([28])
+torch.Size([3])
+torch.Size([43])
+torch.Size([14])
+torch.Size([28])
+torch.Size([33])
+torch.Size([3])
+torch.Size([7])
+torch.Size([17])
+torch.Size([25])
+torch.Size([39])
+torch.Size([7])
+torch.Size([25])
+torch.Size([3])
+torch.Size([2])
+torch.Size([23])
+torch.Size([14])
+torch.Size([6])
+torch.Size([12])
+torch.Size([8])
+torch.Size([14])
+torch.Size([7])
+torch.Size([11])
+torch.Size([9])
+torch.Size([33])
+torch.Size([32])
+torch.Size([21])
+torch.Size([22])
+torch.Size([19])
+torch.Size([17])
+torch.Size([17])
+torch.Size([33])
+torch.Size([11])
+torch.Size([15])
+torch.Size([21])
+torch.Size([21])
+torch.Size([9])
+torch.Size([33])
+torch.Size([14])
+torch.Size([14])
+torch.Size([34])
+torch.Size([24])
+torch.Size([20])
+torch.Size([33])
+torch.Size([8])
+torch.Size([13])
+torch.Size([5])
+torch.Size([15])
+torch.Size([5])
+torch.Size([11])
+torch.Size([11])
+torch.Size([24])
+torch.Size([27])
+torch.Size([13])
+torch.Size([21])
+torch.Size([6])
+torch.Size([27])
+torch.Size([16])
+torch.Size([21])
+torch.Size([3])
+torch.Size([7])
+torch.Size([10])
+torch.Size([4])
+torch.Size([4])
+torch.Size([10])
+torch.Size([28])
+torch.Size([13])
+torch.Size([5])
+torch.Size([29])
+torch.Size([35])
+torch.Size([13])
+torch.Size([26])
+torch.Size([29])
+torch.Size([22])
+torch.Size([4])
+torch.Size([3])
+torch.Size([7])
+torch.Size([22])
+torch.Size([29])
+torch.Size([5])
+torch.Size([2])
+torch.Size([10])
+torch.Size([3])
+torch.Size([14])
+torch.Size([57])
+torch.Size([11])
+torch.Size([4])
+torch.Size([12])
+torch.Size([33])
+torch.Size([2])
+torch.Size([30])
+torch.Size([25])
+torch.Size([17])
+torch.Size([12])
+torch.Size([27])
+torch.Size([22])
+torch.Size([21])
+torch.Size([4])
+torch.Size([4])
+torch.Size([4])
+torch.Size([9])
+torch.Size([15])
+torch.Size([3])
+torch.Size([7])
+torch.Size([5])
+torch.Size([37])
+torch.Size([10])
+torch.Size([33])
+torch.Size([31])
+torch.Size([25])
+torch.Size([24])
+torch.Size([11])
+torch.Size([10])
+torch.Size([10])
+torch.Size([10])
+torch.Size([38])
+torch.Size([37])
+torch.Size([24])
+torch.Size([3])
+torch.Size([32])
+torch.Size([23])
+torch.Size([3])
+torch.Size([4])
+torch.Size([36])
+torch.Size([17])
+torch.Size([12])
+torch.Size([26])
+torch.Size([34])
+torch.Size([17])
+torch.Size([29])
+torch.Size([8])
+torch.Size([21])
+torch.Size([9])
+torch.Size([17])
+torch.Size([5])
+torch.Size([32])
+torch.Size([3])
+torch.Size([22])
+torch.Size([16])
+torch.Size([12])
+torch.Size([15])
+torch.Size([4])
+torch.Size([4])
+torch.Size([30])
+torch.Size([23])
+torch.Size([22])
+torch.Size([19])
+torch.Size([25])
+torch.Size([23])
+torch.Size([34])
+torch.Size([30])
+torch.Size([6])
+torch.Size([4])
+torch.Size([4])
+torch.Size([4])
+torch.Size([47])
+torch.Size([4])
+torch.Size([9])
+torch.Size([14])
+torch.Size([20])
+torch.Size([12])
+torch.Size([18])
+torch.Size([4])
+torch.Size([7])
+torch.Size([24])
+torch.Size([7])
+torch.Size([13])
+torch.Size([14])
+torch.Size([5])
+torch.Size([4])
+torch.Size([6])
+torch.Size([23])
+torch.Size([35])
+torch.Size([5])
+torch.Size([11])
+torch.Size([5])
+torch.Size([5])
+torch.Size([9])
+torch.Size([17])
+torch.Size([19])
+torch.Size([7])
+torch.Size([3])
+torch.Size([18])
+torch.Size([27])
+torch.Size([14])
+torch.Size([21])
+torch.Size([11])
+torch.Size([9])
+torch.Size([20])
+torch.Size([14])
+torch.Size([6])
+torch.Size([32])
+torch.Size([13])
+torch.Size([20])
+torch.Size([34])
+torch.Size([12])
+torch.Size([16])
+torch.Size([6])
+torch.Size([24])
+torch.Size([32])
+torch.Size([22])
+torch.Size([3])
+torch.Size([5])
+torch.Size([12])
+torch.Size([28])
+torch.Size([28])
+torch.Size([5])
+torch.Size([30])
+torch.Size([41])
+torch.Size([19])
+torch.Size([4])
+torch.Size([18])
+torch.Size([23])
+torch.Size([12])
+torch.Size([37])
+torch.Size([14])
+torch.Size([12])
+torch.Size([3])
+torch.Size([5])
+torch.Size([3])
+torch.Size([15])
+torch.Size([4])
+torch.Size([3])
+torch.Size([28])
+torch.Size([6])
+torch.Size([42])
+torch.Size([5])
+torch.Size([3])
+torch.Size([13])
+torch.Size([6])
+torch.Size([13])
+torch.Size([8])
+torch.Size([33])
+torch.Size([32])
+torch.Size([16])
+torch.Size([8])
+torch.Size([3])
+torch.Size([3])
+torch.Size([29])
+torch.Size([12])
+torch.Size([23])
+torch.Size([23])
+torch.Size([23])
+torch.Size([7])
+torch.Size([2])
+torch.Size([5])
+torch.Size([3])
+torch.Size([6])
+torch.Size([21])
+torch.Size([4])
+torch.Size([49])
+torch.Size([5])
+torch.Size([31])
+torch.Size([9])
+torch.Size([22])
+torch.Size([5])
+torch.Size([22])
+torch.Size([25])
+torch.Size([21])
+torch.Size([23])
+torch.Size([3])
+torch.Size([11])
+torch.Size([10])
+torch.Size([34])
+torch.Size([4])
+torch.Size([12])
+torch.Size([5])
+torch.Size([34])
+torch.Size([5])
+torch.Size([5])
+torch.Size([11])
+torch.Size([9])
+torch.Size([3])
+torch.Size([26])
+torch.Size([2])
+torch.Size([3])
+torch.Size([32])
+torch.Size([19])
+torch.Size([10])
+torch.Size([4])
+torch.Size([18])
+torch.Size([34])
+torch.Size([11])
+torch.Size([15])
+torch.Size([4])
+torch.Size([17])
+torch.Size([37])
+torch.Size([19])
+torch.Size([14])
+torch.Size([11])
+torch.Size([3])
+torch.Size([23])
+torch.Size([7])
+torch.Size([33])
+torch.Size([4])
+torch.Size([9])
+torch.Size([12])
+torch.Size([12])
+torch.Size([16])
+torch.Size([19])
+torch.Size([6])
+torch.Size([19])
+torch.Size([14])
+torch.Size([33])
+torch.Size([3])
+torch.Size([5])
+torch.Size([17])
+torch.Size([3])
+torch.Size([16])
+torch.Size([6])
+torch.Size([5])
+torch.Size([9])
+torch.Size([8])
+torch.Size([11])
+torch.Size([3])
+torch.Size([17])
+torch.Size([7])
+torch.Size([3])
+torch.Size([24])
+torch.Size([30])
+torch.Size([27])
+torch.Size([4])
+torch.Size([7])
+torch.Size([19])
+torch.Size([31])
+torch.Size([5])
+torch.Size([9])
+torch.Size([21])
+torch.Size([3])
+torch.Size([12])
+torch.Size([16])
+torch.Size([7])
+torch.Size([22])
+torch.Size([14])
+torch.Size([4])
+torch.Size([5])
+torch.Size([18])
+torch.Size([18])
+torch.Size([6])
+torch.Size([16])
+torch.Size([10])
+torch.Size([5])
+torch.Size([14])
+torch.Size([17])
+torch.Size([9])
+torch.Size([32])
+torch.Size([3])
+torch.Size([3])
+torch.Size([4])
+torch.Size([24])
+torch.Size([13])
+torch.Size([5])
+torch.Size([15])
+torch.Size([6])
+torch.Size([6])
+torch.Size([32])
+torch.Size([3])
+torch.Size([6])
+torch.Size([6])
+torch.Size([10])
+torch.Size([6])
+torch.Size([2])
+torch.Size([27])
+torch.Size([5])
+torch.Size([12])
+torch.Size([7])
+torch.Size([10])
+torch.Size([25])
+torch.Size([36])
+torch.Size([10])
+torch.Size([28])
+torch.Size([20])
+torch.Size([19])
+torch.Size([20])
+torch.Size([3])
+torch.Size([25])
+torch.Size([3])
+torch.Size([3])
+torch.Size([4])
+torch.Size([7])
+torch.Size([15])
+torch.Size([12])
+torch.Size([16])
+torch.Size([34])
+torch.Size([3])
+torch.Size([36])
+torch.Size([5])
+torch.Size([23])
+torch.Size([9])
+torch.Size([19])
+torch.Size([11])
+torch.Size([21])
+torch.Size([29])
+torch.Size([4])
+torch.Size([18])
+torch.Size([33])
+torch.Size([3])
+torch.Size([4])
+torch.Size([4])
+torch.Size([9])
+torch.Size([16])
+torch.Size([2])
+torch.Size([4])
+torch.Size([39])
+torch.Size([28])
+torch.Size([18])
+torch.Size([38])
+torch.Size([10])
+torch.Size([10])
+torch.Size([22])
+torch.Size([19])
+torch.Size([11])
+torch.Size([6])
+torch.Size([5])
+torch.Size([11])
+torch.Size([29])
+torch.Size([8])
+torch.Size([7])
+torch.Size([24])
+torch.Size([16])
+torch.Size([8])
+torch.Size([12])
+torch.Size([8])
+torch.Size([10])
+torch.Size([6])
+torch.Size([12])
+torch.Size([40])
+torch.Size([37])
+torch.Size([14])
+torch.Size([4])
+torch.Size([7])
+torch.Size([26])
+torch.Size([8])
+torch.Size([24])
+torch.Size([34])
+torch.Size([10])
+torch.Size([22])
+torch.Size([19])
+torch.Size([13])
+torch.Size([2])
+torch.Size([24])
+torch.Size([4])
+torch.Size([6])
+torch.Size([31])
+torch.Size([5])
+torch.Size([25])
+torch.Size([2])
+torch.Size([35])
+torch.Size([7])
+torch.Size([7])
+torch.Size([9])
+torch.Size([22])
+torch.Size([26])
+torch.Size([6])
+torch.Size([11])
+torch.Size([16])
+torch.Size([16])
+torch.Size([28])
+torch.Size([4])
+torch.Size([4])
+torch.Size([2])
+torch.Size([21])
+torch.Size([9])
+torch.Size([8])
+torch.Size([15])
+torch.Size([17])
+torch.Size([20])
+torch.Size([7])
+torch.Size([16])
+torch.Size([6])
+torch.Size([5])
+torch.Size([19])
+torch.Size([3])
+torch.Size([7])
+torch.Size([2])
+torch.Size([8])
+torch.Size([25])
+torch.Size([41])
+torch.Size([6])
+torch.Size([13])
+torch.Size([28])
+torch.Size([5])
+torch.Size([3])
+torch.Size([7])
+torch.Size([14])
+torch.Size([5])
+torch.Size([3])
+torch.Size([3])
+torch.Size([21])
+torch.Size([17])
+torch.Size([3])
+torch.Size([4])
+torch.Size([6])
+torch.Size([38])
+torch.Size([7])
+torch.Size([2])
+torch.Size([9])
+torch.Size([26])
+torch.Size([25])
+torch.Size([9])
+torch.Size([3])
+torch.Size([3])
+torch.Size([6])
+torch.Size([2])
+torch.Size([20])
+torch.Size([12])
+torch.Size([2])
+torch.Size([31])
+torch.Size([8])
+torch.Size([28])
+torch.Size([21])
+torch.Size([6])
+torch.Size([33])
+torch.Size([8])
+torch.Size([12])
+torch.Size([3])
+torch.Size([8])
+torch.Size([26])
+torch.Size([26])
+torch.Size([20])
+torch.Size([16])
+torch.Size([12])
+torch.Size([11])
+torch.Size([5])
+torch.Size([38])
+torch.Size([3])
+torch.Size([9])
+torch.Size([19])
+torch.Size([3])
+torch.Size([24])
+torch.Size([6])
+torch.Size([42])
+torch.Size([4])
+torch.Size([12])
+torch.Size([20])
+torch.Size([12])
+torch.Size([21])
+torch.Size([6])
+torch.Size([22])
+torch.Size([18])
+torch.Size([2])
+torch.Size([8])
+torch.Size([10])
+torch.Size([20])
+torch.Size([10])
+torch.Size([30])
+torch.Size([25])
+torch.Size([4])
+torch.Size([32])
+torch.Size([10])
+torch.Size([7])
+torch.Size([4])
+torch.Size([10])
+torch.Size([6])
+torch.Size([4])
+torch.Size([3])
+torch.Size([10])
+torch.Size([23])
+torch.Size([11])
+torch.Size([25])
+torch.Size([26])
+torch.Size([37])
+torch.Size([3])
+torch.Size([18])
+torch.Size([21])
+torch.Size([4])
+torch.Size([19])
+torch.Size([28])
+torch.Size([7])
+torch.Size([25])
+torch.Size([29])
+torch.Size([5])
+torch.Size([6])
+torch.Size([19])
+torch.Size([28])
+torch.Size([14])
+torch.Size([15])
+torch.Size([10])
+torch.Size([7])
+torch.Size([15])
+torch.Size([22])
+torch.Size([28])
+torch.Size([8])
+torch.Size([15])
+torch.Size([3])
+torch.Size([19])
+torch.Size([4])
+torch.Size([21])
+torch.Size([21])
+torch.Size([23])
+torch.Size([17])
+torch.Size([16])
+torch.Size([11])
+torch.Size([31])
+torch.Size([26])
+torch.Size([6])
+torch.Size([28])
+torch.Size([28])
+torch.Size([13])
+torch.Size([5])
+torch.Size([28])
+torch.Size([39])
+torch.Size([28])
+torch.Size([10])
+torch.Size([3])
+torch.Size([3])
+torch.Size([3])
+torch.Size([16])
+torch.Size([8])
+torch.Size([6])
+torch.Size([17])
+torch.Size([18])
+torch.Size([4])
+torch.Size([5])
+torch.Size([2])
+torch.Size([3])
+torch.Size([5])
+torch.Size([7])
+torch.Size([8])
+torch.Size([17])
+torch.Size([11])
+torch.Size([19])
+torch.Size([7])
+torch.Size([7])
+torch.Size([2])
+torch.Size([14])
+torch.Size([3])
+torch.Size([4])
+torch.Size([22])
+torch.Size([17])
+torch.Size([24])
+torch.Size([28])
+torch.Size([2])
+torch.Size([2])
+torch.Size([2])
+torch.Size([13])
+torch.Size([23])
+torch.Size([3])
+torch.Size([6])
+torch.Size([10])
+torch.Size([36])
+torch.Size([23])
+torch.Size([12])
+torch.Size([6])
+torch.Size([22])
+torch.Size([23])
+torch.Size([16])
+torch.Size([12])
+torch.Size([3])
+torch.Size([15])
+torch.Size([38])
+torch.Size([6])
+torch.Size([5])
+torch.Size([11])
+torch.Size([5])
+torch.Size([5])
+torch.Size([17])
+torch.Size([11])
+torch.Size([4])
+torch.Size([4])
+torch.Size([7])
+torch.Size([3])
+torch.Size([9])
+torch.Size([2])
+torch.Size([3])
+torch.Size([20])
+torch.Size([17])
+torch.Size([3])
+torch.Size([32])
+torch.Size([32])
+torch.Size([14])
+torch.Size([6])
+torch.Size([22])
+torch.Size([3])
+torch.Size([10])
+torch.Size([4])
+torch.Size([12])
+torch.Size([5])
+torch.Size([26])
+torch.Size([19])
+torch.Size([19])
+torch.Size([22])
+torch.Size([15])
+torch.Size([11])
+torch.Size([11])
+torch.Size([4])
+torch.Size([3])
+torch.Size([39])
+torch.Size([33])
+torch.Size([30])
+torch.Size([8])
+torch.Size([10])
+torch.Size([46])
+torch.Size([13])
+torch.Size([11])
+torch.Size([19])
+torch.Size([39])
+torch.Size([23])
+torch.Size([5])
+torch.Size([38])
+torch.Size([20])
+torch.Size([20])
+torch.Size([38])
+torch.Size([25])
+torch.Size([22])
+torch.Size([10])
+torch.Size([6])
+torch.Size([2])
+torch.Size([21])
+torch.Size([2])
+torch.Size([7])
+torch.Size([4])
+torch.Size([14])
+torch.Size([7])
+torch.Size([27])
+torch.Size([41])
+torch.Size([12])
+torch.Size([2])
+torch.Size([14])
+torch.Size([27])
+torch.Size([23])
+torch.Size([2])
+torch.Size([2])
+torch.Size([39])
+torch.Size([9])
+torch.Size([4])
+torch.Size([4])
+torch.Size([16])
+torch.Size([3])
+torch.Size([11])
+torch.Size([14])
+/home/shenshiyu/SmartTrafficFramework/task1/test1.py:68: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
+  cond_list = [torch.tensor(batch['od']) for batch in batches]
+torch.Size([8])
+torch.Size([14])
+torch.Size([6])
+torch.Size([3])
+torch.Size([3])
+torch.Size([5])
+torch.Size([8])
+torch.Size([33])
+torch.Size([7])
+torch.Size([5])
+torch.Size([13])
+torch.Size([7])
+torch.Size([2])
+torch.Size([9])
+torch.Size([4])
+torch.Size([5])
+torch.Size([14])
+torch.Size([18])
+torch.Size([7])
+torch.Size([9])
+torch.Size([19])
+torch.Size([28])
+torch.Size([18])
+torch.Size([3])
+torch.Size([5])
+torch.Size([3])
+torch.Size([8])
+torch.Size([22])
+torch.Size([6])
+torch.Size([11])
+torch.Size([8])
+torch.Size([4])
+torch.Size([3])
+torch.Size([9])
+torch.Size([3])
+torch.Size([8])
+{'points': tensor([2836, 6211, 8786, 8719, 2564, 2832, 2326, 2829, 2825, 8697, 8728, 2828,
+        3435, 3451, 3487]), 'od': tensor([2836, 3487])}
+{'traj': tensor([[[   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0]],
+
+        [[2557],
+         [2557],
+         [2557],
+         [2557],
+         [2558],
+         [2558],
+         [8679],
+         [7485],
+         [7485],
+         [7485],
+         [8711],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0]]]), 'traj_targ': tensor([[[   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0]],
+
+        [[2557],
+         [2557],
+         [2557],
+         [2557],
+         [2558],
+         [2558],
+         [8679],
+         [7485],
+         [7485],
+         [7485],
+         [8711],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0],
+         [   0]]]), 'cond': tensor([[[[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]],
+
+         [[2319, 3544]]],
+
+
+        [[[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]],
+
+         [[ 463, 8711]]]]), 'reagent_mask': tensor([[[0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0]],
+
+        [[1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [1],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0],
+         [0]]])}
+torch.Size([2, 66, 1])
+torch.Size([2, 66, 1, 2])
+torch.Size([2, 66, 1])

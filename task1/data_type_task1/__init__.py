@@ -1,0 +1,1 @@
+from data_type_task1.batch import Batch

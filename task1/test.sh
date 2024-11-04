@@ -1,0 +1,2 @@
+EXPNAME=CaliB16V5
+CUDA_VISIBLE_DEVICES=0,1  python trainer.py --use_enchead_ver 5 --n_layer 12 --n_head 8 --block_size 16 --n_embd 384 --n_hidden 384 --use_len_ratio 0 --ucbgc_beta 1.0 --batch_size 256 --max_grad_norm 100000.0 --learning_rate 0.0001 --max_iters 200000 --_split_tvs 1 --num_few_shots -1 --datapath ../Jinan/cali_jux.pkl --setting jinan --expname $EXPNAME --short_runname 1 --use_wandb 1 --debug 0 --save_model 1 --use_dp 1 --ddp_world_size 2 --grad_accumulation 1 # &> /dev/null  
