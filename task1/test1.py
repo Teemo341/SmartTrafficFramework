@@ -1,11 +1,11 @@
 import time
-from dataset import preprocess_edge,preprocess_node,preprocess_traj
+from task1.dataset import preprocess_edge,preprocess_node,preprocess_traj
 import torch
 import numpy as np
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from util import get_model
-from ma_model import SpatialTemporalMultiAgentModel
+from task1.util import get_model
+from task1.ma_model import SpatialTemporalMultiAgentModel
 import torch.optim as optim
 from tqdm import tqdm
 
@@ -57,6 +57,7 @@ class task1Dataset(Dataset):
 def _padding_zero(traj,max_len):
         # return traj + [0]*(max_len-len(traj))
         return np.concatenate([traj,np.zeros((max_len-len(traj),),dtype=np.int64)],axis=0)
+
 def create_collate_fn(max_len,T=-1,window_size=1):
     def task1_collate_fn(batches):
             # 'traj':, # [B,T,1]
@@ -105,7 +106,7 @@ def define_model(cfg):
                                                )
      return model.to(device)
 
-def train(model, dataloader, optimizer, num_epochs, device):
+def train(cfg, dataloader, num_epochs=30, device='cuda'):
     """
     训练模型的函数.
 
@@ -120,8 +121,10 @@ def train(model, dataloader, optimizer, num_epochs, device):
     返回:
     - 每个epoch的损失列表
     """
+    model = define_model(cfg)
     model.train() 
     epoch_losses = []
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     for epoch in range(num_epochs):
         running_loss = 0.0
@@ -152,7 +155,7 @@ def train(model, dataloader, optimizer, num_epochs, device):
         epoch_losses.append(avg_loss)
 
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss:.4f}")
-
+    torch.save(model.state_dict(), cfg['model_save_path'])
     return epoch_losses
 
 if "__main__" == __name__:

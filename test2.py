@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def edge_node_trans(map,list_,is_edge=True):
-    # map: np.array([[edge,o,d],...])
+    # map: np.array([[edge,o,d...],...])
     if is_edge:
         nodes = []
         for edge in list_:

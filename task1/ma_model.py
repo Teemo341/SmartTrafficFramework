@@ -1,10 +1,10 @@
-from math import sin
+from math import log, sin
 import torch
 import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F
 from typing import Optional,Tuple,Union
-from data_type_task1 import Batch
+from task1.data_type_task1 import Batch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch import distributions as pyd
 
@@ -120,6 +120,7 @@ class NormalizedEmbedding(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, n_embd)
         self.n_embd = n_embd
+        self.vocab_size = vocab_size
 
     def forward(self, x):
         x = self.embedding(x)

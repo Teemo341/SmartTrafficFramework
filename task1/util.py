@@ -26,8 +26,8 @@ import pdb
 import argparse
 # from numba import
 from torch.utils.data import RandomSampler
-from ma_model import MAMODEL,SpatialTemporalMultiAgentModel, DPWrapperOut, dp_wrap_model
-from data_type_task1 import Batch
+from task1.ma_model import MAMODEL,SpatialTemporalMultiAgentModel, DPWrapperOut, dp_wrap_model
+from task1.data_type_task1 import Batch
 
 GET_BATCH = Callable[[str],Batch]
 
@@ -789,7 +789,7 @@ def get_graph(cfg)->Tuple[Dict[int,List[int]],None,int]:
     ...
 
 def get_model(cfg:dict, load_from:Optional[str] = None)->SpatialTemporalMultiAgentModel:
-    N = cfg['N']
+
     device = cfg['device']
     block_size, n_embd, n_head, n_layer, dropout = cfg['block_size'], cfg['n_embd'], cfg['n_head'], cfg['n_layer'], cfg['dropout']
     n_hidden = cfg['n_hidden']

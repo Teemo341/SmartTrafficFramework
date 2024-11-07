@@ -3,7 +3,7 @@ import numpy as np
 import tqdm
 from scipy.sparse.csgraph import dijkstra
 from torch.utils.data import Dataset, DataLoader
-from ma_model import SpatialTemporalCrossMultiAgentModel
+from task2.ma_model import SpatialTemporalCrossMultiAgentModel
 import torch
 import random
 
@@ -153,7 +153,7 @@ def estimate_loss(model, train_iter,
     return out
 
 
-def train(cfg):
+def train(cfg , data_loader):
 
     random.seed(1337)
     np.random.seed(1337)
@@ -161,7 +161,7 @@ def train(cfg):
     max_iters = cfg['max_iters']
     learning_rate = cfg['learning_rate']
     device = cfg['device']
-    train_iter = data_loader(cfg['batch_size'])
+    train_iter = data_loader
 
     model = get_model(cfg)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -188,7 +188,9 @@ def train(cfg):
         
         lr_sched.step()
         mean_loss /= iter_count
-
+        print(f'Iter {it}, Loss: {mean_loss}')
+    torch.save(model.state_dict(), cfg['model_save_path'])
+    
 
     # generate adjacent matrix
     # trajs = temp_generate_trajectory(10)
@@ -227,5 +229,5 @@ if __name__=='__main__':
         'learning_rate':0.001,
         'batch_size':1
         }
-    train(cfg)
+    #train(cfg)
     

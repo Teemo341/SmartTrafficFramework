@@ -520,15 +520,18 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             # condition: (B, T, N, 2) 
             # adj: (B, V, V) 
         # Output: (B, T, N, V)
-
+        print(adj[0].shape)
+        print(adj[1].shape)
         B, T, N = x.shape
 
         # adj_indices: (B, V, max_degree+2), adj_values: (B, V, max_degree+2)
         adj_indices, adj_values  = adj
         adj_values = adj_values.unsqueeze(-1)
-
+        print('0000',adj_indices.shape)
         if self.adj_proj is not None:
             # adj_embed: sum((B, V, max_degree+2, 2*n_hidden) * (B, V, max_degree+2, 1)) -> (B, V, 2*n_hidden)
+            print('1111',adj_values.shape)
+            print('2222',self.adj_embedding_table(adj_indices).shape)
             adj_embed = (self.adj_embedding_table(adj_indices) * adj_values).sum(-2)
             # adj_embed: (B, V, 2*n_hidden) -> (B, V , n_hidden)
             adj_embed = self.adj_proj(adj_embed)

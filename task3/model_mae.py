@@ -598,7 +598,8 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
         # to demonstrate the end, we add 0 to the rest of trajectory, so the vocab_size = V + 1
         if use_adj_table:
             if use_ge:
-                self.geolocation_embedding = get_1d_sincos_geo_embed(n_embd, torch.arange(1, vocab_size)).float().unsqueeze(0).unsqueeze(2) # (1, V, 1, n_embd)
+                self.geolocation_embedding = get_1d_sincos_geo_embed(n_embd, torch.arange(0, vocab_size)).float().unsqueeze(0).unsqueeze(2)
+                #self.geolocation_embedding = get_1d_sincos_geo_embed(n_embd, torch.arange(1, vocab_size)).float().unsqueeze(0).unsqueeze(2) # (1, V, 1, n_embd)
             else:
                 self.geolocation_embedding = torch.zeros(
                     (1, vocab_size-1, 1, n_embd))
@@ -665,6 +666,7 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
 
         if self.use_adj_table:
             if self.weight_quantization_scale:
+                #print('7777777777777',weighted_adj)
                 adj = self.token_embedding_table(weighted_adj[0].int()) + self.weight_embedding_table(weighted_adj[1].int()) + self.geolocation_embedding.to(x.device)
             else:
                 adj = self.token_embedding_table(weighted_adj[0].int())+ self.adj_embed(weighted_adj[1].unsqueeze(-1)) + self.geolocation_embedding.to(x.device)
@@ -702,7 +704,7 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
 
             time_pos = None
 
-
+        time_pos = None
         for block in self.blocks:
             x = block(x, condition ,adj, time_pos)
 
