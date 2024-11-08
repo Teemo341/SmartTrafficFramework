@@ -27,7 +27,11 @@ def train(cfg,dataloader):
     load_dir_id = None
     observe_ratio = cfg['observe_ratio']
     special_mask_value = cfg['special_mask_value']
-    
+        # make loggers
+    logger_train_loss = []
+    logger_train_acc = []
+    logger_train_acc_inner = []
+
     model= no_diffusion_model(vocab_size,
                                n_embd, 
                                n_embd,
@@ -58,7 +62,7 @@ def train(cfg,dataloader):
         preprocess_data_time = 0
         forward_time = 0
         backward_time = 0
-        for(j, (condition, time_step, special_mask, adj_table)) in enumerate(tqdm(dataloader, desc=f'Epoch {i}/{max_epochs}')):
+        for(j, (condition, time_step, special_mask, adj_table)) in enumerate(dataloader):
             load_data_time += time.time()-epoch_time
             epoch_time = time.time()
             # return trajectory: [B x N x T], time_step: [B x N], special_mask: [B x N x T], adj_table: [B x N x V x 4 x 2]
@@ -110,9 +114,9 @@ def train(cfg,dataloader):
             optimizer.zero_grad()
             loss.backward()
 
-            # logger_train_loss.append(loss.item())
-            # logger_train_acc.append((torch.argmax(logits, dim=-1) == y).float().mean().item())
-            # logger_train_acc_inner.append((((torch.argmax(logits, dim=-1) == y).float()*special_mask).sum()/special_mask.sum()).item())
+            logger_train_loss.append(loss.item())
+            logger_train_acc.append((torch.argmax(logits, dim=-1) == y).float().mean().item())
+            logger_train_acc_inner.append((((torch.argmax(logits, dim=-1) == y).float()*special_mask).sum()/special_mask.sum()).item())
             optimizer.step()
 
             backward_time += time.time()-epoch_time
@@ -121,7 +125,7 @@ def train(cfg,dataloader):
         lr_sched.step()
         print(f'Train epoch {i:>6}/{max_epochs:<6}|  Loss: {loss.item():<10.8f}  |  Acc: {logger_train_acc[-1]:<7.2%}  |  Acc_inner: {logger_train_acc_inner[-1]:<7.2%}  |  LR: {lr_sched.get_last_lr()[0]:<10.8f}  | Load data time: {load_data_time/60:.<7.2f}m  |  Preprocess data time: {preprocess_data_time/60:<7.2f}m  |  Forward time: {forward_time/60:<7.2f}m  |  Backward time: {backward_time/60:<7.2f}m  |  Total time: {(load_data_time + preprocess_data_time + forward_time + backward_time)/60:<7.2f}m')
         epoch_time = time.time()
-
+    torch.save(model.state_dict(), cfg['model_save_path'])
         # if i % eval_epochs == 0:
         #     if dataloader.test_loader is None:
         #         print('No test data, skip evaluation')
