@@ -8,6 +8,7 @@ from task1.util import get_model
 from task1.ma_model import SpatialTemporalMultiAgentModel
 import torch.optim as optim
 from tqdm import tqdm
+import os
 
 def decide_time_type(trajs):
      time_list = []
@@ -102,11 +103,11 @@ def define_model(cfg):
                                                n_head,
                                                block_size=block_size,
                                                dropout=dropout,
-                                               use_agent_mask=cfg['use_agent_mask'],
+                                               use_agent_mask=True,
                                                )
      return model.to(device)
 
-def train(cfg, dataloader, num_epochs=30, device='cuda'):
+def train(cfg, dataloader):
     """
     训练模型的函数.
 
@@ -121,18 +122,28 @@ def train(cfg, dataloader, num_epochs=30, device='cuda'):
     返回:
     - 每个epoch的损失列表
     """
+    device = cfg['device']
+    num_epochs = cfg['epochs']
     model = define_model(cfg)
+    old_path = None
+    if cfg['model_read_path']:
+        model.load_state_dict(torch.load(cfg['model_read_path']))
+        if 'best_model' in cfg['model_read_path'] or 'last_model' in cfg['model_read_path']:
+            last_loss = float(cfg['model_read_path'][-10:-4])
+            old_path = cfg['model_read_path']
+    else:
+        last_loss = 10000
     model.train() 
     epoch_losses = []
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-
+    optimizer = optim.Adam(model.parameters(), lr=cfg['learning_rate'])
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4000, gamma=0.99)
     for epoch in range(num_epochs):
         running_loss = 0.0
         #
         for batch in tqdm(dataloader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
             
 
-            inputs = {key: value.to('cuda') for key, value in batch.items() if isinstance(value, torch.Tensor)}
+            inputs = {key: value.to(device) for key, value in batch.items() if isinstance(value, torch.Tensor)}
         
             optimizer.zero_grad()
             _, loss = model(inputs)
@@ -148,14 +159,27 @@ def train(cfg, dataloader, num_epochs=30, device='cuda'):
             
             total_loss.backward()
             optimizer.step()
+            lr_scheduler.step()
             running_loss += total_loss.item()
 
         # 计算每个epoch的平均损失
         avg_loss = running_loss / len(dataloader)
         epoch_losses.append(avg_loss)
 
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss:.4f}")
-    torch.save(model.state_dict(), cfg['model_save_path'])
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {avg_loss:.4f},lr:{optimizer.param_groups[0]['lr']:.6f}")
+        if os.path.isdir(cfg['model_save_path']):
+            path = os.path.join(cfg['model_save_path'],f"best_model_{avg_loss:.4f}.pth")
+            if avg_loss < last_loss:
+                if old_path:
+                    os.remove(old_path)
+                last_loss = avg_loss
+                torch.save(model.state_dict(), path)
+                old_path = path
+
+    if os.path.isdir(cfg['model_save_path']):
+        path = os.path.join(cfg['model_save_path'],f"last_model_{avg_loss:.4f}.pth")
+        torch.save(model.state_dict(), path)
+
     return epoch_losses
 
 if "__main__" == __name__:

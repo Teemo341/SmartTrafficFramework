@@ -6,13 +6,15 @@ import sys
 import pickle
 import argparse
 import random
-
+from task1.test1 import train as train1
+from task2.process_task2 import train as train2
+from task3.train_mae import train as train3
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1' 
 sys.path.append('..')
 sys.path.append('../data')
 
-from .DQN import DQNAgent
+from task4.DQN import DQNAgent
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader, read_node_type
 from process_data import read_traj
 
@@ -114,6 +116,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--model_read_path', type=str, default=None)
+    parser.add_argument('--model_save_path', type=str, default=None)
 
     parser.add_argument('--memory_len', type=int, default=2000)
     parser.add_argument('--n_embd', type=int, default=64)
@@ -122,25 +126,75 @@ if __name__ == '__main__':
     parser.add_argument('--mask_ratio', type=float, default=0.0)
     parser.add_argument('--wait_quantization', type=int, default=15)
     parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--device', type=str, default='cuda:2')
-    parser.add_argument('--memory_device', type=str, default='cuda:2')
+    parser.add_argument('--device', type=str, default='cuda:0')
+    parser.add_argument('--memory_device', type=str, default='cuda:0')
+    parser.add_argument('--max_len', type=int, default=122)
+    parser.add_argument('--vocab_size', type=int, default=181)
+    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--n_hidden', type=int, default=64)
+    parser.add_argument('--window_size', type=int, default=1)
 
+    parser.add_argument('--weight_quantization_scale', type=int, default=20, help='task3')
+    parser.add_argument('--observe_ratio', type=float, default=0.5, help='task3')
+    parser.add_argument('--use_adj_table', type=float, default=True, help='task3')
+    parser.add_argument('--special_mask_value', type=float, default=0.0001, help='task3')
+    
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--log_dir', type=str, default='./task4/log')
     parser.add_argument('--batch_size', type=int, default=256)
-
+    parser.add_argument('--task_type', type=int, default=0)
+    parser.add_argument('--trajs_path', type=str, default='data/jinan/traj_repeat_one_by_one/')
+    parser.add_argument('--T', type=int, default=100)
     args = parser.parse_args()
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
+
+
+
     # dataloader
-    trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
-    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4",is_edge=True)
-    data_loader4 = SmartTrafficDataloader(dataset4,batch_size=args.batch_size,shuffle=True, num_workers=4)
+    if args.task_type == 0:
 
-    agent = DQNAgent(args.device, args.memory_device, args.memory_len, 1, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout)
+        cfg = vars(args)
+        trajs_edge = None
+        dataset = SmartTrafficDataset(trajs_edge,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'])
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
+        cfg['block_size'] = dataset.T
+        train1(cfg, data_loader)
 
-    train(agent, vars(args), data_loader4, epochs = args.epochs, log_dir = args.log_dir)
+    elif args.task_type == 1:
+        cfg = vars(args)
+        trajs_node_notrepeat = None
+        dataset = SmartTrafficDataset(trajs_node_notrepeat,mode="task2",
+                                      trajs_path=cfg['trajs_path'],
+                                      adjcent_path='data/jinan/adjcent.npy',
+                                      vocab_size=args.vocab_size,T=args.T,max_len=args.max_len,need_repeat=False)
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
+        cfg['block_size'] = dataset.max_len-cfg['window_size']
+        print(cfg)
+        train2(cfg, data_loader)
+
+    elif args.task_type == 2:
+        cfg = vars(args)
+        trajs_node_repeat = None
+        dataset = SmartTrafficDataset(trajs_node_repeat,mode="task3",
+                                      trajs_path=cfg['trajs_path'],
+                                      adjcent_path='data/jinan/adjcent_class.npy',
+                                      T=cfg['T'],max_len=cfg['max_len'])
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
+        
+        cfg['block_size'] = dataset.max_len // 2
+        train3(cfg, data_loader)
+
+    elif args.task_type == 3:
+        trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
+        dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
+        data_loader4 = SmartTrafficDataloader(dataset4,batch_size=args.batch_size,shuffle=True, num_workers=4)
+        agent = DQNAgent(args.device, args.memory_device, args.memory_len, 1, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout)
+        train(agent, vars(args), data_loader4, epochs = args.epochs, log_dir = args.log_dir)
+    else:
+        raise ValueError('task_type should be 0, 1, 2, 3')
+  
     print('Training finished!')

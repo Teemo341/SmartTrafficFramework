@@ -4,7 +4,6 @@
 from itertools import groupby
 import numpy as np
 import pandas as pd
-from torch.fx.node import map_aggregate
 from tqdm import tqdm
 
 def read_traj(file_path):
@@ -25,32 +24,86 @@ def repeat_traj(trajs,map_):
         new_trajs.append(new_traj)
     return new_trajs
 
-def edge_node_trans(map_,list_,is_edge=True):
+def edge2node(map_,lst):
     # map: np.array([[edge,o,d...],...])
-    if is_edge:
-        nodes = []
-        for edge in list_:
-            nodes.append(map_[map_[:,0]==edge][0][1])
-        nodes.append(map_[map_[:,0]==list_[-1]][0][2])
-        return nodes
+    nodes = []
+    for edge in lst:
+        nodes.append(int(map_[map_[:,0]==edge][0][1]))
+        nodes.append(int(map_[map_[:,0]==edge][0][2]))
+    nodes_lst = []
+    if nodes[0] not in nodes[1:]:
+        nodes_lst.append(nodes[0])
+        nodes_lst.append(nodes[1])
     else:
-        edges = []
-        e_l = []
-        repeats = []
-        nodes = [key for key, _ in groupby(list_)]
-        for i in range(len(nodes)-1):
-            bool_index = [list([int(x) for x in maps])==[nodes[i],nodes[i+1]] for maps in map_[:,1:3]]
-            bool_index_r = [list([int(x) for x in maps])==[nodes[i+1],nodes[i]] for maps in map_[:,1:3]]
-            try:
-                e_l.append(int(map_[bool_index][0][0]))
-            except:
-                e_l.append(int(map_[bool_index_r][0][0]))
-        list_ = list_[:-1]
-        for _, group in groupby(list_):
-            repeats.append(sum(1 for _ in group))
-        for i in range(len(e_l)):
-            edges.append(e_l[i]*repeats[i])
-        return edges
+        nodes_lst.append(nodes[1])
+        nodes_lst.append(nodes[0])
+    nodes = nodes[2:]
+    for i in range(0,len(nodes)//2):
+        if nodes[2*i] == nodes_lst[-1]:
+            nodes_lst.append(nodes[2*i+1])
+        else:
+            nodes_lst.append(nodes[2*i])
+    return nodes_lst
+
+def node2edge(map_,lst):
+    edges = []
+    e_l = []
+    repeats = []
+    nodes = [key for key, _ in groupby(lst)]
+    for i in range(len(nodes)-1):
+        bool_index = [list([int(x) for x in maps])==[nodes[i],nodes[i+1]] for maps in map_[:,1:3]]
+        bool_index_r = [list([int(x) for x in maps])==[nodes[i+1],nodes[i]] for maps in map_[:,1:3]]
+        try:
+            e_l.append(int(map_[bool_index][0][0]))
+        except:
+            e_l.append(int(map_[bool_index_r][0][0]))
+    lst = lst[:-1]
+    for _, group in groupby(lst):
+        repeats.append(sum(1 for _ in group))
+    for i in range(len(e_l)):
+        edges.append(e_l[i]*repeats[i])
+    return edges
+
+
+def edge_node_trans(map_,lst):
+    # map: np.array([[edge,o,d...],...])
+    nodes = []
+    for edge in lst:
+        nodes.append(int(map_[map_[:,0]==edge][0][1]))
+        nodes.append(int(map_[map_[:,0]==edge][0][2]))
+    nodes_list = []
+    if nodes[0] not in nodes[1:]:
+        nodes_list.append(nodes[0])
+        nodes_list.append(nodes[1])
+    else:
+        nodes_list.append(nodes[1])
+        nodes_list.append(nodes[0])
+    nodes = nodes[2:]
+    for i in range(0,len(nodes)//2):
+        if nodes[2*i] == nodes_list[-1]:
+            nodes_list.append(nodes[2*i+1])
+        else:
+            nodes_list.append(nodes[2*i])
+
+    return nodes_list
+def node_edge_trans(map_,lst):
+    edges = []
+    e_l = []
+    repeats = []
+    nodes = [key for key, _ in groupby(lst)]
+    for i in range(len(nodes)-1):
+        bool_index = [list([int(x) for x in maps])==[nodes[i],nodes[i+1]] for maps in map_[:,1:3]]
+        bool_index_r = [list([int(x) for x in maps])==[nodes[i+1],nodes[i]] for maps in map_[:,1:3]]
+        try:
+            e_l.append(int(map_[bool_index][0][0]))
+        except:
+            e_l.append(int(map_[bool_index_r][0][0]))
+    lst = lst[:-1]
+    for _, group in groupby(list_):
+        repeats.append(sum(1 for _ in group))
+    for i in range(len(e_l)):
+        edges.append(e_l[i]*repeats[i])
+    return edges
 
 def pre_map(file_path):
     data = pd.read_csv(file_path)

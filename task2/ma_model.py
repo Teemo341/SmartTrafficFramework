@@ -659,7 +659,7 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
     def decode_strategy(self, 
                         logits:torch.Tensor, 
                         agent_mask:Optional[torch.Tensor]=None, 
-                        sampling_strategy="random",
+                        sampling_strategy="top_1",
                         **kwargs,
     ):
         # logits: (M, V)
@@ -676,6 +676,9 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
         # sample from the distribution
         if sampling_strategy == "random":
             idx_next = torch.multinomial(probs, num_samples=1) # (B*N, 1)
+        
+        elif sampling_strategy == "top_1":
+            idx_next = torch.argmax(probs,dim=-1)
             
         elif sampling_strategy == "top_k":
             top_k = kwargs.pop("top_k",10)
@@ -771,7 +774,7 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             # append sampled index to the running sequence
             idx = torch.cat((idx, idx_next.view(B, 1, N)), dim=1)  # (B, T+1, N)
 
-        return idx
+        return idx.view(101).cpu().tolist()
 
     def log_prob_traj(self, 
                       x:torch.Tensor, 

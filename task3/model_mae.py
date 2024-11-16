@@ -15,6 +15,7 @@ class NormalizedEmbedding(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, n_embd)
         self.n_embd = n_embd
+        self.vocab_size = vocab_size
 
     def forward(self, x):
         x = self.embedding(x)

@@ -1169,6 +1169,27 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         
         probs = probs_state #TODO: add ratio prob
         return idx_next,ratio_next, probs
+    
+    def generate_traj(self, o,d):
+
+        x = {
+            'traj': torch.zeros(1, self.block_size, 1, dtype=torch.int64).to(self.device),
+            'cond': torch.zeros(1, self.block_size, 1,2, dtype=torch.int64).to(self.device),
+            'reagent_mask': torch.ones(1,self.block_size,1 ,dtype=torch.int64).to(self.device),
+            }
+        x['traj'][0,0,0] = o
+        x['cond'][:,:,:,0] = o
+        x['cond'][:,:,:,1] = d
+        idx = o
+        i = 0
+        while idx>0 and i<self.block_size-1 and idx != d:
+            logits, _ = self(x)
+            idx = torch.topk(logits[0,i,0,:],1).indices
+            x['traj'][0,i+1,0] = idx
+            x['reagent_mask'][0,i+1,0] = 0
+            i+=1
+        return x['traj'][0,:,0].detach().cpu().tolist()
+
 
     def generate(self, idx, max_new_tokens,
                  condition = None, get_adj_mask = None, agent_mask = None,

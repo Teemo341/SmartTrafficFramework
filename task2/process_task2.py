@@ -1,11 +1,12 @@
 import pandas as pd
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from scipy.sparse.csgraph import dijkstra
 from torch.utils.data import Dataset, DataLoader
 from task2.ma_model import SpatialTemporalCrossMultiAgentModel
 import torch
 import random
+import os
 
 # node_path = 'data/jinan/node_jinan.csv'
 # edge_path = 'data/jinan/edge_jinan.csv'
@@ -29,7 +30,7 @@ def get_model(cfg):
     device = cfg['device']
     block_size, n_embd, n_head, n_layer, dropout = cfg['block_size'], cfg['n_embd'], cfg['n_head'], cfg['n_layer'], cfg['dropout']
     n_hidden = cfg['n_hidden']
-    n_embed_adj = cfg['n_embed_adj']
+    n_embed_adj = n_embd
     vocab_size = cfg['vocab_size']
     window_size = cfg['window_size']
     
@@ -158,38 +159,61 @@ def train(cfg , data_loader):
     random.seed(1337)
     np.random.seed(1337)
     torch.manual_seed(1337)
-    max_iters = cfg['max_iters']
+    max_epochs = cfg['epochs']
     learning_rate = cfg['learning_rate']
     device = cfg['device']
     train_iter = data_loader
 
     model = get_model(cfg)
+    old_path = None
+    if cfg['model_read_path']:
+        model.load_state_dict(torch.load(cfg['model_read_path']))
+        if 'best_model' in cfg['model_read_path'] or 'last_model' in cfg['model_read_path']:
+            last_loss = float(cfg['model_read_path'][-10:-4])
+            old_path = cfg['model_read_path']
+    else:
+        last_loss = 10000
+    if cfg['model_read_path']:
+        model.load_state_dict(torch.load(cfg['model_read_path']))
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.96)
+    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=4000, gamma=0.95)
    
-    for it in tqdm.tqdm(range(max_iters), ncols=120):
+    for it in range(max_epochs):
         iter_count = 0
         mean_loss = 0
 
-        for x, x_valid, od_condition, y, adj_indices, adj_values in train_iter:
+        for x, x_valid, od_condition, y, adj_indices, adj_values in tqdm(train_iter, desc=f"Epoch {it + 1}/{max_epochs}"):
             iter_count += 1
             x, x_valid, od_condition, y, adj_indices, adj_values = x.to(device), x_valid.to(device), od_condition.to(device),\
                                                                 y.to(device), adj_indices[0].unsqueeze(0).to(device), adj_values.to(device)
             y = y.long()
             logits, loss = model(x, x_valid, y, condition=od_condition, adj=(adj_indices, adj_values))
-                    
+            # print(logits)
+            # print(logits.shape)   
             loss = loss.mean()
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
-           
+            #a = mean_loss
             mean_loss += loss.item()
+            #print(mean_loss - a)
             optimizer.step()
+            lr_sched.step()
 
-        
-        lr_sched.step()
         mean_loss /= iter_count
-        print(f'Iter {it}, Loss: {mean_loss}')
-    torch.save(model.state_dict(), cfg['model_save_path'])
+        print(f'epoch {it}, Loss: {mean_loss}, LR: {lr_sched.get_last_lr()[0]}')
+        if os.path.isdir(cfg['model_save_path']):
+            path = os.path.join(cfg['model_save_path'],f"best_model_{mean_loss:.4f}.pth")
+            if mean_loss < last_loss:
+                if old_path:
+                    os.remove(old_path)
+                last_loss = mean_loss
+                torch.save(model.state_dict(), path)
+                old_path = path
+
+    if os.path.isdir(cfg['model_save_path']):
+        path = os.path.join(cfg['model_save_path'],f"last_model_{mean_loss:.4f}.pth")
+        torch.save(model.state_dict(), path)
+
     
 
     # generate adjacent matrix

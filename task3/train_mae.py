@@ -10,8 +10,38 @@ import random
 from tqdm import tqdm
 from task3.model_mae import no_diffusion_model_cross_attention_parallel as no_diffusion_model
 
+def define_model(cfg):
+
+    vocab_size = cfg['vocab_size']
+    n_embd = cfg['n_embd']
+    n_head = cfg['n_head']
+    n_layer = cfg['n_layer']
+    dropout = cfg['dropout']
+    device = cfg['device']
+    block_size = cfg['block_size']
+    weight_quantization_scale = cfg['weight_quantization_scale']
+    use_adj_table = cfg['use_adj_table']
+
+    model= no_diffusion_model(vocab_size,
+                               n_embd, 
+                               n_embd,
+                               n_layer, 
+                               n_head,
+                               block_size, 
+                               dropout,
+                               weight_quantization_scale = weight_quantization_scale,
+                               use_adj_table=use_adj_table, 
+                               use_ne=True, 
+                               use_ge=True,
+                               use_agent_mask=False, 
+                               norm_position='prenorm')
+
+    model = model.to(device)
+    model.load_state_dict(torch.load(cfg['model_read_path']))
+    return model
 
 def train(cfg,dataloader):
+
 
     vocab_size = cfg['vocab_size']
     n_embd = cfg['n_embd']
@@ -23,10 +53,10 @@ def train(cfg,dataloader):
     weight_quantization_scale = cfg['weight_quantization_scale']
     use_adj_table = cfg['use_adj_table']
     learning_rate = cfg['learning_rate']
-    max_epochs = cfg['max_epochs']
+    max_epochs = cfg['epochs']
     load_dir_id = None
-    observe_ratio = cfg['observe_ratio']
-    special_mask_value = cfg['special_mask_value']
+    observe_ratio = 0.5
+    special_mask_value = 0.0001
         # make loggers
     logger_train_loss = []
     logger_train_acc = []
@@ -47,7 +77,14 @@ def train(cfg,dataloader):
                                norm_position='prenorm')
 
     model = model.to(device)
-
+    old_path = None
+    if cfg['model_read_path']:
+        model.load_state_dict(torch.load(cfg['model_read_path']))
+        if 'best_model' in cfg['model_read_path'] or 'last_model' in cfg['model_read_path']:
+            last_loss = float(cfg['model_read_path'][-10:-4])
+            old_path = cfg['model_read_path']
+    else:
+        last_loss = 10000
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-4)
     lr_sched = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, max_epochs, eta_min=0, last_epoch=-1 if not load_dir_id else load_dir_id)
    
@@ -62,7 +99,8 @@ def train(cfg,dataloader):
         preprocess_data_time = 0
         forward_time = 0
         backward_time = 0
-        for(j, (condition, time_step, special_mask, adj_table)) in enumerate(dataloader):
+        for condition, time_step, special_mask, adj_table in tqdm(dataloader, desc=f'Train epoch {i:>6}/{max_epochs:<6}'):
+            loss1 = []
             load_data_time += time.time()-epoch_time
             epoch_time = time.time()
             # return trajectory: [B x N x T], time_step: [B x N], special_mask: [B x N x T], adj_table: [B x N x V x 4 x 2]
@@ -106,6 +144,7 @@ def train(cfg,dataloader):
 
             logits, loss = model(x, condition, adj_table, y, None , None, special_mask_)
             loss = torch.mean(loss)
+            loss1.append(loss)
 
             forward_time += time.time()-epoch_time
             epoch_time = time.time()
@@ -119,13 +158,27 @@ def train(cfg,dataloader):
             logger_train_acc_inner.append((((torch.argmax(logits, dim=-1) == y).float()*special_mask).sum()/special_mask.sum()).item())
             optimizer.step()
 
+            avg_loss = sum(loss1)/len(loss1)
+            
             backward_time += time.time()-epoch_time
             epoch_time = time.time()
-        
-        lr_sched.step()
+            if os.path.isdir(cfg['model_save_path']):
+                path = os.path.join(cfg['model_save_path'],f"best_model_{avg_loss:.4f}.pth")
+                if avg_loss < last_loss:
+                    if old_path:
+                        os.remove(old_path)
+                    last_loss = avg_loss
+                    torch.save(model.state_dict(), path)
+                    old_path = path
+
+        if os.path.isdir(cfg['model_save_path']):
+            path = os.path.join(cfg['model_save_path'],f"last_model_{avg_loss:.4f}.pth")
+            torch.save(model.state_dict(), path)
+            lr_sched.step()
         print(f'Train epoch {i:>6}/{max_epochs:<6}|  Loss: {loss.item():<10.8f}  |  Acc: {logger_train_acc[-1]:<7.2%}  |  Acc_inner: {logger_train_acc_inner[-1]:<7.2%}  |  LR: {lr_sched.get_last_lr()[0]:<10.8f}  | Load data time: {load_data_time/60:.<7.2f}m  |  Preprocess data time: {preprocess_data_time/60:<7.2f}m  |  Forward time: {forward_time/60:<7.2f}m  |  Backward time: {backward_time/60:<7.2f}m  |  Total time: {(load_data_time + preprocess_data_time + forward_time + backward_time)/60:<7.2f}m')
         epoch_time = time.time()
-    torch.save(model.state_dict(), cfg['model_save_path'])
+    if cfg['model_save_path']:
+        torch.save(model.state_dict(), cfg['model_save_path'])
         # if i % eval_epochs == 0:
         #     if dataloader.test_loader is None:
         #         print('No test data, skip evaluation')

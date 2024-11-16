@@ -1,0 +1,7 @@
+# python train.py --device cuda:1 --T 25 --max_len 50 --task_type 1 --vocab_size 8909 --batch_size 256 --epochs 100 --learning_rate 0.01 --n_embd 32 --n_hidden 32 --n_layer 10 --dropout 0.1 --model_read_path weights/jinan/task1/best_model_0.1352.pth --model_save_path weights/jinan/task1
+# python train.py --task_type 0 
+# python train.py --task_type 1 --vocab_size 101
+# python train.py --task_type 2 --vocab_size 101
+#python train.py --device cuda:3 --T 25 --max_len 50 --task_type 1 --vocab_size 8909 --batch_size 1024 --epochs 40 --learning_rate 0.001 --n_embd 32 --n_hidden 32 --n_layer 10 --dropout 0.1 --model_read_path weights/jinan/task2/best_model_0.0911.pth --model_save_path weights/jinan/task2/ --trajs_path data/jinan/node_traj_repeat_one_by_one/
+#python train.py --device cuda:0 --T 100 --max_len 200 --task_type 0 --vocab_size 23313 --batch_size 256 --epochs 100 --learning_rate 0.001 --n_embd 32 --n_hidden 32 --n_layer 10 --dropout 0.1 --model_read_path weights/jinan/task1/best_model_0.1167.pth  --model_save_path weights/jinan/task1 --trajs_path data/jinan/edge_traj_repeat_one_by_one/
+python train.py --device cuda:1 --T 100 --max_len 200 --task_type 2 --vocab_size 8908 --batch_size 64 --epochs 1 --learning_rate 0.01 --n_embd 32 --n_hidden 16 --n_layer 8 --dropout 0.1 --weight_quantization_scale 13 --model_save_path weights/jinan/task3 --trajs_path data/jinan/node_traj_repeat_one_by_one/

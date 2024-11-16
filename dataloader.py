@@ -1,20 +1,10 @@
-from operator import is_
-from random import choice
 from torch.utils.data import Dataset,DataLoader
 import torch
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
-from process_data import read_traj,edge_node_trans,repeat_traj
-from task1.test1 import train as train1
-from task2.process_task2 import train as train2
-from task3.train_mae import train as train3
-import time
-import networkx as nx
-
-def _padding_zero(traj,max_len):
-
-        return np.concatenate([traj,np.zeros((max_len-len(traj),),dtype=np.int64)],axis=0)
+from utils import padding_zero
+import os 
+from utils import remove_consecutive_duplicates,node2edge,adj_m2adj_l
 
 def simulation2adj(file_path='data/simulation/edge_node_10*10.csv'):    
     
@@ -41,36 +31,16 @@ def read_node_type(file_path='data/simulation/node_type_10*10.csv'):
     node_type = data['Type'].tolist()
     return node_type
 
-def adj_m2adj_l(adj_matrix,max_connection=4):
-    adj_list = torch.zeros([adj_matrix.shape[0],max_connection,2])
-    adj_list = torch.FloatTensor(adj_list)
-    for i in range(adj_matrix.shape[0]):
-        #获取节点i的邻接节点
-        adj_nodes = np.nonzero(adj_matrix[i])[0]
- 
-        if len(adj_nodes) > max_connection:
-            raise ValueError('Error: Max connection is wrong')
- 
-        for j in range(len(adj_nodes)):
-  
-            adj_list[i,j,0] = adj_nodes[j]
-            adj_list[i,j,1] = adj_matrix[i,adj_nodes[j]]
-    return adj_list
-
 def task4data_process(trajs,max_len,map_path='data/simulation/edge_node_10*10.csv',
                       state_path='data/simulation/edge_node_10*10_state.csv',
                       node_type_path='data/simulation/node_type_10*10.csv'):
         node_type = read_node_type(node_type_path)
         state = pd.read_csv(state_path)
-        traj_ = _padding_zero(trajs,max_len)
+        traj_ = padding_zero(trajs,max_len)
         traj_ = torch.tensor(traj_,dtype=torch.int64)
         result = torch.zeros([max_len,101,7])
         for i in range(len(traj_)-1):
-            if traj_[i]==traj_[i+1]:
-                pass
-            elif traj_[i+1]==0:
-                pass
-            else:
+            if not (traj_[i]==traj_[i+1] or traj_[i+1]==0):
                 #print(traj_[i],traj_[i+1])
                 state1 = state[state['EdgeID_x']==int(traj_[i])]
                 #print(state1)
@@ -78,13 +48,12 @@ def task4data_process(trajs,max_len,map_path='data/simulation/edge_node_10*10.cs
                 #print(state2)
                 value = state2['state'].values[0]
                 #print('value:',value)
-                if value == 0:
-                    pass
-                else:
+                if value != 0:
                     a = [0]*7
                     a[value-1]=1
                     node1 = state['Origin_y'].values[0]
                     result[i,int(node1)]+=torch.tensor(a)
+
         for i in range(1,101):
             if node_type[i-1]=="T":
                 result[:,i,0:4]=-1
@@ -103,42 +72,45 @@ class SmartTrafficDataset(Dataset):
 
     def __init__(self,trajs,map_path='data/simulation/edge_node_10*10.csv',
                  task4_path = 'data/simulation/task4_traj_data.npy',
-                 T=None,window_size=1,mode = "task1",max_len=None,is_edge=True,task4_num=2000,vocab_size=100+1):
+                 trajs_path = '',
+                 adjcent_path = None,
+                 T=None,window_size=1,mode = "task1",max_len=None,task4_num=2000,vocab_size=100+1,need_repeat=True):
         super(SmartTrafficDataset,self).__init__()
        
         self.mode = mode
-        self.is_edge = is_edge
         self.vocab_size = vocab_size
-        
+        self.traj_path = trajs_path
+        self.need_repeat = need_repeat
+
         if self.mode == "task1":
-        
         #task1
             self.trajs = trajs
             self.window_size = window_size
             self.max_len = max_len if max_len else max([len(traj) for traj in trajs])
             self.T = T if T else self.max_len//2
+            self.map = pd.read_csv(map_path)
+            self.map = np.array(self.map[['EdgeID','Origin','Destination']])
         #task2
         elif self.mode == "task2":
-            self.max_len = max([len(traj) for traj in trajs])
+            self.max_len = max_len if max_len else max([len(traj) for traj in trajs])
             self.trajs = trajs
             self.window_size = window_size
-            self.map = pd.read_csv(map_path)
-            self.adjacent= simulation2adj(map_path)
+            
+            self.adjacent= np.load(adjcent_path) if adjcent_path else simulation2adj(map_path)
             #self.indices , self.values =adj2sparse_adjmatrix_weighted(self.adjacent)
             self.adjacent = adj_m2adj_l(self.adjacent)
             self.indices , self.values =self.adjacent[:,:,0],self.adjacent[:,:,1]
             #self.indices = torch.tensor(self.indices.clone().detach(),dtype=torch.int64)
             self.indices = self.indices.clone().detach().to(torch.int64)
 
-            self.T = T if T else self.max_len//2
+            self.T = T if T else self.max_len-window_size
         #task3
         elif self.mode == "task3":
-            self.max_len = max([len(traj) for traj in trajs])
+            self.max_len = max_len if max_len else max([len(traj) for traj in trajs])
             self.trajs = trajs
             self.window_size = window_size
-            self.max_len = max_len if max_len else max([len(traj) for traj in trajs])
             self.T = T if T else self.max_len//2
-            self.adjacent= simulation2adj(map_path)
+            self.adjacent= np.load(adjcent_path) if adjcent_path else simulation2adj(map_path)
             self.adj_l = adj_m2adj_l(self.adjacent)
         #task4
         elif self.mode == "task4":
@@ -150,10 +122,9 @@ class SmartTrafficDataset(Dataset):
             
 
     def __len__(self):
-        if self.mode == 'task4':
-            return len(self.trajs)//self.task4_num
-        else:
-            return len(self.trajs)
+        if self.mode == "task4":
+            return len(self.trajs)//10
+        return len(self.trajs) if self.trajs else len(os.listdir(self.traj_path))
     
     def __getitem__(self,idx):
         
@@ -167,7 +138,13 @@ class SmartTrafficDataset(Dataset):
         else:
             if self.T + self.window_size > self.max_len:
                 raise ValueError('Error: T + window_size is too large')
-            traj = _padding_zero(self.trajs[idx],self.max_len)
+            if self.trajs is None:
+                traj = np.load(self.traj_path+str(idx+1)+'.npy')
+            else:
+                traj = self.trajs[idx]
+            if not self.need_repeat:
+                traj = remove_consecutive_duplicates(traj)
+            traj = padding_zero(traj,self.max_len)
             traj_ = traj[0:self.T]
             traj_targ = traj[self.window_size:self.T+self.window_size]
             reagent_mask = [ 1 if x!=0 else 0 for x in traj_ ]
@@ -195,7 +172,9 @@ class SmartTrafficDataset(Dataset):
                 # x_valid: (1, 1), valid length for each trajectory
                 # condition: (1, T, 1, 2) 
                 # incides and values: (2, num_edges)
-                
+                o = od[0,0,0]
+                d = od[0,0,1]
+                od[:,:,0]=d
                 return traj_ ,valid_length,od,traj_targ,self.indices,self.values
             
             if self.mode == "task3":
@@ -216,8 +195,8 @@ class SmartTrafficDataset(Dataset):
         return super().__getattribute__(name)
 
 class SmartTrafficDataloader(DataLoader):
-    def __init__(self,dataset,batch_size=1,shuffle=False):
-        super(SmartTrafficDataloader,self).__init__(dataset,batch_size=batch_size,shuffle=shuffle)
+    def __init__(self,dataset,batch_size=1,shuffle=False, **kwargs):
+        super(SmartTrafficDataloader,self).__init__(dataset,batch_size=batch_size,shuffle=shuffle, **kwargs)
         self.max_len = dataset.max_len
         self.vocab_size = dataset.vocab_size
     def get_max_len(self):
@@ -258,67 +237,126 @@ if __name__ == '__main__':
     #results = np.array(results)
     
     #load data
-    trajs = read_traj('data/simulation/trajectories_10*10_repeat_node.csv') #trajs of nodes
-    trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv') #trajs of edges
+    # trajs = read_traj('data/simulation/trajectories_10*10_repeat_node.csv') #trajs of nodes
+    # trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv') #trajs of edges
+    # trajs_not_repeat = read_traj('data/simulation/trajectories_10*10.csv')
 
-    dataset1 = SmartTrafficDataset(trajs_edge , mode="task1",is_edge=False)
-    dataset2 = SmartTrafficDataset(trajs ,mode="task2",is_edge=False)
-    dataset3 = SmartTrafficDataset(trajs,mode="task3",is_edge=False)
+    # dataset1 = SmartTrafficDataset(trajs_edge , mode="task1")
+    # dataset2 = SmartTrafficDataset(trajs_not_repeat ,mode="task2")
+    # dataset3 = SmartTrafficDataset(trajs,mode="task3")
 
-    data_loader1 = SmartTrafficDataloader(dataset1,batch_size=32,shuffle=False)
-    data_loader2 = SmartTrafficDataloader(dataset2,batch_size=32,shuffle=False)
-    data_loader3 = SmartTrafficDataloader(dataset3,batch_size=32,shuffle=False)
+    # data_loader1 = SmartTrafficDataloader(dataset1,batch_size=32,shuffle=False)
+    # data_loader2 = SmartTrafficDataloader(dataset2,batch_size=256,shuffle=False)
+    # data_loader3 = SmartTrafficDataloader(dataset3,batch_size=32,shuffle=False)
 
     #configs
-    cfg1 = {
-            "vocab_size": 180+1,
-            "device": "cuda:0",
-            "block_size": dataset1.max_len //2,
-            "n_embd": 64,
-            "n_head": 4,
-            "n_layer": 2,
-            "dropout": 0.1,
-            "n_hidden": 64,
-            "use_agent_mask": True,
-            'model_save_path': "weights/model_task1.pth",
-            'ta_sliding_window':1,
-            'use_model':'sd',
-            'use_ne':True
-            }
-    cfg2 = {
-        'device':'cuda',
-        'block_size':dataset2.max_len //2, # max length of trajectory
-        'n_embd':10,
-        'n_head':1,
-        'n_layer':1,
-        'dropout':0.1,
-        'n_hidden':10,
-        'n_embed_adj':10,
-        'vocab_size':100+1,
-        'window_size':2,
-        'max_iters':10,
-        'learning_rate':0.001,
-        'batch_size':1,
-        'model_save_path': "weights/model_task2.pth"
-        }
+    # cfg1 = {
+    #         "vocab_size": 180+1,
+    #         "device": "cuda:0",
+    #         "block_size": dataset1.max_len //2,
+    #         "n_embd": 64,
+    #         "n_head": 4,
+    #         "n_layer": 2,
+    #         "dropout": 0.1,
+    #         "n_hidden": 64,
+    #         'model_save_path': "weights/model_task1.pth",
+    #         }
+    # cfg2 = {
+    #     'device':'cuda',
+    #     'block_size':dataset2.max_len //2, # max length of trajectory
+    #     'n_embd':64,
+    #     'n_head':4,
+    #     'n_layer':2,
+    #     'dropout':0.1,
+    #     'n_hidden':64,
+    #     'n_embed_adj':64,
+    #     'vocab_size':100+1,
+    #     'window_size':1,
+    #     'max_epochs':1000,
+    #     'learning_rate':0.001,
+    #     'batch_size':256,
+    #     'model_save_path': "weights/model_task2.pth"
+    #     }
+    # cfg2 = {
+    #     'device':'cuda',
+    #     'block_size':dataset2.max_len-1, # max length of trajectory
+    #     'n_embd':20,
+    #     'n_head':4,
+    #     'n_layer':8,
+    #     'dropout':0.1,
+    #     'n_hidden':16,
+    #     'n_embed_adj':20,
+    #     'vocab_size':100+1,
+    #     'window_size':1,
+    #     'max_epochs':20,
+    #     'learning_rate':0.001,
+    #     'batch_size':256,
+    #     'model_read_path': None,
+    #     'model_save_path': "weights/model_task2_1.pth"
+    #     }
 
-    cfg3 = {
-        'vocab_size':101,
-        'n_embd' : 64,
-        'n_head' : 4,
-        'n_layer' : 2,
-        'dropout' : 0.1,
-        'device' :"cuda",
-        "block_size":dataset3.max_len //2,
-        'weight_quantization_scale': 20,
-        'use_adj_table':True,
-        'learning_rate':0.001,
-        'max_epochs':100,
-        'observe_ratio':0.5,
-        'special_mask_value':0.0001,
-        'model_save_path': "weights/model_task3.pth"
-    }
+    # cfg3 = {
+    #     'vocab_size':101,
+    #     'n_embd' : 64,
+    #     'n_head' : 4,
+    #     'n_layer' : 2,
+    #     'dropout' : 0.1,
+    #     'device' :"cuda",
+    #     "block_size":dataset3.max_len //2,
+    #     'weight_quantization_scale': 20,
+    #     'use_adj_table':True,
+    #     'learning_rate':0.001,
+    #     'max_epochs':100,
+    #     'observe_ratio':0.5,
+    #     'special_mask_value':0.0001,
+    #     'model_save_path': "weights/model_task3.pth"
+    # }
 
     #train1(cfg1,data_loader1)
+
+    #print('max_len:',dataset2.max_len)
     #train2(cfg2,data_loader2)
-    train3(cfg3,data_loader3)
+    
+    #train3(cfg3,data_loader3)
+    #print(dataset2[0][2].shape)
+    # dataset1 = SmartTrafficDataset(None,mode="task1",T=100,max_len=200,
+    #                                 trajs_path='data/jinan/node_traj_repeat_one_by_one/',
+    #                                 map_path='data/jinan/edge_node_jinan.csv',
+    #                                 need_edge=True,need_repeat=True)
+    # dataloader1 = SmartTrafficDataloader(dataset1,batch_size=32,shuffle=False)
+    # import time
+    # time0 = time.time()
+    # for data in dataloader1:
+    #     print(data['traj'].shape)
+    #     print(data['cond'].shape)
+    #     print(data['traj_targ'].shape)
+    #     print(data['reagent_mask'].shape)
+    #     print(time.time()-time0)
+        
+    # adjcent = np.load('data/jinan/adjcent.npy')
+    # print(adjcent.shape)
+    # print(adjcent)
+    # num = 1
+    # for i in range(len(adjcent)):
+    #     for j in range(i,len(adjcent)):
+    #         if adjcent[i][j] != 0:
+    #             num+=1
+    # print(num)
+    # dataset3 = SmartTrafficDataset(None,mode="task3",T=100,max_len=200,
+    #                                trajs_path='data/jinan/node_traj_repeat_one_by_one/',
+    #                                adjcent_path='data/jinan/adjcent.npy',need_repeat=True)
+    # dataloader2 = SmartTrafficDataloader(dataset3,batch_size=32,shuffle=False)
+    # for data in dataloader2:
+    #     print(data[0].shape)
+    #     print(data[2].shape)
+    #     print(data[3].shape)
+    #     break
+    # map = pd.read_csv('data/jinan/edge_node_jinan.csv')
+    # print(map['EdgeID','Origin','Destination'].values)
+    # path = 'data/jinan/edge_traj_repeat_one_by_one/'
+    # files = os.listdir(path)
+    # print(len(files))
+    path =  '/home/shenshiyu/SmartTrafficFramework/weights/jinan/task2/best_model_0.0880.pth'
+    print(path[-10:-4])
+
+        

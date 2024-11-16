@@ -7,9 +7,7 @@ from tqdm import tqdm
 
 def generate_node_edge(grid_size):
     nodes = [[i, j] for i in range(1,grid_size+1) for j in range(1,grid_size+1)]
-    edges = []
-
-
+    edges = [] 
     for i in range(1,grid_size+1):
         for j in range(1,grid_size+1):
             node = [i, j]
@@ -46,12 +44,15 @@ def save_edge_node_length(edgeID,nodeID,path='data/simulation/edge_node_10*10.cs
     data.to_csv(path,index=False)
 
 
-def generate_random_trajectory(filepath, num_traj=5,min_length=10):
-    datas = pd.read_csv(filepath)
+def generate_random_trajectory(filepath, num_traj=5,min_length=3):
+    # datas = pd.read_csv(filepath)
+    adj = np.load(filepath)
     G = nx.DiGraph()
-    for data in datas.values:
-        G.add_edge(data[1],data[2],weight=data[3])
-        G.add_edge(data[2],data[1],weight=data[3])
+    for i in range(len(adj)):
+        for j in range(len(adj[i])):
+            if adj[i][j] != 0:
+                G.add_edge(i+1,j+1,weight=adj[i][j])
+                G.add_edge(j+1,i+1,weight=adj[i][j])
     trajectories = []
     nodes = list(G.nodes())
     with tqdm(total=num_traj, desc="Generating Trajectories") as pbar:
@@ -66,11 +67,12 @@ def generate_random_trajectory(filepath, num_traj=5,min_length=10):
                 # 生成路径
                 path = nx.shortest_path(G, source=start, target=end, weight='weight')
                 # 计算路径的加权长度
-                path_length = nx.path_weight(G, path, weight='weight')
-                
+                #path_length = nx.path_weight(G, path, weight='weight')
+                nodes =[int(node) for node in path]
                 # 检查路径的加权长度是否满足要求
-                if path_length >= min_length:
-                    trajectories.append([int(node) for node in path])
+                #if path_length >= min_length:
+                if len(nodes) >= min_length:
+                    trajectories.append(nodes)
                     pbar.update(1)
             except nx.NetworkXNoPath:
                 pass  # 跳过无路径的情况
@@ -107,7 +109,12 @@ if __name__ == '__main__':
     #print(nodeID)
     #save_edge_node_length(edgeID,nodeID)
     #save_node_type(nodeID)
-    trajectories = generate_random_trajectory('data/simulation/edge_node_10*10.csv',100000,min_length=20)
-    trajectories_str = ["_".join(map(str, traj)) for traj in trajectories]
-    traj = pd.DataFrame(trajectories_str,columns=['Trajectory'])
-    traj.to_csv('data/simulation/trajectories_10*10.csv',index=False)
+    # trajectories = generate_random_trajectory('data/simulation/edge_node_10*10.csv',100000,min_length=20)
+    # trajectories_str = ["_".join(map(str, traj)) for traj in trajectories]
+    # traj = pd.DataFrame(trajectories_str,columns=['Trajectory'])
+    # traj.to_csv('data/simulation/trajectories_10*10.csv',index=False)
+    filepath = 'data/jinan/adjcent.npy'
+    trajectories = generate_random_trajectory(filepath,100000,min_length=3)
+    savepath = 'data/jinan/traj_min'
+    for i in range(len(trajectories)):
+        

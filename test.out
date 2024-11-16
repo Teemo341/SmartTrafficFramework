@@ -1,515 +1,178 @@
-(101, 101)
-tensor([[[  0.0000,   0.0000],
-         [  0.0000,   0.0000],
-         [  0.0000,   0.0000],
-         [  0.0000,   0.0000]],
-
-        [[  2.0000,  13.7612],
-         [ 11.0000,  17.9712],
-         [  0.0000,   0.0000],
-         [  0.0000,   0.0000]],
-
-        [[  1.0000,  13.7612],
-         [  3.0000,   8.6906],
-         [ 12.0000,   8.6020],
-         [  0.0000,   0.0000]],
-
-        [[  2.0000,   8.6906],
-         [  4.0000,  10.9735],
-         [ 13.0000,   9.7688],
-         [  0.0000,   0.0000]],
-
-        [[  3.0000,  10.9735],
-         [  5.0000,   8.5969],
-         [ 14.0000,  11.4742],
-         [  0.0000,   0.0000]],
-
-        [[  4.0000,   8.5969],
-         [  6.0000,  14.4854],
-         [ 15.0000,  18.9134],
-         [  0.0000,   0.0000]],
-
-        [[  5.0000,  14.4854],
-         [  7.0000,  13.5458],
-         [ 16.0000,   1.0777],
-         [  0.0000,   0.0000]],
-
-        [[  6.0000,  13.5458],
-         [  8.0000,   6.9480],
-         [ 17.0000,  14.2164],
-         [  0.0000,   0.0000]],
-
-        [[  7.0000,   6.9480],
-         [  9.0000,  13.0837],
-         [ 18.0000,  11.4409],
-         [  0.0000,   0.0000]],
-
-        [[  8.0000,  13.0837],
-         [ 10.0000,  10.9918],
-         [ 19.0000,   5.1380],
-         [  0.0000,   0.0000]],
-
-        [[  9.0000,  10.9918],
-         [ 20.0000,  10.9238],
-         [  0.0000,   0.0000],
-         [  0.0000,   0.0000]],
-
-        [[  1.0000,  17.9712],
-         [ 12.0000,  18.0453],
-         [ 21.0000,  11.3715],
-         [  0.0000,   0.0000]],
-
-        [[  2.0000,   8.6020],
-         [ 11.0000,  18.0453],
-         [ 13.0000,   4.5313],
-         [ 22.0000,   9.9543]],
-
-        [[  3.0000,   9.7688],
-         [ 12.0000,   4.5313],
-         [ 14.0000,  15.2506],
-         [ 23.0000,   3.9771]],
-
-        [[  4.0000,  11.4742],
-         [ 13.0000,  15.2506],
-         [ 15.0000,  11.8529],
-         [ 24.0000,  15.4504]],
-
-        [[  5.0000,  18.9134],
-         [ 14.0000,  11.8529],
-         [ 16.0000,   1.1838],
-         [ 25.0000,   8.3696]],
-
-        [[  6.0000,   1.0777],
-         [ 15.0000,   1.1838],
-         [ 17.0000,   3.7452],
-         [ 26.0000,  14.9916]],
-
-        [[  7.0000,  14.2164],
-         [ 16.0000,   3.7452],
-         [ 18.0000,  14.3783],
-         [ 27.0000,  18.3488]],
-
-        [[  8.0000,  11.4409],
-         [ 17.0000,  14.3783],
-         [ 19.0000,  19.8700],
-         [ 28.0000,  11.9948]],
-
-        [[  9.0000,   5.1380],
-         [ 18.0000,  19.8700],
-         [ 20.0000,  13.2494],
-         [ 29.0000,   3.1147]],
-
-        [[ 10.0000,  10.9238],
-         [ 19.0000,  13.2494],
-         [ 30.0000,  14.9022],
-         [  0.0000,   0.0000]],
-
-        [[ 11.0000,  11.3715],
-         [ 22.0000,   3.4790],
-         [ 31.0000,  19.9747],
-         [  0.0000,   0.0000]],
-
-        [[ 12.0000,   9.9543],
-         [ 21.0000,   3.4790],
-         [ 23.0000,   3.7241],
-         [ 32.0000,   2.5370]],
-
-        [[ 13.0000,   3.9771],
-         [ 22.0000,   3.7241],
-         [ 24.0000,   3.6041],
-         [ 33.0000,  15.8658]],
-
-        [[ 14.0000,  15.4504],
-         [ 23.0000,   3.6041],
-         [ 25.0000,  15.3487],
-         [ 34.0000,  16.2962]],
-
-        [[ 15.0000,   8.3696],
-         [ 24.0000,  15.3487],
-         [ 26.0000,  19.8823],
-         [ 35.0000,  14.4308]],
-
-        [[ 16.0000,  14.9916],
-         [ 25.0000,  19.8823],
-         [ 27.0000,  19.0340],
-         [ 36.0000,   3.8006]],
-
-        [[ 17.0000,  18.3488],
-         [ 26.0000,  19.0340],
-         [ 28.0000,  12.7991],
-         [ 37.0000,  11.2060]],
-
-        [[ 18.0000,  11.9948],
-         [ 27.0000,  12.7991],
-         [ 29.0000,   3.6266],
-         [ 38.0000,   5.7321]],
-
-        [[ 19.0000,   3.1147],
-         [ 28.0000,   3.6266],
-         [ 30.0000,  13.1026],
-         [ 39.0000,  10.3299]],
-
-        [[ 20.0000,  14.9022],
-         [ 29.0000,  13.1026],
-         [ 40.0000,   9.4097],
-         [  0.0000,   0.0000]],
-
-        [[ 21.0000,  19.9747],
-         [ 32.0000,   9.8319],
-         [ 41.0000,   2.6128],
-         [  0.0000,   0.0000]],
-
-        [[ 22.0000,   2.5370],
-         [ 31.0000,   9.8319],
-         [ 33.0000,  14.0234],
-         [ 42.0000,  17.1658]],
-
-        [[ 23.0000,  15.8658],
-         [ 32.0000,  14.0234],
-         [ 34.0000,   5.9086],
-         [ 43.0000,  15.2020]],
-
-        [[ 24.0000,  16.2962],
-         [ 33.0000,   5.9086],
-         [ 35.0000,   1.8154],
-         [ 44.0000,   1.8332]],
-
-        [[ 25.0000,  14.4308],
-         [ 34.0000,   1.8154],
-         [ 36.0000,   6.7732],
-         [ 45.0000,  10.9256]],
-
-        [[ 26.0000,   3.8006],
-         [ 35.0000,   6.7732],
-         [ 37.0000,   4.4574],
-         [ 46.0000,   1.7157]],
-
-        [[ 27.0000,  11.2060],
-         [ 36.0000,   4.4574],
-         [ 38.0000,   4.9903],
-         [ 47.0000,  17.0002]],
-
-        [[ 28.0000,   5.7321],
-         [ 37.0000,   4.9903],
-         [ 39.0000,  19.4418],
-         [ 48.0000,  11.0559]],
-
-        [[ 29.0000,  10.3299],
-         [ 38.0000,  19.4418],
-         [ 40.0000,   3.2109],
-         [ 49.0000,   7.8967]],
-
-        [[ 30.0000,   9.4097],
-         [ 39.0000,   3.2109],
-         [ 50.0000,   7.8667],
-         [  0.0000,   0.0000]],
-
-        [[ 31.0000,   2.6128],
-         [ 42.0000,  10.9771],
-         [ 51.0000,   9.2185],
-         [  0.0000,   0.0000]],
-
-        [[ 32.0000,  17.1658],
-         [ 41.0000,  10.9771],
-         [ 43.0000,  17.5615],
-         [ 52.0000,  12.4118]],
-
-        [[ 33.0000,  15.2020],
-         [ 42.0000,  17.5615],
-         [ 44.0000,  10.1757],
-         [ 53.0000,   5.5745]],
-
-        [[ 34.0000,   1.8332],
-         [ 43.0000,  10.1757],
-         [ 45.0000,  16.3944],
-         [ 54.0000,  18.5618]],
-
-        [[ 35.0000,  10.9256],
-         [ 44.0000,  16.3944],
-         [ 46.0000,   2.7120],
-         [ 55.0000,   8.4898]],
-
-        [[ 36.0000,   1.7157],
-         [ 45.0000,   2.7120],
-         [ 47.0000,   7.7722],
-         [ 56.0000,   4.8477]],
-
-        [[ 37.0000,  17.0002],
-         [ 46.0000,   7.7722],
-         [ 48.0000,   1.4425],
-         [ 57.0000,  10.4244]],
-
-        [[ 38.0000,  11.0559],
-         [ 47.0000,   1.4425],
-         [ 49.0000,   6.7581],
-         [ 58.0000,  16.4638]],
-
-        [[ 39.0000,   7.8967],
-         [ 48.0000,   6.7581],
-         [ 50.0000,  12.5715],
-         [ 59.0000,  16.5353]],
-
-        [[ 40.0000,   7.8667],
-         [ 49.0000,  12.5715],
-         [ 60.0000,  17.2657],
-         [  0.0000,   0.0000]],
-
-        [[ 41.0000,   9.2185],
-         [ 52.0000,  14.8921],
-         [ 61.0000,  16.5927],
-         [  0.0000,   0.0000]],
-
-        [[ 42.0000,  12.4118],
-         [ 51.0000,  14.8921],
-         [ 53.0000,  17.6649],
-         [ 62.0000,  18.8819]],
-
-        [[ 43.0000,   5.5745],
-         [ 52.0000,  17.6649],
-         [ 54.0000,  17.6279],
-         [ 63.0000,   1.1386]],
-
-        [[ 44.0000,  18.5618],
-         [ 53.0000,  17.6279],
-         [ 55.0000,   6.9901],
-         [ 64.0000,  15.0993]],
-
-        [[ 45.0000,   8.4898],
-         [ 54.0000,   6.9901],
-         [ 56.0000,  10.8855],
-         [ 65.0000,   5.8137]],
-
-        [[ 46.0000,   4.8477],
-         [ 55.0000,  10.8855],
-         [ 57.0000,  19.6520],
-         [ 66.0000,  14.6010]],
-
-        [[ 47.0000,  10.4244],
-         [ 56.0000,  19.6520],
-         [ 58.0000,  17.2698],
-         [ 67.0000,   7.2370]],
-
-        [[ 48.0000,  16.4638],
-         [ 57.0000,  17.2698],
-         [ 59.0000,  17.2804],
-         [ 68.0000,   5.4636]],
-
-        [[ 49.0000,  16.5353],
-         [ 58.0000,  17.2804],
-         [ 60.0000,   3.4862],
-         [ 69.0000,   3.0537]],
-
-        [[ 50.0000,  17.2657],
-         [ 59.0000,   3.4862],
-         [ 70.0000,   2.7923],
-         [  0.0000,   0.0000]],
-
-        [[ 51.0000,  16.5927],
-         [ 62.0000,  13.5849],
-         [ 71.0000,   6.6708],
-         [  0.0000,   0.0000]],
-
-        [[ 52.0000,  18.8819],
-         [ 61.0000,  13.5849],
-         [ 63.0000,   6.0238],
-         [ 72.0000,   7.5443]],
-
-        [[ 53.0000,   1.1386],
-         [ 62.0000,   6.0238],
-         [ 64.0000,   7.3824],
-         [ 73.0000,  11.9881]],
-
-        [[ 54.0000,  15.0993],
-         [ 63.0000,   7.3824],
-         [ 65.0000,   8.6056],
-         [ 74.0000,   9.3002]],
-
-        [[ 55.0000,   5.8137],
-         [ 64.0000,   8.6056],
-         [ 66.0000,   6.8562],
-         [ 75.0000,  14.2809]],
-
-        [[ 56.0000,  14.6010],
-         [ 65.0000,   6.8562],
-         [ 67.0000,  18.3639],
-         [ 76.0000,  10.1245]],
-
-        [[ 57.0000,   7.2370],
-         [ 66.0000,  18.3639],
-         [ 68.0000,   1.1300],
-         [ 77.0000,   4.4164]],
-
-        [[ 58.0000,   5.4636],
-         [ 67.0000,   1.1300],
-         [ 69.0000,  11.8538],
-         [ 78.0000,   6.3034]],
-
-        [[ 59.0000,   3.0537],
-         [ 68.0000,  11.8538],
-         [ 70.0000,  17.8870],
-         [ 79.0000,  17.5276]],
-
-        [[ 60.0000,   2.7923],
-         [ 69.0000,  17.8870],
-         [ 80.0000,  15.1926],
-         [  0.0000,   0.0000]],
-
-        [[ 61.0000,   6.6708],
-         [ 72.0000,   2.6585],
-         [ 81.0000,   3.7256],
-         [  0.0000,   0.0000]],
-
-        [[ 62.0000,   7.5443],
-         [ 71.0000,   2.6585],
-         [ 73.0000,  15.9529],
-         [ 82.0000,  10.8818]],
-
-        [[ 63.0000,  11.9881],
-         [ 72.0000,  15.9529],
-         [ 74.0000,  17.9215],
-         [ 83.0000,  15.7027]],
-
-        [[ 64.0000,   9.3002],
-         [ 73.0000,  17.9215],
-         [ 75.0000,   2.8870],
-         [ 84.0000,  14.1801]],
-
-        [[ 65.0000,  14.2809],
-         [ 74.0000,   2.8870],
-         [ 76.0000,  17.1533],
-         [ 85.0000,   9.6227]],
-
-        [[ 66.0000,  10.1245],
-         [ 75.0000,  17.1533],
-         [ 77.0000,  16.1963],
-         [ 86.0000,  11.7706]],
-
-        [[ 67.0000,   4.4164],
-         [ 76.0000,  16.1963],
-         [ 78.0000,  18.1386],
-         [ 87.0000,   2.7074]],
-
-        [[ 68.0000,   6.3034],
-         [ 77.0000,  18.1386],
-         [ 79.0000,   1.8498],
-         [ 88.0000,  11.1147]],
-
-        [[ 69.0000,  17.5276],
-         [ 78.0000,   1.8498],
-         [ 80.0000,  16.9542],
-         [ 89.0000,  19.7913]],
-
-        [[ 70.0000,  15.1926],
-         [ 79.0000,  16.9542],
-         [ 90.0000,  19.7616],
-         [  0.0000,   0.0000]],
-
-        [[ 71.0000,   3.7256],
-         [ 82.0000,   8.4474],
-         [ 91.0000,   1.5286],
-         [  0.0000,   0.0000]],
-
-        [[ 72.0000,  10.8818],
-         [ 81.0000,   8.4474],
-         [ 83.0000,  10.8525],
-         [ 92.0000,   7.5577]],
-
-        [[ 73.0000,  15.7027],
-         [ 82.0000,  10.8525],
-         [ 84.0000,   6.5301],
-         [ 93.0000,  13.1380]],
-
-        [[ 74.0000,  14.1801],
-         [ 83.0000,   6.5301],
-         [ 85.0000,  11.4458],
-         [ 94.0000,   2.9921]],
-
-        [[ 75.0000,   9.6227],
-         [ 84.0000,  11.4458],
-         [ 86.0000,   5.1514],
-         [ 95.0000,  15.4034]],
-
-        [[ 76.0000,  11.7706],
-         [ 85.0000,   5.1514],
-         [ 87.0000,  10.0284],
-         [ 96.0000,   6.6519]],
-
-        [[ 77.0000,   2.7074],
-         [ 86.0000,  10.0284],
-         [ 88.0000,  16.4751],
-         [ 97.0000,  10.6939]],
-
-        [[ 78.0000,  11.1147],
-         [ 87.0000,  16.4751],
-         [ 89.0000,  10.7040],
-         [ 98.0000,  18.5466]],
-
-        [[ 79.0000,  19.7913],
-         [ 88.0000,  10.7040],
-         [ 90.0000,  19.5368],
-         [ 99.0000,  15.8297]],
-
-        [[ 80.0000,  19.7616],
-         [ 89.0000,  19.5368],
-         [100.0000,  18.7669],
-         [  0.0000,   0.0000]],
-
-        [[ 81.0000,   1.5286],
-         [ 92.0000,   5.0322],
-         [  0.0000,   0.0000],
-         [  0.0000,   0.0000]],
-
-        [[ 82.0000,   7.5577],
-         [ 91.0000,   5.0322],
-         [ 93.0000,   2.6822],
-         [  0.0000,   0.0000]],
-
-        [[ 83.0000,  13.1380],
-         [ 92.0000,   2.6822],
-         [ 94.0000,   8.8103],
-         [  0.0000,   0.0000]],
-
-        [[ 84.0000,   2.9921],
-         [ 93.0000,   8.8103],
-         [ 95.0000,   2.5013],
-         [  0.0000,   0.0000]],
-
-        [[ 85.0000,  15.4034],
-         [ 94.0000,   2.5013],
-         [ 96.0000,   7.3638],
-         [  0.0000,   0.0000]],
-
-        [[ 86.0000,   6.6519],
-         [ 95.0000,   7.3638],
-         [ 97.0000,   1.2214],
-         [  0.0000,   0.0000]],
-
-        [[ 87.0000,  10.6939],
-         [ 96.0000,   1.2214],
-         [ 98.0000,   3.1740],
-         [  0.0000,   0.0000]],
-
-        [[ 88.0000,  18.5466],
-         [ 97.0000,   3.1740],
-         [ 99.0000,   7.1646],
-         [  0.0000,   0.0000]],
-
-        [[ 89.0000,  15.8297],
-         [ 98.0000,   7.1646],
-         [100.0000,   3.7856],
-         [  0.0000,   0.0000]],
-
-        [[ 90.0000,  18.7669],
-         [ 99.0000,   3.7856],
-         [  0.0000,   0.0000],
-         [  0.0000,   0.0000]]])
-torch.Size([101, 4, 2])
-Vocab Size:  101  Num Graphs:  1
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [32,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [33,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [34,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [35,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [36,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [37,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [38,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [39,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [40,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [41,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [42,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [43,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [44,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [45,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [46,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [47,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [48,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [49,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [50,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [51,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [52,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [53,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [54,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [55,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [56,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [57,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [58,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [59,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [60,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [61,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [62,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+/opt/conda/conda-bld/pytorch_1712609048481/work/aten/src/ATen/native/cuda/Indexing.cu:1289: indexSelectLargeIndex: block: [6,0,0], thread: [63,0,0] Assertion `srcIndex < srcSelectDimSize` failed.
+8909 tensor([[0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0],
+        ...,
+        [0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0]], device='cuda:0')
+8909 tensor([[[   1, 5877, 8058,  ...,    0,    0,    0],
+         [   0,    2, 1113,  ...,    0,    0,    0],
+         [   1, 1059, 1094,  ...,    0,    0,    0],
+         ...,
+         [2878, 2879,    0,  ...,    0,    0,    0],
+         [2719, 2722, 3758,  ...,    0,    0,    0],
+         [7048, 8858,    0,  ...,    0,    0,    0]],
+
+        [[   1, 5877, 8058,  ...,    0,    0,    0],
+         [   0,    2, 1113,  ...,    0,    0,    0],
+         [   1, 1059, 1094,  ...,    0,    0,    0],
+         ...,
+         [2878, 2879,    0,  ...,    0,    0,    0],
+         [2719, 2722, 3758,  ...,    0,    0,    0],
+         [7048, 8858,    0,  ...,    0,    0,    0]],
+
+        [[   1, 5877, 8058,  ...,    0,    0,    0],
+         [   0,    2, 1113,  ...,    0,    0,    0],
+         [   1, 1059, 1094,  ...,    0,    0,    0],
+         ...,
+         [2878, 2879,    0,  ...,    0,    0,    0],
+         [2719, 2722, 3758,  ...,    0,    0,    0],
+         [7048, 8858,    0,  ...,    0,    0,    0]],
+
+        ...,
+
+        [[   1, 5877, 8058,  ...,    0,    0,    0],
+         [   0,    2, 1113,  ...,    0,    0,    0],
+         [   1, 1059, 1094,  ...,    0,    0,    0],
+         ...,
+         [2878, 2879,    0,  ...,    0,    0,    0],
+         [2719, 2722, 3758,  ...,    0,    0,    0],
+         [7048, 8858,    0,  ...,    0,    0,    0]],
+
+        [[   1, 5877, 8058,  ...,    0,    0,    0],
+         [   0,    2, 1113,  ...,    0,    0,    0],
+         [   1, 1059, 1094,  ...,    0,    0,    0],
+         ...,
+         [2878, 2879,    0,  ...,    0,    0,    0],
+         [2719, 2722, 3758,  ...,    0,    0,    0],
+         [7048, 8858,    0,  ...,    0,    0,    0]],
+
+        [[   1, 5877, 8058,  ...,    0,    0,    0],
+         [   0,    2, 1113,  ...,    0,    0,    0],
+         [   1, 1059, 1094,  ...,    0,    0,    0],
+         ...,
+         [2878, 2879,    0,  ...,    0,    0,    0],
+         [2719, 2722, 3758,  ...,    0,    0,    0],
+         [7048, 8858,    0,  ...,    0,    0,    0]]], device='cuda:0',
+       dtype=torch.int32)
+21 tensor([[[122, 459,  77,  ...,   0,   0,   0],
+         [122,  68,  52,  ...,   0,   0,   0],
+         [ 68, 105,  74,  ...,   0,   0,   0],
+         ...,
+         [258, 683,   0,  ...,   0,   0,   0],
+         [452,  18, 789,  ...,   0,   0,   0],
+         [674,   9,   0,  ...,   0,   0,   0]],
+
+        [[122, 459,  77,  ...,   0,   0,   0],
+         [122,  68,  52,  ...,   0,   0,   0],
+         [ 68, 105,  74,  ...,   0,   0,   0],
+         ...,
+         [258, 683,   0,  ...,   0,   0,   0],
+         [452,  18, 789,  ...,   0,   0,   0],
+         [674,   9,   0,  ...,   0,   0,   0]],
+
+        [[122, 459,  77,  ...,   0,   0,   0],
+         [122,  68,  52,  ...,   0,   0,   0],
+         [ 68, 105,  74,  ...,   0,   0,   0],
+         ...,
+         [258, 683,   0,  ...,   0,   0,   0],
+         [452,  18, 789,  ...,   0,   0,   0],
+         [674,   9,   0,  ...,   0,   0,   0]],
+
+        ...,
+
+        [[122, 459,  77,  ...,   0,   0,   0],
+         [122,  68,  52,  ...,   0,   0,   0],
+         [ 68, 105,  74,  ...,   0,   0,   0],
+         ...,
+         [258, 683,   0,  ...,   0,   0,   0],
+         [452,  18, 789,  ...,   0,   0,   0],
+         [674,   9,   0,  ...,   0,   0,   0]],
+
+        [[122, 459,  77,  ...,   0,   0,   0],
+         [122,  68,  52,  ...,   0,   0,   0],
+         [ 68, 105,  74,  ...,   0,   0,   0],
+         ...,
+         [258, 683,   0,  ...,   0,   0,   0],
+         [452,  18, 789,  ...,   0,   0,   0],
+         [674,   9,   0,  ...,   0,   0,   0]],
+
+        [[122, 459,  77,  ...,   0,   0,   0],
+         [122,  68,  52,  ...,   0,   0,   0],
+         [ 68, 105,  74,  ...,   0,   0,   0],
+         ...,
+         [258, 683,   0,  ...,   0,   0,   0],
+         [452,  18, 789,  ...,   0,   0,   0],
+         [674,   9,   0,  ...,   0,   0,   0]]], device='cuda:0',
+       dtype=torch.int32)
 Traceback (most recent call last):
-  File "/home/shenshiyu/SmartTrafficFramework/dataloader.py", line 369, in <module>
-    indices , values =adjlist2sparse_adjmatrix_weighted(adjacent)
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/shenshiyu/SmartTrafficFramework/dataloader.py", line 70, in adjlist2sparse_adjmatrix_weighted
-    for k, v in neighbor.items():
-                ^^^^^^^^^^^^^^
-AttributeError: 'numpy.ndarray' object has no attribute 'items'. Did you mean: 'item'?
+  File "/home/shenshiyu/SmartTrafficFramework/train.py", line 189, in <module>
+    train3(cfg, data_loader)
+  File "/home/shenshiyu/SmartTrafficFramework/task3/train_mae.py", line 145, in train
+    logits, loss = model(x, condition, adj_table, y, None , None, special_mask_)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/SmartTrafficFramework/task3/model_mae.py", line 672, in forward
+    adj = self.token_embedding_table(weighted_adj[0].int()) + self.weight_embedding_table(weighted_adj[1].int()) + self.geolocation_embedding.to(x.device)
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/SmartTrafficFramework/task3/model_mae.py", line 22, in forward
+    x = self.embedding(x)
+        ^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/modules/sparse.py", line 163, in forward
+    return F.embedding(
+           ^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/torch/nn/functional.py", line 2264, in embedding
+    return torch.embedding(weight, input, padding_idx, scale_grad_by_freq, sparse)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: CUDA error: device-side assert triggered
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+
