@@ -660,6 +660,8 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
                         logits:torch.Tensor, 
                         agent_mask:Optional[torch.Tensor]=None, 
                         sampling_strategy="top_1",
+                        adj_indices:torch.Tensor=None,
+                        idx:int=None,
                         **kwargs,
     ):
         # logits: (M, V)
@@ -678,6 +680,16 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             idx_next = torch.multinomial(probs, num_samples=1) # (B*N, 1)
         
         elif sampling_strategy == "top_1":
+            #print(adj_indices, idx)
+            #print(probs.shape)
+            mask = torch.zeros(V).to(self.device)
+            for i in adj_indices[idx[:,-1,:].item()]:
+                if i == 0:
+                    break
+                mask[i] = 1
+            for i in idx[0,:,0]:
+                mask[i.item()] = 0
+            probs = torch.masked_fill(probs, mask==0, 0)
             idx_next = torch.argmax(probs,dim=-1)
             
         elif sampling_strategy == "top_k":
@@ -717,7 +729,7 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
                  adj=None, 
                  max_new_tokens=100,
                  agent_mask=None,
-                 sampling_strategy="random", 
+                 sampling_strategy="top_1", 
                  **kwargs,
     ): 
         # Input: 
@@ -765,8 +777,10 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             
             # focus only on the last time step
             logits = logits[:, -1, :, :].view(B*N, -1)  # becomes (B*N, V)
-            
-            idx_next, probs = self.decode_strategy(logits, None, sampling_strategy, **kwargs)
+            #print(idx.shape)
+            idx_next, probs = self.decode_strategy(logits, None, sampling_strategy,adj_indices,idx, **kwargs)
+            if idx_next==0:
+                break
             #if torch.all(idx_next == 0):
                 # (B, max_new_tokens, N)
             #    idx = torch.cat((idx, torch.zeros((B, max_new_tokens-i, N), device=idx.device, dtype=idx.dtype)), dim=1)
@@ -774,7 +788,7 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             # append sampled index to the running sequence
             idx = torch.cat((idx, idx_next.view(B, 1, N)), dim=1)  # (B, T+1, N)
 
-        return idx.view(101).cpu().tolist()
+        return idx.view(idx.shape[1]).cpu().tolist()
 
     def log_prob_traj(self, 
                       x:torch.Tensor, 

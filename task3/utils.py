@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import cv2
+import pandas as pd
 import os
 
 
@@ -351,3 +352,28 @@ def calculate_load(traj_probability, method = 'map'):
     else:
         raise ValueError(f"method should be 'map', 'single_prob' or 'all_prob', but got {method}")
     return load
+
+def preprocess_node(node_dir):
+    #! 0-indexing
+    pos = pd.read_csv(node_dir)
+    pos = { int(nid): (float(lon), float(lat), bool(hasc)) for _, (nid, lon, lat, hasc) in pos.iterrows() }
+    return pos
+
+def preprocess_edge(edge_dir):
+    #! 0-indexing
+    edges = pd.read_csv(edge_dir)
+    edges = [(int(o), int(d), float(l), translate_roadtype_to_capacity(c)) for _, (o, d, c, geo, l) in edges.iterrows()
+    ]
+    return edges
+
+def read_city(city, path='./data'):
+    if city in ['boston', 'paris']:
+        origin_data = pd.read_csv(path + '/'+ city + '_data.csv').to_dict(orient='list')
+        edges, pos = preprocess_data_boston(origin_data) #! 0-indexing
+    elif city in ['jinan']:
+        node_dir = f"{path}/{city}/node_{city}.csv"
+        edge_dir = f"{path}/{city}/edge_{city}.csv"
+        pos = preprocess_node(node_dir) #! 0-indexing
+        edges = preprocess_edge(edge_dir) #! 0-indexing
+
+    return edges, pos

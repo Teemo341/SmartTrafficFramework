@@ -8,7 +8,7 @@ import argparse
 import random
 
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1' 
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 sys.path.append('..')
 sys.path.append('../data')
 
@@ -29,7 +29,7 @@ def train(agent:DQNAgent, cfg, dataloader, epochs = 10, log_dir = './log'):
     reward_fn = torch.nn.CrossEntropyLoss(reduction='none')
 
     cross_type = read_node_type('data/simulation/node_type_10*10.csv') # 1,...,100 V
-    cross_type = [3 if i == 'C' else 4 for i in cross_type]
+    cross_type = [3 if i == 'T' else 4 for i in cross_type]
     cross_type = torch.tensor(cross_type, dtype=torch.int, device = device) # (V,)
 
     if mask_ratio:
@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
     # dataloader
     trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
-    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4",is_edge=True)
+    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=args.batch_size,shuffle=True, num_workers=4)
 
     agent = DQNAgent(args.device, args.memory_device, args.memory_len, 1, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout)

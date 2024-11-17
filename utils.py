@@ -6,11 +6,12 @@ import torch
 from tqdm import tqdm
 import os
 from itertools import groupby
+import pickle
 
 def adj_m2adj_l(adj_matrix:np.ndarray,max_connection:int=10)->torch.Tensor:
     #jinan:max_connection=10
     n = len(adj_matrix)
-    adj_list = torch.zeros([n,max_connection,2],dtype=torch.float)
+    adj_list = torch.zeros([n+1,max_connection,2],dtype=torch.float)
   
     for i in range(n):
         adj_nodes = np.nonzero(adj_matrix[i])[0]
@@ -21,10 +22,42 @@ def adj_m2adj_l(adj_matrix:np.ndarray,max_connection:int=10)->torch.Tensor:
  
         for j in range(len(adj_nodes)):
   
-            adj_list[i,j,0] = adj_nodes[j]
-            adj_list[i,j,1] = adj_matrix[i][adj_nodes[j]]
+            adj_list[i+1,j,0] = adj_nodes[j]+1
+            adj_list[i+1,j,1] = adj_matrix[i][adj_nodes[j]]
     
     return adj_list
+
+def decide_order(num:int,adj:List[int],map:dict)->List[int]:
+    if num == 3:
+        la_adj = [map[int(x)][0] for x in adj]
+        lo_adj = [map[int(x)][1] for x in adj]
+        index1 = np.argmin(la_adj)
+        lo_adj[index1] = 1000
+        index2 = np.argmin(lo_adj)
+        ans = [3,3,3]
+        ans[index1] = 1
+        ans[index2] = 2
+        #print(la_adj,lo_adj)
+        #print(index1,index2)
+        return ans
+    if num == 4:
+        la_adj = [map[int(x)][0] for x in adj]
+        lo_adj = [map[int(x)][1] for x in adj]
+        index1 = np.argmin(la_adj)
+        index3 = np.argmax(la_adj)
+        lo_adj[index1] = 1000
+        lo_adj[index3] = 1000
+        index2 = np.argmin(lo_adj)
+        ans = [4,4,4,4]
+        ans[index1] = 1
+        ans[index2] = 2
+        ans[index3] = 3
+        #print(la_adj,lo_adj)
+        #print(index1,index2,index3)
+        return ans
+    else:
+        raise ValueError('Error: The number of adj is wrong')
+        
 
 def edge2node(map_,lst):
     # map: np.array([[edge,o,d...],...])
@@ -150,12 +183,14 @@ if __name__ == '__main__':
     # edgepath='data/jinan/edge_traj_repeat_one_by_one/'
     # edgefiles = os.listdir(edgepath)
     # files = os.listdir(path)
-    map_ = pd.read_csv('data/jinan/edge_node_jinan.csv')
-    map_ = np.array(map_[['EdgeID','Origin','Destination']])
-    map_dict = {}
+    # map_ = pd.read_csv('data/jinan/edge_node_jinan.csv')
+    # map_ = np.array(map_[['EdgeID','Origin','Destination']])
+    # map_dict = {}
     # for i in tqdm(range(len(map_)),desc='Building Map'):
-    #     map_dict[str(map_[i][1])+'_'+str(map_[i][2])] = map_[i][0]
-    #     map_dict[str(map_[i][2])+'_'+str(map_[i][1])] = map_[i][0]
+    #     map_dict[str(map_[i][0])] = (int(map_[i][1]),int(map_[i][2]))
+
+    # with open('data/jinan/edge_node_map_dict.pkl','wb') as f:
+    #     pickle.dump(map_dict,f)
 
     # for file in tqdm(files,desc='Processing'):
     #     name_='data/jinan/edge_traj_repeat_one_by_one/'+file
@@ -199,3 +234,50 @@ if __name__ == '__main__':
     #             data[j][i] = int(map_dict[str(i)+'_'+str(j)])
     
     # np.save('data/jinan/adjcent_class.npy',data)
+
+    # TODO:处理济南数据，找出三岔路口和四岔路口
+    # path = 'data/jinan/node_jinan.csv'
+    # data = pd.read_csv(path)
+    # data = np.array(data[['NodeID','Latitude','Longitude']])
+    # map_ = {}
+    # for i in range(len(data)):
+    #     map_[data[i][0]] = [data[i][1],data[i][2]]
+    # adj_path = 'data/jinan/adjcent.npy'
+    # adj = np.load(adj_path)
+    # adj_l = adj_m2adj_l(adj)
+    # adj_l_34 = []
+    # for i in range(len(adj_l)):
+    #     adj = [int(x) for x in adj_l[i,:,0].tolist() if x != 0]
+    #     if len(adj) == 3 or len(adj)==4:
+    #         adj_l_34.append([i,adj,decide_order(len(adj),adj,map_)])
+    # map_ = 0
+    # np.save('data/jinan/dict_decide_rode_type.npy',adj_l_34)
+
+  
+
+
+    #0_index to 1-index
+    # path = 'data/jinan/node_traj_repeat_one_by_one'
+    # files = os.listdir(path)
+    # for file in tqdm(files,desc='Processing'):
+    #     traj = np.load(path+'/'+file)
+    #     traj = [t+1 for t in traj]
+    #     np.save(path+'/'+file,traj)
+    #     # break
+    # path = 'data/jinan/traj_jinan_min_one_by_one'
+    # files = os.listdir(path)
+    # out_path = 'data/jinan/traj_min_test'
+    # for i in range(1000):
+    #     file = files[i]
+    #     traj = np.load(path+'/'+file)
+    #     np.save(out_path+'/'+str((i+1))+'.npy',traj)
+        # break
+    path = 'data/jinan/edge_traj_repeat_one_by_one'
+    files = os.listdir(path)
+    lengths = torch.tensor([len(np.load(path + '/' + file)) for file in files])
+    top_lengths = torch.topk(lengths, 10).values
+    print(top_lengths)
+
+    #task2 191
+    #task1
+

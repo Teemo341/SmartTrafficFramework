@@ -169,14 +169,17 @@ def train(cfg , data_loader):
     if cfg['model_read_path']:
         model.load_state_dict(torch.load(cfg['model_read_path']))
         if 'best_model' in cfg['model_read_path'] or 'last_model' in cfg['model_read_path']:
-            last_loss = float(cfg['model_read_path'][-10:-4])
-            old_path = cfg['model_read_path']
+            try:
+                last_loss = float(cfg['model_read_path'][-10:-4])
+                old_path = cfg['model_read_path']
+            except:
+                last_loss = 10000
     else:
         last_loss = 10000
     if cfg['model_read_path']:
         model.load_state_dict(torch.load(cfg['model_read_path']))
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=4000, gamma=0.95)
+    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.97)
    
     for it in range(max_epochs):
         iter_count = 0
@@ -200,7 +203,7 @@ def train(cfg , data_loader):
             lr_sched.step()
 
         mean_loss /= iter_count
-        print(f'epoch {it}, Loss: {mean_loss}, LR: {lr_sched.get_last_lr()[0]}')
+        print(f'epoch {it+1}, Loss: {mean_loss}, LR: {lr_sched.get_last_lr()[0]}')
         if os.path.isdir(cfg['model_save_path']):
             path = os.path.join(cfg['model_save_path'],f"best_model_{mean_loss:.4f}.pth")
             if mean_loss < last_loss:

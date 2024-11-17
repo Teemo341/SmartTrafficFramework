@@ -60,6 +60,7 @@ def generate_random_trajectory(filepath, num_traj=5,min_length=3):
             # 随机选择起点和终点
             start = random.choice(nodes)
             end = random.choice(nodes)
+            #print(start,end)
             while start == end:
                 end = random.choice(nodes)
             
@@ -68,11 +69,11 @@ def generate_random_trajectory(filepath, num_traj=5,min_length=3):
                 path = nx.shortest_path(G, source=start, target=end, weight='weight')
                 # 计算路径的加权长度
                 #path_length = nx.path_weight(G, path, weight='weight')
-                nodes =[int(node) for node in path]
+                traj = [int(node) for node in path]
                 # 检查路径的加权长度是否满足要求
                 #if path_length >= min_length:
-                if len(nodes) >= min_length:
-                    trajectories.append(nodes)
+                if len(traj) >= min_length:
+                    trajectories.append(traj)
                     pbar.update(1)
             except nx.NetworkXNoPath:
                 pass  # 跳过无路径的情况
@@ -115,6 +116,8 @@ if __name__ == '__main__':
     # traj.to_csv('data/simulation/trajectories_10*10.csv',index=False)
     filepath = 'data/jinan/adjcent.npy'
     trajectories = generate_random_trajectory(filepath,100000,min_length=3)
-    savepath = 'data/jinan/traj_min'
+    savepath = 'data/jinan/traj_jinan_min_one_by_one/'
     for i in range(len(trajectories)):
-        
+        filepath = savepath+str(i+1)+'.npy'
+        np.save(filepath,trajectories[i],allow_pickle=True)
+

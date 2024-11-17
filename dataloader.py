@@ -51,14 +51,15 @@ def task4data_process(trajs,max_len,map_path='data/simulation/edge_node_10*10.cs
                 if value != 0:
                     a = [0]*7
                     a[value-1]=1
-                    node1 = state['Origin_y'].values[0]
+                    node1 = state2['Origin_y'].values[0]
+                    #print('111111',i,int(node1),a)
                     result[i,int(node1)]+=torch.tensor(a)
 
         for i in range(1,101):
             if node_type[i-1]=="T":
                 result[:,i,0:4]=-1
             elif node_type[i-1]=="C":
-                result[:,i,5:]=-1
+                result[:,i,4:]=-1
             else:
                 result[:,i,:]=-1
 
@@ -74,7 +75,7 @@ class SmartTrafficDataset(Dataset):
                  task4_path = 'data/simulation/task4_traj_data.npy',
                  trajs_path = '',
                  adjcent_path = None,
-                 T=None,window_size=1,mode = "task1",max_len=None,task4_num=2000,vocab_size=100+1,need_repeat=True):
+                 T=None,window_size=1,mode = "task1",max_len=None,task4_num=2000,vocab_size=8909,need_repeat=True):
         super(SmartTrafficDataset,self).__init__()
        
         self.mode = mode
@@ -100,6 +101,7 @@ class SmartTrafficDataset(Dataset):
             #self.indices , self.values =adj2sparse_adjmatrix_weighted(self.adjacent)
             self.adjacent = adj_m2adj_l(self.adjacent)
             self.indices , self.values =self.adjacent[:,:,0],self.adjacent[:,:,1]
+            
             #self.indices = torch.tensor(self.indices.clone().detach(),dtype=torch.int64)
             self.indices = self.indices.clone().detach().to(torch.int64)
 
@@ -140,6 +142,9 @@ class SmartTrafficDataset(Dataset):
                 raise ValueError('Error: T + window_size is too large')
             if self.trajs is None:
                 traj = np.load(self.traj_path+str(idx+1)+'.npy')
+                traj_o = np.load(self.traj_path+str(idx+1)+'.npy')
+                if self.traj_path == 'data/jinan/node_traj_repeat_one_by_one/':
+                    traj = [ t+1 for t in traj]
             else:
                 traj = self.trajs[idx]
             if not self.need_repeat:
@@ -147,11 +152,14 @@ class SmartTrafficDataset(Dataset):
             traj = padding_zero(traj,self.max_len)
             traj_ = traj[0:self.T]
             traj_targ = traj[self.window_size:self.T+self.window_size]
+            reagent_mask_ = [ 1 if x!=0 else 0 for x in traj ]
+            reagent_mask_ = torch.tensor(reagent_mask_,dtype=torch.int64).view(-1,1)
+
             reagent_mask = [ 1 if x!=0 else 0 for x in traj_ ]
             reagent_mask = torch.tensor(reagent_mask,dtype=torch.int64).view(-1,1)
 
             valid_length = torch.tensor([torch.sum(reagent_mask)],dtype=torch.int64)
-            od = torch.tensor([traj[0],traj[valid_length[0]-1]],dtype=torch.int64)
+            od = torch.tensor([traj_o[0],traj_o[-1]],dtype=torch.int64)
             od = od[None,None,:].repeat(self.T,1,1) 
             
             traj_ = torch.tensor(traj_,dtype=torch.int64)
@@ -172,9 +180,13 @@ class SmartTrafficDataset(Dataset):
                 # x_valid: (1, 1), valid length for each trajectory
                 # condition: (1, T, 1, 2) 
                 # incides and values: (2, num_edges)
-                o = od[0,0,0]
-                d = od[0,0,1]
+           
+                o = od[0,0,0].item() 
+                d = od[0,0,1].item()
+             
                 od[:,:,0]=d
+                od[:,:,1]=o
+                #print('dataset',od)
                 return traj_ ,valid_length,od,traj_targ,self.indices,self.values
             
             if self.mode == "task3":
@@ -356,7 +368,17 @@ if __name__ == '__main__':
     # path = 'data/jinan/edge_traj_repeat_one_by_one/'
     # files = os.listdir(path)
     # print(len(files))
-    path =  '/home/shenshiyu/SmartTrafficFramework/weights/jinan/task2/best_model_0.0880.pth'
-    print(path[-10:-4])
-
+    # path =  '/home/shenshiyu/SmartTrafficFramework/weights/jinan/task2/best_model_0.0880.pth'
+    # print(path[-10:-4])
+    dataset = SmartTrafficDataset(trajs = None,mode="task3",T=60,max_len=120,adjcent_path='data/jinan/adjcent_class.npy',trajs_path='data/jinan/node_traj_test/')
+#dataset = dataset[:100]
+    print(dataset[0])   
+    dataloader = SmartTrafficDataloader(dataset,batch_size=1,shuffle=False, num_workers=4)
+    dataloader.randomize_condition()
+    for condition, time_step, special_mask, adj_table in dataloader:
+        print(condition.shape)
+        print(time_step)
+        print(special_mask.shape)
+        print(adj_table.shape)
+        break
         

@@ -18,6 +18,9 @@ class NormalizedEmbedding(nn.Module):
         self.vocab_size = vocab_size
 
     def forward(self, x):
+        #print(torch.max(x), torch.min(x))
+        #print(self.vocab_size)
+        #print(self.embedding(x))
         x = self.embedding(x)
         return x/torch.norm(x, dim=-1, keepdim=True)
 
@@ -599,7 +602,11 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
         # to demonstrate the end, we add 0 to the rest of trajectory, so the vocab_size = V + 1
         if use_adj_table:
             if use_ge:
+
+                #此处有改动
+                
                 self.geolocation_embedding = get_1d_sincos_geo_embed(n_embd, torch.arange(0, vocab_size)).float().unsqueeze(0).unsqueeze(2)
+                #print(self.geolocation_embedding)
                 #self.geolocation_embedding = get_1d_sincos_geo_embed(n_embd, torch.arange(1, vocab_size)).float().unsqueeze(0).unsqueeze(2) # (1, V, 1, n_embd)
             else:
                 self.geolocation_embedding = torch.zeros(
@@ -655,19 +662,22 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
         # Output: (B T V)
 
         B, T = x.shape
-
+        #print(B,T)
         if not self.use_agent_mask:
             agent_mask = None
 
         # x and y are both (B, T) tensor of integers
         tok_emb = self.token_embedding_table(x)  # (B, T ,C)
-
-        pos_emb = self.position_embedding_table(torch.arange(
-            T, device=x.device)).view(1, T, -1)  # (1,T,C)
+        #print(self.position_embedding_table(torch.arange(T, device=x.device)).view(1, T, -1))
+        pos_emb = self.position_embedding_table(torch.arange(T, device=x.device)).view(1, T, -1)  # (1,T,C)
 
         if self.use_adj_table:
             if self.weight_quantization_scale:
-                #print('7777777777777',weighted_adj)
+                print(self.geolocation_embedding.shape)
+                print(x.device)
+                print(self.token_embedding_table(weighted_adj[0].int()).shape)
+                print(self.weight_embedding_table(weighted_adj[1].int()).shape)
+
                 adj = self.token_embedding_table(weighted_adj[0].int()) + self.weight_embedding_table(weighted_adj[1].int()) + self.geolocation_embedding.to(x.device)
             else:
                 adj = self.token_embedding_table(weighted_adj[0].int())+ self.adj_embed(weighted_adj[1].unsqueeze(-1)) + self.geolocation_embedding.to(x.device)

@@ -126,17 +126,22 @@ def train(cfg, dataloader):
     num_epochs = cfg['epochs']
     model = define_model(cfg)
     old_path = None
+
     if cfg['model_read_path']:
         model.load_state_dict(torch.load(cfg['model_read_path']))
         if 'best_model' in cfg['model_read_path'] or 'last_model' in cfg['model_read_path']:
-            last_loss = float(cfg['model_read_path'][-10:-4])
-            old_path = cfg['model_read_path']
+            try:
+                last_loss = float(cfg['model_read_path'][-10:-4])
+                old_path = cfg['model_read_path']
+            except:
+                last_loss = 10000
+            
     else:
         last_loss = 10000
     model.train() 
     epoch_losses = []
     optimizer = optim.Adam(model.parameters(), lr=cfg['learning_rate'])
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=4000, gamma=0.99)
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=400, gamma=0.99)
     for epoch in range(num_epochs):
         running_loss = 0.0
         #

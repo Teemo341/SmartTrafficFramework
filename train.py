@@ -9,6 +9,7 @@ import random
 from task1.test1 import train as train1
 from task2.process_task2 import train as train2
 from task3.train_mae import train as train3
+from torch.utils.data import SequentialSampler
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1' 
 sys.path.append('..')
@@ -159,7 +160,7 @@ if __name__ == '__main__':
 
         cfg = vars(args)
         trajs_edge = None
-        dataset = SmartTrafficDataset(trajs_edge,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'])
+        dataset = SmartTrafficDataset(trajs_edge,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],need_repeat=False)
         data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
         cfg['block_size'] = dataset.T
         train1(cfg, data_loader)
@@ -170,8 +171,9 @@ if __name__ == '__main__':
         dataset = SmartTrafficDataset(trajs_node_notrepeat,mode="task2",
                                       trajs_path=cfg['trajs_path'],
                                       adjcent_path='data/jinan/adjcent.npy',
-                                      vocab_size=args.vocab_size,T=args.T,max_len=args.max_len,need_repeat=False)
-        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
+                                      vocab_size=args.vocab_size,T=args.T,max_len=args.max_len)
+        
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False, num_workers=4)
         cfg['block_size'] = dataset.max_len-cfg['window_size']
         print(cfg)
         train2(cfg, data_loader)
@@ -183,7 +185,8 @@ if __name__ == '__main__':
                                       trajs_path=cfg['trajs_path'],
                                       adjcent_path='data/jinan/adjcent_class.npy',
                                       T=cfg['T'],max_len=cfg['max_len'])
-        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
+        
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,num_workers=4)
         
         cfg['block_size'] = dataset.max_len // 2
         train3(cfg, data_loader)

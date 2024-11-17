@@ -6,7 +6,7 @@ from tqdm import tqdm
 import numpy as np
 import math
 
-from dataset import generate_data, read_city, preprocess_traj, get_weighted_adj_table
+from .dataset import generate_data, read_city, preprocess_traj, get_weighted_adj_table
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -79,14 +79,14 @@ class traj_dataset(Dataset):
     def __len__(self):
         return self.simulation_num
     
-    def sample_jinan_data(self, city, path='../data', max_connection=9):
+    def sample_jinan_data(self, city, path='./data', max_connection=9):
         edges, pos = read_city(city, path)
         weight = [edge[2] for edge in edges]
         self.adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=max_connection)
         self.adj_table = torch.tensor(self.adj_table, dtype=torch.float32)
         if self.weight_quantization_scale is not None:
             self.adj_table = torch.ceil(self.adj_table/self.adj_table.max()*self.weight_quantization_scale)
-        traj_dir = f'../data/{city}/traj_{city}.csv'
+        traj_dir = f'./data/{city}/traj_{city}.csv'
         traj_dic = preprocess_traj(traj_dir)
         self.traj = []
         self.time_step = []
@@ -220,7 +220,7 @@ class traj_dataloader():
         self.batch_size = batch_size
         self.shuffle = shuffle
 
-        edges, pos = read_city(city, path='../data')
+        edges, pos = read_city(city, path='./data')
         print(f'pos: {len(pos)}, edges: {len(edges)}')
         self.vocab_size = len(pos)+1
 

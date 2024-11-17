@@ -1184,10 +1184,12 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         i = 0
         while idx>0 and i<self.block_size-1 and idx != d:
             logits, _ = self(x)
+            logits[:,i,:,idx]=0
             idx = torch.topk(logits[0,i,0,:],1).indices
             x['traj'][0,i+1,0] = idx
             x['reagent_mask'][0,i+1,0] = 0
             i+=1
+
         return x['traj'][0,:,0].detach().cpu().tolist()
 
 
