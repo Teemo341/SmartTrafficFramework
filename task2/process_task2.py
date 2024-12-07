@@ -179,21 +179,30 @@ def train(cfg , data_loader):
     if cfg['model_read_path']:
         model.load_state_dict(torch.load(cfg['model_read_path']))
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.97)
-   
+    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.99)
+    criterion = torch.nn.CrossEntropyLoss(reduction='none')
     for it in range(max_epochs):
         iter_count = 0
         mean_loss = 0
 
-        for x, x_valid, od_condition, y, adj_indices, adj_values in tqdm(train_iter, desc=f"Epoch {it + 1}/{max_epochs}"):
+        for x, x_valid, od_condition, y, adj_indices, adj_values,mask in tqdm(train_iter, desc=f"Epoch {it + 1}/{max_epochs}"):
             iter_count += 1
-            x, x_valid, od_condition, y, adj_indices, adj_values = x.to(device), x_valid.to(device), od_condition.to(device),\
-                                                                y.to(device), adj_indices[0].unsqueeze(0).to(device), adj_values.to(device)
+            x, x_valid, od_condition, y, adj_indices, adj_values,mask = x.to(device), x_valid.to(device), od_condition.to(device),\
+                                                                y.to(device), adj_indices[0].unsqueeze(0).to(device), adj_values.to(device),mask.to(device)
             y = y.long()
-            logits, loss = model(x, x_valid, y, condition=od_condition, adj=(adj_indices, adj_values))
+            logits, _ = model(x, x_valid, y, condition=od_condition, adj=(adj_indices, adj_values))
+            target = y
+            logits = logits.squeeze(2)
+            target = target.squeeze(-1).squeeze(-1)
+            loss = criterion(logits.view(-1,logits.shape[-1]), target.view(-1))
+            mask = mask.squeeze(-1).float()
+            loss = loss.view(mask.shape)
+            loss = loss * mask
+            loss = loss.sum() / mask.sum()
+            
             # print(logits)
             # print(logits.shape)   
-            loss = loss.mean()
+            #loss = loss.mean()
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             #a = mean_loss

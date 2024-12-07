@@ -141,7 +141,8 @@ def train(cfg, dataloader):
     model.train() 
     epoch_losses = []
     optimizer = optim.Adam(model.parameters(), lr=cfg['learning_rate'])
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30000, gamma=0.99)
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30000, gamma=0.95)
+    criterion = nn.CrossEntropyLoss(reduction='none')
     for epoch in range(num_epochs):
         running_loss = 0.0
         #
@@ -151,21 +152,33 @@ def train(cfg, dataloader):
             inputs = {key: value.to(device) for key, value in batch.items() if isinstance(value, torch.Tensor)}
         
             optimizer.zero_grad()
-            _, loss = model(inputs)
-            state_loss, ratio_loss = loss[0].mean(), loss[1].mean()
-            sl_loss:torch.Tensor = (state_loss + ratio_loss*1 ) 
+            logits, _ = model(inputs)
+            mask = batch['reagent_mask'].to(device)
+            target = batch['traj_targ'].to(device)
+            logits = logits.squeeze(2)
+            target = target.squeeze(-1).squeeze(-1)
+            loss = criterion(logits.view(-1,logits.shape[-1]), target.view(-1))
+            mask = mask.squeeze(-1).float()
+            loss = loss.view(mask.shape)
+            loss = loss * mask
+            final_loss = loss.sum() / mask.sum()
+            final_loss.backward()
+
+
+            # state_loss, ratio_loss = loss[0].mean(), loss[1].mean()
+            # sl_loss:torch.Tensor = (state_loss + ratio_loss*1 ) 
             
             
             
-            kl_loss = torch.tensor(0.0,device=device)
+            # kl_loss = torch.tensor(0.0,device=device)
 
             
-            total_loss:torch.Tensor = (sl_loss + 0.001 * kl_loss)/ 1 #grad_accumulation
+            # total_loss:torch.Tensor = (sl_loss + 0.001 * kl_loss)/ 1 #grad_accumulation
             
-            total_loss.backward()
+            # total_loss.backward()
             optimizer.step()
             lr_scheduler.step()
-            running_loss += total_loss.item()
+            running_loss += final_loss.item()
 
         # 计算每个epoch的平均损失
         avg_loss = running_loss / len(dataloader)

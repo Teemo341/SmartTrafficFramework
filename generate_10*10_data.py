@@ -4,6 +4,7 @@ import pandas as pd
 import networkx as nx
 import random
 from tqdm import tqdm
+import os
 
 def generate_node_edge(grid_size):
     nodes = [[i, j] for i in range(1,grid_size+1) for j in range(1,grid_size+1)]
@@ -116,10 +117,31 @@ if __name__ == '__main__':
     # trajectories_str = ["_".join(map(str, traj)) for traj in trajectories]
     # traj = pd.DataFrame(trajectories_str,columns=['Trajectory'])
     # traj.to_csv('data/simulation/trajectories_10*10.csv',index=False)
-    filepath = 'data/jinan/adjcent.npy'
-    trajectories = generate_random_trajectory(filepath,1000000,min_length=3)
-    savepath = 'data/jinan/traj_jinan_min_one_by_one/'
-    for i in range(len(trajectories)):
-        filepath = savepath+str(i+1)+'.npy'
-        np.save(filepath,trajectories[i],allow_pickle=True)
 
+    # filepath = 'data/jinan/adjcent.npy'
+    # trajectories = generate_random_trajectory(filepath,300000,min_length=3)
+    # savepath = 'data/jinan/traj_jinan_min_one_by_one/'
+    # for i in range(len(trajectories)):
+    #     filepath = savepath+str(i+1)+'.npy'
+    #     np.save(filepath,trajectories[i],allow_pickle=True)
+
+    # path = 'data/jinan/traj_jinan_min_one_by_one'
+    # files = os.listdir(path)
+    # trajs_len = []
+    # for file in files:
+    #     trajs = np.load(path+'/'+file,allow_pickle=True)
+    #     trajs_len.append(len(trajs))
+    #     print(trajs)
+
+    # print(max(trajs_len))
+    # print(np.sort(trajs_len)[::-1][:100])
+
+    path = 'data/jinan/adjcent.npy'
+    adj = np.load(path)
+    k = 0
+    for i in range(len(adj)):
+        for j in range(len(adj[i])):
+            if adj[i][j] != 0:
+                k += 1
+                print(i,j,adj[i][j])
+    print(k)

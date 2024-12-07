@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
-from task3.utils import calculate_load,transfer_graph,calculate_bounds,read_city
+from utils import calculate_load,transfer_graph,calculate_bounds,read_city
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import cv2

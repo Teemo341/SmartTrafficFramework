@@ -5,7 +5,7 @@ from utils import adj_m2adj_l
 from task2.util import transfer_graph, transfer_graph_
 import networkx as nx
 import matplotlib.pyplot as plt
-from task3.utils import calculate_bounds, read_city
+from utils import calculate_bounds, read_city
 import time
 from task2.process_task2 import get_model
 import torch
@@ -123,7 +123,7 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task2_test.png'):
     # min_path: list of edges to be shown in blue
     # traj: list of nodes representing a path, shown as points
 
-    edges, pos = read_city('jinan')
+    edges, pos = read_city('jinan',path='data/jinan')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
     G = transfer_graph(adj_table)

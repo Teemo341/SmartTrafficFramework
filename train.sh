@@ -2,9 +2,11 @@
 # python train.py --task_type 0 
 # python train.py --task_type 1 --vocab_size 101
 # python train.py --task_type 2 --vocab_size 101
-#python train.py --device cuda:3 --T 192 --max_len 193 --task_type 1 --vocab_size 8909 --batch_size 50 --epochs 1000 --learning_rate 0.01 --n_embd 32 --n_hidden 8 --n_layer 4 --dropout 0.0    --model_save_path weights/jinan/task2New/ --trajs_path data/jinan/traj_min_test/
-#python train.py --device cuda:0 --T 300 --max_len 303 --task_type 0 --vocab_size 23313 --batch_size 128 --epochs 2000 --learning_rate 0.01 --n_embd 32 --n_hidden 16 --n_layer 8 --n_head 4  --dropout 0.1  --model_save_path weights/jinan/task1 --trajs_path data/jinan/edge_traj_new/
-python train.py  --device cuda:3 --T 200 --max_len 203 --task_type 2 --vocab_size 8909 --batch_size 32 --epochs 300 --learning_rate 0.01 --n_embd 32 --n_hidden 16 --n_layer 8 --n_head 4 --dropout 0.1 --weight_quantization_scale 13  --model_save_path weights/jinan/task3 --trajs_path data/jinan/node_traj_repeat_one_by_one/
+#python train.py --device cuda:1 -- trajnum 200000 --T 200 --max_len 203 --task_type 1 --vocab_size 8909 --batch_size 256 --epochs 1000 --learning_rate 0.01 --n_embd 32 --n_hidden 8 --n_layer 4 --dropout 0.1 --adjcent data/jinan/adjcent_class.npy --model_save_path weights/jinan/task2/ --trajs_path data/jinan/traj_jinan_min_one_by_one/ 0.0476
+#python train.py --device cuda:2 --T 300 --max_len 303 --task_type 0 --vocab_size 23313 --batch_size 128 --epochs 2000 --learning_rate 0.01 --n_embd 32 --n_hidden 16 --n_layer 8 --n_head 4  --dropout 0.01  --model_save_path weights/jinan/task1 --trajs_path data/jinan/edge_traj_new/
+#python train.py  --device cuda:3 --T 200 --max_len 203 --task_type 2 --vocab_size 8909 --batch_size 32 --epochs 100 --learning_rate 0.01 --n_embd 32 --n_hidden 16 --n_layer 8 --n_head 4 --dropout 0.1 --weight_quantization_scale 13  --model_save_path weights/jinan/task3 --trajs_path data/jinan/node_traj_repeat_one_by_one/
 #export CUDA_LAUNCH_BLOCKING=1
 #python test3.py 
 
+#boston
+python train.py --device cuda:3 --traj_num 100000 --T 48 --max_len 49 --task_type 1 --vocab_size 242 --batch_size 512 --epochs 5000 --learning_rate 0.01 --n_embd 16 --n_hidden 8 --n_layer 4 --dropout 0.0 --adjcent data/boston/adj_table_list.npy --model_save_path weights/boston/task2/ --trajs_path data/boston/traj_boston_min_one_by_one/

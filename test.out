@@ -1,20 +1,25 @@
-/home/shenshiyu/SmartTrafficFramework/test2.py:115: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
-  indices = torch.tensor(indices,dtype=torch.int).to(cfg['device'])
-/home/shenshiyu/SmartTrafficFramework/test2.py:116: UserWarning: To copy construct from a tensor, it is recommended to use sourceTensor.clone().detach() or sourceTensor.clone().detach().requires_grad_(True), rather than torch.tensor(sourceTensor).
-  values = torch.tensor(values,dtype=torch.float).to(cfg['device'])
-Window size: 1
-Origin_Destination: [4202, 7112]
-Djs spend time: 1.131885051727295
-model spend time: 4.218357801437378
-Origin_Destination: [[4202, 7112]]
-car1 [4202, 4200, 4203, 3230, 8394, 3229, 2054, 247, 1408, 1409, 1401, 1403, 8514, 8517, 8457, 1388, 1387, 8458, 1389, 8518, 1393, 8513, 8249, 1414, 8271, 8246, 1416, 8381, 6061, 1772, 1495, 2846, 8321, 1499, 1396, 6078, 8283, 8322, 8317, 4132, 8318, 8324, 8360, 8278, 8325, 8326, 875, 8327, 6028, 8319, 8280, 8281, 8331, 8329, 6030, 6031, 8805, 8816, 8817, 8806, 6020, 8818, 547, 546, 2427, 855, 8849, 854, 7847, 5003, 8811, 8828, 856, 861, 859, 8848, 5000, 8795, 5664, 2383, 8825, 8824, 2712, 8845, 8844, 4867, 7500, 5402, 3792, 4859, 8854, 4999, 6707, 6708, 7946, 7948, 7947, 4864, 4861, 4863, 4866]
-Djs: [[4202, 4200, 4199, 5178, 1758, 207, 8393, 185, 4648, 182, 184, 52, 253, 55, 54, 85, 5482, 5479, 5473, 2687, 2411, 4054, 618, 4725, 4168, 4166, 4162, 4161, 4163, 8232, 4165, 5690, 1163, 8233, 1161, 1156, 1155, 1164, 8375, 1150, 1152, 1168, 1169, 830, 828, 4444, 4849, 829, 8112, 947, 945, 943, 6099, 4846, 981, 4847, 6101, 6109, 7144, 7045, 3725, 2536, 7047, 2515, 2530, 3271, 7616, 983, 2116, 2114, 8855, 2879, 3830, 2724, 2381, 2223, 2221, 2220, 8862, 3799, 3274, 3804, 3822, 3814, 3821, 3818, 3820, 3873, 3872, 3874, 7112]]
-Node 8908 has no position.
+241 369
+100001
 Traceback (most recent call last):
-  File "/home/shenshiyu/SmartTrafficFramework/test2.py", line 204, in <module>
-    plot_volume1(path[0],traj[0])
-  File "/home/shenshiyu/SmartTrafficFramework/test2.py", line 180, in plot_volume1
-    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=1, edge_color=edge_colors, ax=ax, arrows=False)
-  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/networkx/drawing/nx_pylab.py", line 723, in draw_networkx_edges
-    raise nx.NetworkXError(f"Edge {e} has no valid positions.")
-networkx.exception.NetworkXError: Edge (7049, 8908) has no valid positions.
+  File "/home/shenshiyu/SmartTrafficFramework/utils.py", line 506, in <module>
+    traj = np.load(data_dir+'/'+file)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/numpy/lib/npyio.py", line 456, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/numpy/lib/format.py", line 784, in read_array
+    shape, fortran_order, dtype = _read_array_header(
+                                  ^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/numpy/lib/format.py", line 623, in _read_array_header
+    d = safe_eval(header)
+        ^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/site-packages/numpy/lib/utils.py", line 1078, in safe_eval
+    return ast.literal_eval(source)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/ast.py", line 112, in literal_eval
+    return _convert(node_or_string)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/shenshiyu/anaconda3/envs/traffic/lib/python3.12/ast.py", line 86, in _convert
+    def _convert(node):
+
+KeyboardInterrupt

@@ -99,7 +99,11 @@ class SmartTrafficDataset(Dataset):
             
             self.adjacent= np.load(adjcent_path) if adjcent_path else simulation2adj(map_path)
             #self.indices , self.values =adj2sparse_adjmatrix_weighted(self.adjacent)
-            self.adjacent = adj_m2adj_l(self.adjacent)
+            if len(self.adjacent.shape) == 2:
+                self.adjacent = adj_m2adj_l(self.adjacent)
+            else:
+                self.adjacent = torch.tensor(self.adjacent,dtype=torch.float)
+
             self.indices , self.values =self.adjacent[:,:,0],self.adjacent[:,:,1]
             
             #self.indices = torch.tensor(self.indices.clone().detach(),dtype=torch.int64)
@@ -187,7 +191,7 @@ class SmartTrafficDataset(Dataset):
                 od[:,:,0]=d
                 od[:,:,1]=o
                 #print('dataset',od)
-                return traj_ ,valid_length,od,traj_targ,self.indices,self.values
+                return traj_ ,valid_length,od,traj_targ,self.indices,self.values,reagent_mask
             
             if self.mode == "task3":
                 # traj: (1, T, 1)
@@ -207,14 +211,14 @@ class SmartTrafficDataset(Dataset):
         return super().__getattribute__(name)
 
 class SmartTrafficDataloader(DataLoader):
-    def __init__(self,dataset,batch_size=1,max_len=203,vocab_size=23313,shuffle=False, **kwargs):
+    def __init__(self,dataset,batch_size=1,max_len=203,vocab_size=23313,shuffle=False,x=1000000,y=1000000 ,**kwargs):
         super(SmartTrafficDataloader,self).__init__(dataset,batch_size=batch_size,shuffle=shuffle, **kwargs)
         self.max_len = max_len
         self.vocab_size = vocab_size
         
-        self.train_dataset = [i for i in range(1000000)]
+        self.train_dataset = [i for i in range(x)]
         self.train_dataset = Subset(dataset,self.train_dataset)
-        self.test_dataset = [i for i in range(1000000,dataset.__len__())]
+        self.test_dataset = [i for i in range(y,dataset.__len__())]
         self.test_dataset = Subset(dataset,self.test_dataset)
 
     def get_max_len(self):

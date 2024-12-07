@@ -7,7 +7,7 @@ from task3.utils import transfer_graph
 import networkx as nx
 import pickle
 import matplotlib.pyplot as plt
-from task3.utils import calculate_bounds, read_city
+from utils import calculate_bounds, read_city
 import pandas as pd
 import cv2
 import os
@@ -33,14 +33,34 @@ cfg = { 'T':192,
         }
 cfg['block_size'] = cfg['T']
 
-    
+
+weights_path = 'weights/jinan/task1/best_model_0.0102.pth'
+cfg = { 'T':300,
+        'max_len':303,
+        'vocab_size':23313,
+        'batch_size':256,
+        'epochs':5,
+        'learning_rate':0.001,
+        'n_embd':32,
+        'n_hidden':16,
+        'n_layer':8,
+        'dropout':0.1,
+        'model_read_path':None,
+        'model_save_path':'weights/jinan/task1',
+        'trajs_path_train':'data/jinan/edge_traj_test1/',
+        'trajs_path':'data/jinan/edge_traj_test/',
+        'device':'cuda:1',
+        'n_head':4,    
+        }
+cfg['block_size'] = cfg['T']
+
 def plot_volume1(traj1, traj2, fig_size=20, save_path='task1.png'):
     # G networkx graph
     # pos position of the nodes, get from read_city('boston')[1]
     # volume_single: V
     # traj: list of nodes representing a path
 
-    edges, pos = read_city('jinan')
+    edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
     G = transfer_graph(adj_table)
@@ -89,7 +109,7 @@ def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
     cfg['learning_rate'] = lr
     cfg['device'] = device
     dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len']) 
-    data_loader1 = SmartTrafficDataloader(dataset1,batch_size=cfg['batch_size'],shuffle=True, num_workers=4)
+    data_loader1 = SmartTrafficDataloader(dataset1,batch_size=cfg['batch_size'],shuffle=True, num_workers=4).get_test_data()
 
     from train import train1
     train1(cfg, data_loader1)        
@@ -178,7 +198,7 @@ def translate_roadtype_to_capacity(roadtype):
 
 
 def djikstra(start, end):
-    edges, pos = read_city('jinan')
+    edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
     G = transfer_graph(adj_table)
@@ -204,6 +224,7 @@ def test_presention1(k):
     traj = test_presention((o-1,d-1),(e1,e_1))
 
     print('traj',traj)
+    print('real_traj',x['traj'].view(x['traj'].shape[0]).tolist())
     # print(x['traj'].shape)
     # print('x',x['traj'].view(x['traj'].shape[0]).tolist())
 
@@ -229,40 +250,40 @@ def test_presention1(k):
 
     print(map_dict['2503'],map_dict['21721'],map_dict['21720'])
     
-    for i in range(len(pred_traj)):
-        plot_volume1(pred_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/pred/frames/frame_{i}.png')
+    # for i in range(len(pred_traj)):
+    #     plot_volume1(pred_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/pred/frames/frame_{i}.png')
 
-    for i in range(len(dj_traj)):
-        plot_volume1(dj_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/dj/frames/frame_{i}.png')
+    # for i in range(len(dj_traj)):
+    #     plot_volume1(dj_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/dj/frames/frame_{i}.png')
 
 
-    # Create a VideoCapture object
-    save_frame_path0 = './task1/video/dj/frames'
-    save_video_path0 = './task1/video/dj'
-    save_frame_path1 = './task1/video/pred/frames'
-    save_video_path1 = './task1/video/pred'
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    frame = cv2.imread(f'{save_frame_path0}/frame_{0}.png')
-    frame_height, frame_width, _ = frame.shape
-    out = cv2.VideoWriter(f'{save_video_path0}/video.mp4', fourcc, 2, (frame_width, frame_height))
+    # # Create a VideoCapture object
+    # save_frame_path0 = './task1/video/dj/frames'
+    # save_video_path0 = './task1/video/dj'
+    # save_frame_path1 = './task1/video/pred/frames'
+    # save_video_path1 = './task1/video/pred'
+    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # frame = cv2.imread(f'{save_frame_path0}/frame_{0}.png')
+    # frame_height, frame_width, _ = frame.shape
+    # out = cv2.VideoWriter(f'{save_video_path0}/video.mp4', fourcc, 2, (frame_width, frame_height))
 
-    # Iterate over all the frames
-    for i in range(len(os.listdir(save_frame_path0))):
-        frame = cv2.imread(f'{save_frame_path0}/frame_{i}.png')
-        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        out.write(frame_bgr)
-    frame = cv2.imread(f'{save_frame_path1}/frame_{0}.png')
-    frame_height, frame_width, _ = frame.shape
-    out = cv2.VideoWriter(f'{save_video_path1}/video.mp4', fourcc, 2, (frame_width, frame_height))
+    # # Iterate over all the frames
+    # for i in range(len(os.listdir(save_frame_path0))):
+    #     frame = cv2.imread(f'{save_frame_path0}/frame_{i}.png')
+    #     frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    #     out.write(frame_bgr)
+    # frame = cv2.imread(f'{save_frame_path1}/frame_{0}.png')
+    # frame_height, frame_width, _ = frame.shape
+    # out = cv2.VideoWriter(f'{save_video_path1}/video.mp4', fourcc, 2, (frame_width, frame_height))
 
-    # Iterate over all the frames
-    for i in range(len(os.listdir(save_frame_path1))):
-        frame = cv2.imread(f'{save_frame_path1}/frame_{i}.png')
-        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        out.write(frame_bgr)
+    # # Iterate over all the frames
+    # for i in range(len(os.listdir(save_frame_path1))):
+    #     frame = cv2.imread(f'{save_frame_path1}/frame_{i}.png')
+    #     frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    #     out.write(frame_bgr)
 
-    # Release the VideoCapture object
-    out.release()
+    # # Release the VideoCapture object
+    # out.release()
     
 if __name__ == '__main__':
     

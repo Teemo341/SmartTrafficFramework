@@ -100,9 +100,9 @@ def train(cfg,dataloader):
         preprocess_data_time = 0
         forward_time = 0
         backward_time = 0
-   
+        a = time.time()
         for condition, time_step, special_mask, adj_table in tqdm(dataloader, desc=f'Train epoch {i:>6}/{max_epochs:<6}'):
-
+     
             loss1 = []
             load_data_time += time.time()-epoch_time
             epoch_time = time.time()
@@ -144,8 +144,9 @@ def train(cfg,dataloader):
 
             preprocess_data_time += time.time()-epoch_time
             epoch_time = time.time()
-        
+       
             logits, loss = model(x, condition, adj_table, y, None , None, special_mask_)
+    
             loss = torch.mean(loss)
             loss1.append(loss)
 
@@ -165,19 +166,20 @@ def train(cfg,dataloader):
             
             backward_time += time.time()-epoch_time
             epoch_time = time.time()
-            if os.path.isdir(cfg['model_save_path']):
-                path = os.path.join(cfg['model_save_path'],f"best_model_{avg_loss:.4f}.pth")
-                if avg_loss < last_loss:
-                    if old_path:
-                        os.remove(old_path)
-                    last_loss = avg_loss
-                    torch.save(model.state_dict(), path)
-                    old_path = path
+       
+        if os.path.isdir(cfg['model_save_path']):
+            path = os.path.join(cfg['model_save_path'],f"best_model_{avg_loss:.4f}.pth")
+            if avg_loss < last_loss:
+                if old_path:
+                    os.remove(old_path)
+                last_loss = avg_loss
+                torch.save(model.state_dict(), path)
+                old_path = path
 
         lr_sched.step()
         print(f'Train epoch {i:>6}/{max_epochs:<6}|  Loss: {loss.item():<10.8f}  |  Acc: {logger_train_acc[-1]:<7.2%}  |  Acc_inner: {logger_train_acc_inner[-1]:<7.2%}  |  LR: {lr_sched.get_last_lr()[0]:<10.8f}  | Load data time: {load_data_time/60:.<7.2f}m  |  Preprocess data time: {preprocess_data_time/60:<7.2f}m  |  Forward time: {forward_time/60:<7.2f}m  |  Backward time: {backward_time/60:<7.2f}m  |  Total time: {(load_data_time + preprocess_data_time + forward_time + backward_time)/60:<7.2f}m')
         epoch_time = time.time()
-    
+
     if os.path.isdir(cfg['model_save_path']):
         path = os.path.join(cfg['model_save_path'],f"last_model_{avg_loss:.4f}.pth")
         torch.save(model.state_dict(), path)

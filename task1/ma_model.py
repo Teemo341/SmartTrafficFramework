@@ -1029,9 +1029,9 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         x = self.ln_f(x) # (B,T,N,C)
         logits:torch.Tensor = self.lm_head(x) # (B,T,N,V) or (...,2V+1)
         
-        loss = self.loss_fn(logits,batch,agent_mask)
-
-        return logits, loss
+        #loss = self.loss_fn(logits,batch,agent_mask)
+        return logits, 1
+        #return logits, loss
     
     def loss_fn(self,logits:torch.Tensor,batch,agent_mask=None):
         # raise NotImplementedError

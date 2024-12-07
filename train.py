@@ -134,7 +134,8 @@ if __name__ == '__main__':
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--n_hidden', type=int, default=64)
     parser.add_argument('--window_size', type=int, default=1)
-
+    parser.add_argument('--adjcent', type=str, default='data/jinan/adjcent.npy')
+    parser.add_argument('--traj_num', type=int, default=100000)
     parser.add_argument('--weight_quantization_scale', type=int, default=20, help='task3')
     parser.add_argument('--observe_ratio', type=float, default=0.5, help='task3')
     parser.add_argument('--use_adj_table', type=float, default=True, help='task3')
@@ -171,12 +172,12 @@ if __name__ == '__main__':
         trajs_node_notrepeat = None
         dataset = SmartTrafficDataset(trajs_node_notrepeat,mode="task2",
                                       trajs_path=cfg['trajs_path'],
-                                      adjcent_path='data/jinan/adjcent.npy',
+                                      adjcent_path=cfg['adjcent'],
                                       vocab_size=args.vocab_size,T=args.T,max_len=args.max_len)
         
-        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False, num_workers=4)
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,x=cfg['traj_num'],y=1000000,num_workers=4)
 
-        cfg['block_size'] = dataset.max_len-cfg['window_size']
+        cfg['block_size'] = cfg['T']
         print(cfg)
         train2(cfg, data_loader)
 
@@ -185,10 +186,10 @@ if __name__ == '__main__':
         trajs_node_repeat = None
         dataset = SmartTrafficDataset(trajs_node_repeat,mode="task3",
                                       trajs_path=cfg['trajs_path'],
-                                      adjcent_path='data/jinan/adjcent_class.npy',
+                                      adjcent_path=cfg['adjcent'],
                                       T=cfg['T'],max_len=cfg['max_len'])
         
-        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,num_workers=4)
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,x=cfg['traj_num'],y=1000000,num_workers=4)
         train_dataloader = data_loader.get_train_data()
         cfg['block_size'] = cfg['T']
         train3(cfg, train_dataloader)
