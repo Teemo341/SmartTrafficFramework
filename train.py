@@ -161,7 +161,8 @@ if __name__ == '__main__':
         cfg = vars(args)
         trajs_edge = None
         dataset = SmartTrafficDataset(trajs_edge,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],need_repeat=False)
-        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=True, num_workers=4)
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,max_len=cfg['max_len'],vocab_size=cfg['vocab_size'],shuffle=False, num_workers=4)
+        train_dataloader = data_loader.get_train_data()
         cfg['block_size'] = dataset.T
         train1(cfg, data_loader)
 
@@ -174,6 +175,7 @@ if __name__ == '__main__':
                                       vocab_size=args.vocab_size,T=args.T,max_len=args.max_len)
         
         data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False, num_workers=4)
+
         cfg['block_size'] = dataset.max_len-cfg['window_size']
         print(cfg)
         train2(cfg, data_loader)
@@ -187,9 +189,9 @@ if __name__ == '__main__':
                                       T=cfg['T'],max_len=cfg['max_len'])
         
         data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,num_workers=4)
-        
-        cfg['block_size'] = dataset.max_len // 2
-        train3(cfg, data_loader)
+        train_dataloader = data_loader.get_train_data()
+        cfg['block_size'] = cfg['T']
+        train3(cfg, train_dataloader)
 
     elif args.task_type == 3:
         trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')

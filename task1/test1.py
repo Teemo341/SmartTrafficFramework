@@ -141,7 +141,7 @@ def train(cfg, dataloader):
     model.train() 
     epoch_losses = []
     optimizer = optim.Adam(model.parameters(), lr=cfg['learning_rate'])
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=400, gamma=0.99)
+    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30000, gamma=0.99)
     for epoch in range(num_epochs):
         running_loss = 0.0
         #

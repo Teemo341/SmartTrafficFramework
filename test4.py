@@ -6,7 +6,7 @@ import pickle
 import random
 import matplotlib.pyplot as plt
 import cv2
-
+from train import train
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 sys.path.append('..')
@@ -15,6 +15,46 @@ sys.path.append('../data')
 from task4.DQN import DQNAgent
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader, read_node_type
 from process_data import read_traj
+
+method = 1
+seed = 0
+load_dir = './task4/log/best_model.pth'
+save_frame_path = './task4/video/frames'
+save_video_path = "./task4/video"
+batch_size = 1
+device = 'cuda:2'
+memory_device = 'cuda:2'
+memory_len = 2000
+n_layer = 6
+n_embd = 64
+n_head = 4
+wait_quantization = 15
+mask_ratio = 0.0
+
+cfg = {
+    'seed': seed,
+    'memory_len': memory_len,
+    'n_embd': n_embd,
+    'n_head': n_head,
+    'n_layer': n_layer,
+    'mask_ratio': mask_ratio,
+    'wait_quantization': wait_quantization,
+    'device': device,
+    'memory_device': memory_device,
+    'batch_size': batch_size,
+    'log_dir': './task4/log',
+    'dropout': 0.1,
+
+}
+
+def train_presention(device='cuda:2',epochs=4):
+
+    trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
+    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
+    data_loader4 = SmartTrafficDataloader(dataset4,batch_size=1,shuffle=True, num_workers=4)
+    agent = DQNAgent(device,memory_device, memory_len, 1, n_layer, n_embd, n_head,wait_quantization, cfg['dropout'])
+    train(agent, cfg, data_loader4, epochs = epochs, log_dir = cfg['log_dir'])
+
 
 def draw_frame(wait,light):
     #wait: (5 , 7) 5 cross, 7 choices
@@ -121,10 +161,9 @@ def filter():
     ids = [33,32,23,34,43]
     return ids
 
-
-if __name__ == '__main__':
-    # method 0 means queue, methods 1 means DQN
-    method = 1
+def test_presention(method=1):
+    method = method
+    iteration = 1
     seed = 0
     load_dir = './task4/log/best_model.pth'
     save_frame_path = './task4/video/frames'
@@ -170,6 +209,8 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         for i, wait in enumerate(data_loader4):
+            if i != iteration:
+                continue
             wait = wait[:,:,1:,:] # remove the special token, (B, T, V, 7)
             wait = wait.to(device)
             wait = torch.clamp(wait, -1, wait_quantization) # (B, T, V, 7), all negative values become special token, clamp the wait value max to wait_quantization
@@ -210,4 +251,100 @@ if __name__ == '__main__':
             draw_video(wait_list, light_list, save_frame_path, save_video_path)
             break
 
-    print('Finish')
+    print('Finish') 
+
+
+
+if __name__ == '__main__':
+    # method 0 means queue, methods 1 means DQN
+  
+      
+    # method = 1
+    # seed = 0
+    # load_dir = './task4/log/best_model.pth'
+    # save_frame_path = './task4/video/frames'
+    # save_video_path = "./task4/video"
+    # batch_size = 1
+    # device = 'cuda:2'
+    # memory_device = 'cuda:2'
+    # memory_len = 2000
+    # n_layer = 6
+    # n_embd = 64
+    # n_head = 4
+    # wait_quantization = 15
+    # mask_ratio = 0.0
+
+
+    # random.seed(seed)
+    # torch.manual_seed(seed)
+    # np.random.seed(seed)
+    
+    # # dataloader
+    # trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
+    # dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
+    # data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
+
+    # agent = DQNAgent(device, memory_device, memory_len, 1, n_layer, n_embd, n_head, wait_quantization, 0)
+    # agent.model.load_state_dict(torch.load(load_dir))
+    # agent.model = agent.model.to(device)
+
+    # ids = filter()
+
+    # cross_type = read_node_type('data/simulation/node_type_10*10.csv') # 1,...,100 V
+    # cross_type = [3 if i == 'T' else 4 for i in cross_type]
+    # cross_type = torch.tensor(cross_type, dtype=torch.int, device = device) # (V,)
+    # print(cross_type[ids])
+
+    # if mask_ratio:
+    #     mask_id = np.random.choice(len(cross_type), int(len(cross_type)*mask_ratio), replace=False)+1
+    #     mask = torch.ones(len(cross_type), dtype=torch.int) # (V,)
+    #     mask[mask_id] = False
+    # else:
+    #     mask = torch.ones(len(cross_type), dtype=torch.int) # (V,)
+    # mask = mask.to(device)
+
+    # with torch.no_grad():
+    #     for i, wait in enumerate(data_loader4):
+    #         wait = wait[:,:,1:,:] # remove the special token, (B, T, V, 7)
+    #         wait = wait.to(device)
+    #         wait = torch.clamp(wait, -1, wait_quantization) # (B, T, V, 7), all negative values become special token, clamp the wait value max to wait_quantization
+    #         full_wait = wait.int().clone()
+    #         B, T, V, _ = wait.shape
+    #         wait = wait*mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1) - torch.ones_like(wait,dtype=int)*(1-mask).unsqueeze(0).unsqueeze(0).unsqueeze(-1) # change the value of the masked position to -1
+    #         wait= wait.int()
+
+    #         light = 0
+    #         light_list = []
+
+    #         for t in range(T):
+    #             if t == 0:
+    #                 light = agent.best_light(full_wait[:,t,:,:]) # (B, V, 7)
+    #                 print(full_wait[0,t,:,:])
+    #                 # print(light[0,:,:])
+    #                 # print(full_wait[0,t,ids,:])
+    #                 # print(light[0,ids,:])
+    #                 light = torch.argmax(light, dim = -1) # (B, V)
+    #                 # print(light[0,ids])
+    #                 light_list.append(light[0,ids]) # (5)
+    #             else:
+    #                 if method == 0:
+    #                     action = torch.ones((B, V), dtype=torch.int, device=device)
+    #                 elif method == 1:
+    #                     state = (wait[:,t,:,:], cross_type, light)
+    #                     action = agent.act(state[0],state[1],state[2],agent.epsilon) # (B, V)
+    #                 else: 
+    #                     raise ValueError(f'{method} method not supported')
+    #                 # next light
+    #                 light = agent.turn_light(cross_type, light, action) # (B, V)
+    #                 light_list.append(light[0,ids]) # (5)
+
+    #         light_list = torch.stack(light_list, dim = 0) # (T, 5)
+    #         wait_list = wait[0, :, ids, :] # (T, 5, 7)
+    #         light_list = np.array(light_list.detach().cpu())
+    #         wait_list = np.array(wait_list.detach().cpu())
+    #         draw_video(wait_list, light_list, save_frame_path, save_video_path)
+    #         break
+
+    # print('Finish')
+    #train_presention(device,epochs=4)
+    test_presention(method=1)

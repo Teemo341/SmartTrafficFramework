@@ -15,10 +15,10 @@ import os
 import contextlib 
 import time
 import fire
-from ma_model import SpatialTemporalCrossMultiAgentModel
+# from ma_model import SpatialTemporalCrossMultiAgentModel
 import pickle
 from copy import deepcopy
-import pdb
+import networkx as nx
 
 class EarlyStopping:
     def __init__(self, patience=100, verbose=False, delta=0):
@@ -475,52 +475,52 @@ def get_graph(cfg):
     
     return adjlist, adjmat, V
 
-def get_model(cfg, load_from:Optional[str] = None):
-    N = cfg['N']
-    device = cfg['device']
-    block_size, n_embd, n_head, n_layer, dropout = cfg['block_size'], cfg['n_embd'], cfg['n_head'], cfg['n_layer'], cfg['dropout']
-    n_hidden = cfg['n_hidden']
-    n_embed_adj = cfg['n_embed_adj']
-    vocab_size = cfg['vocab_size']
-    use_ne = cfg['use_ne']
-    use_ge = cfg['use_ge']
-    use_adaLN = cfg['use_adaLN']
-    use_adjembed = cfg['use_adjembed']
-    postprocess = cfg['postprocess']
-    window_size = cfg['window_size']
+# def get_model(cfg, load_from:Optional[str] = None):
+#     N = cfg['N']
+#     device = cfg['device']
+#     block_size, n_embd, n_head, n_layer, dropout = cfg['block_size'], cfg['n_embd'], cfg['n_head'], cfg['n_layer'], cfg['dropout']
+#     n_hidden = cfg['n_hidden']
+#     n_embed_adj = cfg['n_embed_adj']
+#     vocab_size = cfg['vocab_size']
+#     use_ne = cfg['use_ne']
+#     use_ge = cfg['use_ge']
+#     use_adaLN = cfg['use_adaLN']
+#     use_adjembed = cfg['use_adjembed']
+#     postprocess = cfg['postprocess']
+#     window_size = cfg['window_size']
 
-    use_model = cfg['use_model']
-    graph_embedding_mode = cfg['graph_embedding_mode']
-    if use_model=="sd":
-        model = SpatialTemporalCrossMultiAgentModel(vocab_size, 
-                                                    n_embd, 
-                                                    n_hidden, 
-                                                    n_layer, 
-                                                    n_head, 
-                                                    block_size,
-                                                    n_embed_adj,
-                                                    window_size=window_size,
-                                                    dropout=dropout, 
-                                                    use_ne=use_ne, 
-                                                    use_ge=use_ge, 
-                                                    device=device,
-                                                    postprocess=postprocess,
-                                                    use_adjembed=use_adjembed,
-                                                    graph_embedding_mode=graph_embedding_mode
-                                                    )
-    else:
-        raise NotImplementedError
-    # elif use_model=="naive":
-    #     model = NaiveMultiAgentLanguageModel(N,vocab_size, n_embd, n_layer,n_head,block_size, dropout,device=device)
-    # else:    
-    #     model = MultiAgentBigramLanguageModelWithoutAttention(N,vocab_size)
+#     use_model = cfg['use_model']
+#     graph_embedding_mode = cfg['graph_embedding_mode']
+#     if use_model=="sd":
+#         model = SpatialTemporalCrossMultiAgentModel(vocab_size, 
+#                                                     n_embd, 
+#                                                     n_hidden, 
+#                                                     n_layer, 
+#                                                     n_head, 
+#                                                     block_size,
+#                                                     n_embed_adj,
+#                                                     window_size=window_size,
+#                                                     dropout=dropout, 
+#                                                     use_ne=use_ne, 
+#                                                     use_ge=use_ge, 
+#                                                     device=device,
+#                                                     postprocess=postprocess,
+#                                                     use_adjembed=use_adjembed,
+#                                                     graph_embedding_mode=graph_embedding_mode
+#                                                     )
+#     else:
+#         raise NotImplementedError
+#     # elif use_model=="naive":
+#     #     model = NaiveMultiAgentLanguageModel(N,vocab_size, n_embd, n_layer,n_head,block_size, dropout,device=device)
+#     # else:    
+#     #     model = MultiAgentBigramLanguageModelWithoutAttention(N,vocab_size)
 
-    model = model.to(device)
+#     model = model.to(device)
     
-    if load_from is not None:
-        model.load_state_dict(torch.load(load_from, map_location=device),strict=True)
+#     if load_from is not None:
+#         model.load_state_dict(torch.load(load_from, map_location=device),strict=True)
     
-    return model
+#     return model
 
 def count_non_embedding_params(model):
     non_embedding_params = 0
@@ -621,4 +621,29 @@ def get_cfg(args: Optional[List[str]]=None)->dict:
     # cfg['max_value'] = cfg['grid_size']
     
     return cfg
-    
+
+
+# transfer node, wrighted_adj to graph
+def transfer_graph(adj_table):
+    # adj_table: B x N x V x 4 x 2, 1-indexing, 0 is special token, 0 is not exist, 1 is exist
+    #! G is 0-indexing
+    G = nx.DiGraph()
+    for i in range(len(adj_table)):
+        G.add_node(i)
+    for i in range(len(adj_table)):
+        for j in range(len(adj_table[i])):
+            if adj_table[i,j,1] != 0:
+                G.add_edge(i,adj_table[i,j,0]-1,weight=adj_table[i,j,1]) #adj_table is 1-indexing, G is 0-indexing
+    return G
+
+def transfer_graph_(adj_table):
+    # adj_table: B x N x V x 4 x 2, 1-indexing, 0 is special token, 0 is not exist, 1 is exist
+    #! G is 0-indexing
+    G = nx.DiGraph()
+    for i in range(len(adj_table)):
+        G.add_node(i)
+    for i in range(len(adj_table)):
+        for j in range(len(adj_table[i])):
+            if adj_table[i,j,1] != 0:
+                G.add_edge(i,int(adj_table[i,j,0]),weight=adj_table[i,j,1]) #adj_table is 1-indexing, G is 0-indexing
+    return G

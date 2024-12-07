@@ -9,6 +9,8 @@ import pickle
 import matplotlib.pyplot as plt
 from task3.utils import calculate_bounds, read_city
 import pandas as pd
+import cv2
+import os
 
 
 weights_path = 'weights/jinan/task1New/best_model_0.0004.pth'
@@ -32,22 +34,11 @@ cfg = { 'T':192,
 cfg['block_size'] = cfg['T']
 
     
-def plot_volume1(min_path, traj, fig_size=20, save_path='task1.png'):
+def plot_volume1(traj1, traj2, fig_size=20, save_path='task1.png'):
     # G networkx graph
     # pos position of the nodes, get from read_city('boston')[1]
     # volume_single: V
-    # min_path: list of edges to be shown in blue
-    # traj: list of nodes representing a path, shown as points
-    path_edge_node_map = 'data/jinan/edge_node_map_dict.pkl'
-    with open(path_edge_node_map, 'rb') as f:
-        edge_node_map = pickle.load(f)
-    from collections import Counter
-
-    
-    traj_counts = Counter(traj) 
-    traj = list(traj_counts.keys()) 
-    cnt = list(traj_counts.values())
-    cnt = np.random.choice(np.arange(4,10),len(cnt))
+    # traj: list of nodes representing a path
 
     edges, pos = read_city('jinan')
     weight = [edge[2] for edge in edges]
@@ -56,8 +47,6 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task1.png'):
     for i in pos:
         pos[i] = pos[i][:-1]
     
-    min_path = [(min_path[i], min_path[i + 1]) for i in range(len(min_path) - 1)]
-    traj_path = []
     x_min, x_max, y_min, y_max = calculate_bounds(pos)
     fig, ax = plt.subplots(1, 1, figsize=(fig_size, fig_size * (y_max - y_min) / (x_max - x_min)))
     ax.set_facecolor('black')
@@ -68,66 +57,30 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task1.png'):
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
     ax.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
     ax.axvline(x=0, color='k', linestyle='--', linewidth=0.5)
-    edge_colors = np.array([0 for u, v in G.edges()])
-    edge_colors = plt.cm.coolwarm(1 - edge_colors)
-    # edge_colors = plt.cm.RdYlBu(1 - edge_colors)
-    # Plot min_path as blue edges
-    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=1, edge_color='white', ax=ax, arrows=False)
-    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=1, edge_color=edge_colors, ax=ax, arrows=False)
-    nx.draw_networkx_edges(G, pos, edgelist=min_path, width=fig_size / 15, alpha=1, edge_color='green', ax=ax)
-    # Plot traj as points distributed along edges
-    node_traj = []
-    for i in range(len([x  for x in traj if x!=0])):
-        start_node, end_node = edge_node_map[str(traj[i])]
-        node_traj.append(start_node)
-    #     traj_path.append((start_node-1, end_node-1))
-    # traj_path_=[]
-    # for i in range(len(traj_path)):
-    #     if i == 0:
-    #         if len(traj_path)>1 and(traj_path[i][0] not in traj_path[i+1]):
-    #             traj_path_.append(traj_path[i][0])
-    #             traj_path_.append(traj_path[i][1])
-    #         else:
-    #             traj_path_.append(traj_path[i][1])
-    #             traj_path_.append(traj_path[i][0])
-    #     else:
-    #         if traj_path[i][0] in traj_path_:
-    #             traj_path_.append(traj_path[i][1])
-    #         else:
-    #             traj_path_.append(traj_path[i][0])
+    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=0.3, edge_color='white', ax=ax, arrows=False)
 
-        start_pos = pos[start_node+1]
-        end_pos = pos[end_node+1]
-        # for j in range(1, cnt[i] + 1):
-        #     x = (start_pos[0] * (cnt[i] - j) + end_pos[0] * j) / float(cnt[i])
-        #     y = (start_pos[1] * (cnt[i] - j) + end_pos[1] * j) / float(cnt[i])
-        #     #print(x,y)
-        #     ax.plot(x,y, 'ro', markersize=3)
-        if i == 0:
-            ax.plot(start_pos[0], start_pos[1], 'b*', markersize=10)
-            ax.plot(end_pos[0], end_pos[1], 'b*', markersize=10)
-        elif i == len([x  for x in traj if x!=0])-1:
-            ax.plot(start_pos[0], start_pos[1], 'y*', markersize=10)
-            ax.plot(end_pos[0], end_pos[1], 'y*', markersize=10)
-        else:
-            ax.plot(end_pos[0], end_pos[1], 'ro', markersize=3)
-            ax.plot(start_pos[0], start_pos[1], 'ro', markersize=3)
-        
-    print('node_traj',node_traj)
-
-    # traj_path = [(traj_path_[i], traj_path_[i + 1]) for i in range(len(traj_path_) - 1)]
-    # print(traj_path)
-    # nx.draw_networkx_edges(G, pos, edgelist=traj_path, width=fig_size / 15, alpha=1, edge_color='red', ax=ax)
+    start_1 = traj1[0]
+    start_2 = traj2[0]
+    nx.draw_networkx_nodes(G, pos, nodelist=[start_1], node_size=fig_size/10, node_color='blue', ax=ax)
+    nx.draw_networkx_nodes(G, pos, nodelist=[start_2], node_size=fig_size/10, node_color='blue', ax=ax)
+    end_1 = traj1[-1]
+    end_2 = traj2[-1]
+    nx.draw_networkx_nodes(G, pos, nodelist=[end_1], node_size=fig_size/10, node_color='blue', ax=ax)
+    nx.draw_networkx_nodes(G, pos, nodelist=[end_2], node_size=fig_size/10, node_color='blue', ax=ax)
     
-    # Plot all other edges in black
+    traj1 = [(traj1[i], traj1[i + 1]) for i in range(len(traj1) - 1)]
+    traj2 = [(traj2[i], traj2[i + 1]) for i in range(len(traj2) - 1)]
+    nx.draw_networkx_edges(G, pos, edgelist=traj1, width=fig_size / 15, alpha=1.0, edge_color='green', ax=ax, arrows = False)
+    nx.draw_networkx_edges(G, pos, edgelist=traj2, width=fig_size / 15, alpha=0.3, edge_color='red', ax=ax, arrows = False)
+    
     
 
     # Display the figure
     plt.tight_layout()
-    plt.show()
+    # plt.show()
     if save_path is not None:
         plt.savefig(save_path)
-    return fig
+    plt.close()
 
 def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
     
@@ -260,27 +213,56 @@ def test_presention1(k):
     real_traj_ = real_traj_[real_traj_>0]
     real_traj_ = [map_dict[str(x)] for x in real_traj_]
     real_traj = transfer_edge_to_node(real_traj_)
-    real_traj = np.array(real_traj)-1
+    real_traj = np.array(real_traj) # 1-indexing
     print('real_traj',real_traj)
 
     traj = np.array(traj)
     traj = traj[traj>0]
     pred_traj_ = [map_dict[str(traj[i])] for i in range(len(traj))]
     pred_traj = transfer_edge_to_node(pred_traj_)
-    pred_traj = np.array(pred_traj)-1 # transfer to 0-based for networkx
+    pred_traj = np.array(pred_traj) # 1-indexing
     print('pred_traj',pred_traj)
 
-    path = djikstra(real_traj[0],real_traj[-1])
-    path = np.array(path,dtype=int)
-    print('Djs:',path)
+    dj_traj = djikstra(real_traj[0],real_traj[-1])
+    dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
+    print('Djs:',dj_traj)
 
     print(map_dict['2503'],map_dict['21721'],map_dict['21720'])
     
-    ims = []
-    im = plot_volume1(path,traj,fig_size=20, save_path='task1_test.png')
-    # for i in range(len([x for x in traj if x!=0])):
-    #     ims.append(plot_volume1(path,traj[0:i],fig_size=20, save_path='img/'+f'task1_test{i}.png'))
-    return ims
+    for i in range(len(pred_traj)):
+        plot_volume1(pred_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/pred/frames/frame_{i}.png')
+
+    for i in range(len(dj_traj)):
+        plot_volume1(dj_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/dj/frames/frame_{i}.png')
+
+
+    # Create a VideoCapture object
+    save_frame_path0 = './task1/video/dj/frames'
+    save_video_path0 = './task1/video/dj'
+    save_frame_path1 = './task1/video/pred/frames'
+    save_video_path1 = './task1/video/pred'
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    frame = cv2.imread(f'{save_frame_path0}/frame_{0}.png')
+    frame_height, frame_width, _ = frame.shape
+    out = cv2.VideoWriter(f'{save_video_path0}/video.mp4', fourcc, 2, (frame_width, frame_height))
+
+    # Iterate over all the frames
+    for i in range(len(os.listdir(save_frame_path0))):
+        frame = cv2.imread(f'{save_frame_path0}/frame_{i}.png')
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        out.write(frame_bgr)
+    frame = cv2.imread(f'{save_frame_path1}/frame_{0}.png')
+    frame_height, frame_width, _ = frame.shape
+    out = cv2.VideoWriter(f'{save_video_path1}/video.mp4', fourcc, 2, (frame_width, frame_height))
+
+    # Iterate over all the frames
+    for i in range(len(os.listdir(save_frame_path1))):
+        frame = cv2.imread(f'{save_frame_path1}/frame_{i}.png')
+        frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        out.write(frame_bgr)
+
+    # Release the VideoCapture object
+    out.release()
     
 if __name__ == '__main__':
     

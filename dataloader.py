@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset,DataLoader
+from torch.utils.data import Dataset,DataLoader,Subset
 import torch
 import numpy as np
 import pandas as pd
@@ -207,10 +207,16 @@ class SmartTrafficDataset(Dataset):
         return super().__getattribute__(name)
 
 class SmartTrafficDataloader(DataLoader):
-    def __init__(self,dataset,batch_size=1,shuffle=False, **kwargs):
+    def __init__(self,dataset,batch_size=1,max_len=203,vocab_size=23313,shuffle=False, **kwargs):
         super(SmartTrafficDataloader,self).__init__(dataset,batch_size=batch_size,shuffle=shuffle, **kwargs)
-        self.max_len = dataset.max_len
-        self.vocab_size = dataset.vocab_size
+        self.max_len = max_len
+        self.vocab_size = vocab_size
+        
+        self.train_dataset = [i for i in range(1000000)]
+        self.train_dataset = Subset(dataset,self.train_dataset)
+        self.test_dataset = [i for i in range(1000000,dataset.__len__())]
+        self.test_dataset = Subset(dataset,self.test_dataset)
+
     def get_max_len(self):
         return self.max_len
     
@@ -225,6 +231,12 @@ class SmartTrafficDataloader(DataLoader):
         observed = 1 - unobserved
         traj_batch = traj_batch * observed
         return traj_batch
+    
+    def get_train_data(self):
+        return SmartTrafficDataloader(self.train_dataset,batch_size=self.batch_size,shuffle=False)
+    
+    def get_test_data(self):
+        return SmartTrafficDataloader(self.test_dataset,batch_size=self.batch_size,shuffle=False)
 
 
 if __name__ == '__main__':
@@ -370,15 +382,26 @@ if __name__ == '__main__':
     # print(len(files))
     # path =  '/home/shenshiyu/SmartTrafficFramework/weights/jinan/task2/best_model_0.0880.pth'
     # print(path[-10:-4])
-    dataset = SmartTrafficDataset(trajs = None,mode="task3",T=60,max_len=120,adjcent_path='data/jinan/adjcent_class.npy',trajs_path='data/jinan/node_traj_test/')
-#dataset = dataset[:100]
-    print(dataset[0])   
-    dataloader = SmartTrafficDataloader(dataset,batch_size=1,shuffle=False, num_workers=4)
-    dataloader.randomize_condition()
-    for condition, time_step, special_mask, adj_table in dataloader:
-        print(condition.shape)
-        print(time_step)
-        print(special_mask.shape)
-        print(adj_table.shape)
+#     dataset = SmartTrafficDataset(trajs = None,mode="task3",T=60,max_len=120,adjcent_path='data/jinan/adjcent_class.npy',trajs_path='data/jinan/node_traj_test/')
+# #dataset = dataset[:100]
+#     print(dataset[0])   
+#     dataloader = SmartTrafficDataloader(dataset,batch_size=1,shuffle=False, num_workers=4)
+#     dataloader.randomize_condition()
+#     for condition, time_step, special_mask, adj_table in dataloader:
+#         print(condition.shape)
+#         print(time_step)
+#         print(special_mask.shape)
+#         print(adj_table.shape)
+#         break
+    dataset = SmartTrafficDataset(trajs = None,mode="task1",trajs_path='data/jinan/edge_traj_new/',need_repeat=True,max_len=203,T=200)
+    dataloader = SmartTrafficDataloader(dataset,batch_size=1,max_len=203,shuffle=False, num_workers=4,vocab_size=23313)
+    train_dataloader = dataloader.get_train_data()
+    test_dataloader = dataloader.get_test_data()
+    for data in train_dataloader:
+        print(data['traj'])
+        print(data['cond'])
+        print(data['traj_targ'])
+        print(data['reagent_mask'])
         break
+ 
         

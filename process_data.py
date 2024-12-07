@@ -86,6 +86,7 @@ def edge_node_trans(map_,lst):
             nodes_list.append(nodes[2*i])
 
     return nodes_list
+
 def node_edge_trans(map_,lst):
     edges = []
     e_l = []
@@ -99,7 +100,7 @@ def node_edge_trans(map_,lst):
         except:
             e_l.append(int(map_[bool_index_r][0][0]))
     lst = lst[:-1]
-    for _, group in groupby(list_):
+    for _, group in groupby(lst):
         repeats.append(sum(1 for _ in group))
     for i in range(len(e_l)):
         edges.append(e_l[i]*repeats[i])

@@ -102,6 +102,7 @@ def train(cfg,dataloader):
         backward_time = 0
    
         for condition, time_step, special_mask, adj_table in tqdm(dataloader, desc=f'Train epoch {i:>6}/{max_epochs:<6}'):
+
             loss1 = []
             load_data_time += time.time()-epoch_time
             epoch_time = time.time()

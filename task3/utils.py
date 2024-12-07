@@ -366,11 +366,15 @@ def preprocess_edge(edge_dir):
     ]
     return edges
 
+def translate_roadtype_to_capacity(roadtype):
+    dic = {'living_street': 1, 'motorway': 10, 'motorway_link': 10, 'primary': 8, 'primary_link': 8, 'residential': 2, 'secondary': 6, 'secondary_link': 6, 'service': 3, 'tertiary': 4, 'tertiary_link': 4, 'trunk': 7, 'trunk_link': 7, 'unclassified': 5}
+    return dic[roadtype]
+
 def read_city(city, path='./data'):
-    if city in ['boston', 'paris']:
-        origin_data = pd.read_csv(path + '/'+ city + '_data.csv').to_dict(orient='list')
-        edges, pos = preprocess_data_boston(origin_data) #! 0-indexing
-    elif city in ['jinan']:
+    # if city in ['boston', 'paris']:
+    #     origin_data = pd.read_csv(path + '/'+ city + '_data.csv').to_dict(orient='list')
+    #     edges, pos = preprocess_data_boston(origin_data) #! 0-indexing
+    if city in ['jinan']:
         node_dir = f"{path}/{city}/node_{city}.csv"
         edge_dir = f"{path}/{city}/edge_{city}.csv"
         pos = preprocess_node(node_dir) #! 0-indexing

@@ -2,7 +2,7 @@ from train import train2
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 import numpy as np
 from utils import adj_m2adj_l
-from task3.utils import transfer_graph
+from task2.util import transfer_graph, transfer_graph_
 import networkx as nx
 import matplotlib.pyplot as plt
 from task3.utils import calculate_bounds, read_city
@@ -33,6 +33,29 @@ cfg = {
     'device': 'cuda:2'
 }
 cfg['block_size'] = cfg['T']
+
+def get_weighted_adj_table(edges, pos, capacity, normalization = True, quantization_scale = None, max_connection = 4):
+
+    adj_table = np.zeros([len(pos),max_connection, 2]) # [node, connection, [target_node, weight]]
+
+    # add edges to adj_table
+    for i in range(len(edges)):
+        if np.sum(adj_table[edges[i][0],:,0]!=0) >= max_connection: # already full
+            raise ValueError('Error: max_connection is too small')
+        elif adj_table[edges[i][0],np.sum(adj_table[edges[i][0],:,0]!=0),0] == max_connection: # duplicate edge
+            raise ValueError('Error: duplicate edge')
+        else:
+            adj_table[edges[i][0],np.sum(adj_table[edges[i][0],:,0]!=0)] = [edges[i][1]+1,capacity[i]] # [target_node, weight], add to the first empty slot
+            #! the adj_table[1][0][0] is the first connection of road 2,
+            #! the adj_table[1][0][0] = 1 means that road 2 is connected to road 1
+            #! the ajd_table[1][0][1] is the road length from road 2 to road 1
+    
+    if normalization:
+        adj_table[:,:,1] = adj_table[:,:,1]/np.max(adj_table[:,:,1])
+    if quantization_scale:
+        adj_table[:,:,1] = np.ceil(adj_table[:,:,1]*quantization_scale)
+        
+    return adj_table #! 0-indexing
 
 def train_presention(epochs=3,batch_size=64,lr=0.001):
     
@@ -70,7 +93,7 @@ def test_presention(num=1,od=None):
         idx[0,0,0] = od[i][0]
         condation[0,0,0,0] = od[i][1]
         od_list.append([od[i][0],od[i][1]])
-        G = transfer_graph(adj_l)
+        G = transfer_graph_(adj_l)
         print('Origin_Destination:',od_list[-1])
         x0 = time.time()
         path = nx.shortest_path(G, source=od[i][0], target=od[i][1], weight='weight')
@@ -100,15 +123,13 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task2_test.png'):
     # min_path: list of edges to be shown in blue
     # traj: list of nodes representing a path, shown as points
 
-    adjcent_path = 'data/jinan/adjcent.npy'
-    adjcent = np.load(adjcent_path)
-    adj_l = adj_m2adj_l(adjcent)
-    G = transfer_graph(adj_l)
-    pos = read_city('jinan', path='data/')
-    for i in range(len(pos)):
-        pos[i+1] = pos[i+1][:-1]
-    min_path = [(min_path[i], min_path[i + 1]) for i in range(len(min_path) - 1)]
-    traj_path = [(traj[i], traj[i + 1]) for i in range(len(traj) - 1)]
+    edges, pos = read_city('jinan')
+    weight = [edge[2] for edge in edges]
+    adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+    G = transfer_graph(adj_table)
+    for i in pos:
+        pos[i] = pos[i][:-1]
+    
     x_min, x_max, y_min, y_max = calculate_bounds(pos)
     fig, ax = plt.subplots(1, 1, figsize=(fig_size, fig_size * (y_max - y_min) / (x_max - x_min)))
     ax.set_facecolor('black')
@@ -125,6 +146,9 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task2_test.png'):
     # Plot min_path as blue edges
     nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=1, edge_color=edge_colors, ax=ax, arrows=False)
     nx.draw_networkx_edges(G, pos, width=fig_size / 15, alpha=1, edge_color='white', ax=ax, arrows=False)
+
+    min_path = [(min_path[i], min_path[i + 1]) for i in range(len(min_path) - 1)]
+    traj_path = [(traj[i], traj[i + 1]) for i in range(len(traj) - 1)]
     nx.draw_networkx_edges(G, pos, edgelist=min_path, width=fig_size / 5, alpha=1, edge_color='blue', ax=ax)
     nx.draw_networkx_edges(G, pos, edgelist=traj_path, width=fig_size / 5, alpha=0.3, edge_color='red', ax=ax)
    
@@ -153,5 +177,7 @@ def task2_test(k):
         #print(traj_)
         traj,path = test_presention(1,[[od[0,0,1].item(),od[0,0,0].item()]])
         break
-    im = plot_volume1(path[0],traj[0],save_path='task2_test.png')
+    path = np.array(path[0])-1
+    traj = np.array(traj[0])-1
+    im = plot_volume1(path,traj,save_path='task2_test.png')
     return im

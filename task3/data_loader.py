@@ -236,6 +236,10 @@ class traj_dataloader():
     def randomize_condition(self, observe_prob=0.5):
         self.observe_list = np.random.choice(
             (self.vocab_size), int(self.vocab_size*observe_prob), replace=False)+1
+    
+    def reduce_observation(self, reduce_ratio = 0.1):
+        reduce_ratio = reduce_ratio/0.5
+        self.observe_list = np.random.choice(self.observe_list, int(len(self.observe_list)*reduce_ratio), replace=False)
 
     def filter_condition(self, traj_batch):
         unobserved = torch.ones(traj_batch.shape, dtype=torch.int32, device = traj_batch.device)

@@ -6,6 +6,7 @@ import pickle
 import random
 import matplotlib.pyplot as plt
 import cv2
+import subprocess
 
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -25,6 +26,7 @@ def draw_frame(wait,light):
 
     wait = wait / (np.max(wait)+1e-6)
     print(wait.max(), wait.min())
+    wait = np.clip(wait, 0, 1)
     wait_colors = plt.cm.RdYlBu(1 - wait)
 
     def draw_cross(x,y, wait_,light_):
@@ -77,40 +79,53 @@ def draw_frame(wait,light):
     draw_cross(3,5,wait_colors[3],light[3])
     draw_cross(5,3,wait_colors[4],light[4])
 
+    plt.draw()
+    plt.tight_layout()
+
     return plt
 
 
-def draw_video(wait,light, save_frame_path = './task4/video/frames', save_video_path = "./task4/video"):
+def draw_frames(wait,light, save_frame_path = './task4/video/frames'):
     # wait: (T, 5, 7) 5 cross, 7 choices
     # light: (T, 5)
     print(wait.shape, light.shape)
     if save_frame_path is not None:
         os.makedirs(save_frame_path,exist_ok=True)
-    if save_video_path is not None:
-        os.makedirs(save_video_path,exist_ok=True)
 
     T = wait.shape[0]
     for t in range(T):
         plt = draw_frame(wait[t],light[t])
         if save_video_path is not None:
-            plt.savefig(f'{save_frame_path}/frame_{t}.png', bbox_inches='tight')
+            plt.savefig(f'{save_frame_path}/frame_{t}.png')
         plt.close()
     
-    if save_video_path is not None:
-        # Create a VideoCapture object
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        frame = cv2.imread(f'{save_frame_path}/frame_{0}.png')
-        frame_height, frame_width, _ = frame.shape
-        out = cv2.VideoWriter(f'{save_video_path}/video.mp4', fourcc, 2, (frame_width, frame_height))
 
-        # Iterate over all the frames
-        for i in range(len(os.listdir(save_frame_path))):
-            frame = cv2.imread(f'{save_frame_path}/frame_{i}.png')
-            frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            out.write(frame_bgr)
+# def make_video_from_frames(save_frame_path = './task4/video/frames', save_video_path = "./task4/video"):
+#     if save_video_path is not None:
+#         os.makedirs(save_video_path,exist_ok=True)
+#     # Create a VideoCapture object
+#     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#     frame = cv2.imread(f'{save_frame_path}/frame_{0}.png')
+#     frame_height, frame_width, _ = frame.shape
+#     out = cv2.VideoWriter(f'{save_video_path}/video.mp4', fourcc, 2, (frame_width, frame_height))
 
-        # Release the VideoCapture object
-        out.release()
+#     # Iterate over all the frames
+#     for i in range(len(os.listdir(save_frame_path))):
+#         frame = cv2.imread(f'{save_frame_path}/frame_{i}.png')
+#         out.write(frame)
+
+#     # Release the VideoCapture object
+#     out.release()
+
+def make_video_from_frames(save_frame_path='./video/frames', save_video_path='./video', fps=1):
+    # 使用 ffmpeg 生成视频
+    frame_paths = [f'{save_frame_path}/frame_{i}.png' for i in range(len(os.listdir(save_frame_path)))]
+    
+    # 使用 ffmpeg 从图像文件生成视频
+    subprocess.run([
+        'ffmpeg', '-y', '-framerate', str(fps), '-i', f'{save_frame_path}/frame_%d.png', f'{save_video_path}/video.mp4'
+    ])
+    print(f"Video saved to {save_video_path}")
 
 #TODO implement the function
 def filter():
@@ -125,6 +140,7 @@ def filter():
 if __name__ == '__main__':
     # method 0 means queue, methods 1 means DQN
     method = 1
+    iteration = 5
     seed = 0
     load_dir = './task4/log/best_model.pth'
     save_frame_path = './task4/video/frames'
@@ -158,7 +174,6 @@ if __name__ == '__main__':
     cross_type = read_node_type('data/simulation/node_type_10*10.csv') # 1,...,100 V
     cross_type = [3 if i == 'T' else 4 for i in cross_type]
     cross_type = torch.tensor(cross_type, dtype=torch.int, device = device) # (V,)
-    print(cross_type[ids])
 
     if mask_ratio:
         mask_id = np.random.choice(len(cross_type), int(len(cross_type)*mask_ratio), replace=False)+1
@@ -170,6 +185,8 @@ if __name__ == '__main__':
 
     with torch.no_grad():
         for i, wait in enumerate(data_loader4):
+            if i!= iteration:
+                continue
             wait = wait[:,:,1:,:] # remove the special token, (B, T, V, 7)
             wait = wait.to(device)
             wait = torch.clamp(wait, -1, wait_quantization) # (B, T, V, 7), all negative values become special token, clamp the wait value max to wait_quantization
@@ -184,7 +201,7 @@ if __name__ == '__main__':
             for t in range(T):
                 if t == 0:
                     light = agent.best_light(full_wait[:,t,:,:]) # (B, V, 7)
-                    print(full_wait[0,t,:,:])
+                    # print(full_wait[0,t,:,:])
                     # print(light[0,:,:])
                     # print(full_wait[0,t,ids,:])
                     # print(light[0,ids,:])
@@ -207,7 +224,8 @@ if __name__ == '__main__':
             wait_list = wait[0, :, ids, :] # (T, 5, 7)
             light_list = np.array(light_list.detach().cpu())
             wait_list = np.array(wait_list.detach().cpu())
-            draw_video(wait_list, light_list, save_frame_path, save_video_path)
+            draw_frames(wait_list, light_list, save_frame_path)
+            make_video_from_frames(save_frame_path, save_video_path)
             break
 
     print('Finish')

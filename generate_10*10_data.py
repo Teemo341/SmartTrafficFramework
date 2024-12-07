@@ -51,8 +51,9 @@ def generate_random_trajectory(filepath, num_traj=5,min_length=3):
     for i in range(len(adj)):
         for j in range(len(adj[i])):
             if adj[i][j] != 0:
-                G.add_edge(i+1,j+1,weight=adj[i][j])
-                G.add_edge(j+1,i+1,weight=adj[i][j])
+                #G 0-index
+                G.add_edge(i,j,weight=adj[i][j])
+                #G.add_edge(j+1,i+1,weight=adj[i][j])
     trajectories = []
     nodes = list(G.nodes())
     with tqdm(total=num_traj, desc="Generating Trajectories") as pbar:
@@ -69,7 +70,8 @@ def generate_random_trajectory(filepath, num_traj=5,min_length=3):
                 path = nx.shortest_path(G, source=start, target=end, weight='weight')
                 # 计算路径的加权长度
                 #path_length = nx.path_weight(G, path, weight='weight')
-                traj = [int(node) for node in path]
+                #traj 1-index
+                traj = [int(node)+1 for node in path]
                 # 检查路径的加权长度是否满足要求
                 #if path_length >= min_length:
                 if len(traj) >= min_length:
@@ -115,7 +117,7 @@ if __name__ == '__main__':
     # traj = pd.DataFrame(trajectories_str,columns=['Trajectory'])
     # traj.to_csv('data/simulation/trajectories_10*10.csv',index=False)
     filepath = 'data/jinan/adjcent.npy'
-    trajectories = generate_random_trajectory(filepath,100000,min_length=3)
+    trajectories = generate_random_trajectory(filepath,1000000,min_length=3)
     savepath = 'data/jinan/traj_jinan_min_one_by_one/'
     for i in range(len(trajectories)):
         filepath = savepath+str(i+1)+'.npy'
