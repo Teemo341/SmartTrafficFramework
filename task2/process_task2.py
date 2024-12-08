@@ -179,7 +179,7 @@ def train(cfg , data_loader):
     if cfg['model_read_path']:
         model.load_state_dict(torch.load(cfg['model_read_path']))
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.99)
+    #lr_sched = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.99)
     criterion = torch.nn.CrossEntropyLoss(reduction='none')
     for it in range(max_epochs):
         iter_count = 0
@@ -209,10 +209,12 @@ def train(cfg , data_loader):
             mean_loss += loss.item()
             #print(mean_loss - a)
             optimizer.step()
-            lr_sched.step()
+            #lr_sched.step()
 
         mean_loss /= iter_count
-        print(f'epoch {it+1}, Loss: {mean_loss}, LR: {lr_sched.get_last_lr()[0]}')
+        print(f'epoch {it+1}, Loss: {mean_loss}, LR: {cfg["learning_rate"]}')
+
+        #print(f'epoch {it+1}, Loss: {mean_loss}, LR: {lr_sched.get_last_lr()[0]}')
         if os.path.isdir(cfg['model_save_path']):
             path = os.path.join(cfg['model_save_path'],f"best_model_{mean_loss:.4f}.pth")
             if mean_loss < last_loss:

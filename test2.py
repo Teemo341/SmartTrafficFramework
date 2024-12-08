@@ -1,22 +1,21 @@
 from train import train2
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 import numpy as np
-from utils import adj_m2adj_l
-from task2.util import transfer_graph, transfer_graph_
+#from task2.util import transfer_graph, transfer_graph_
 import networkx as nx
 import matplotlib.pyplot as plt
-from utils import calculate_bounds, read_city
+from utils import calculate_bounds, read_city, adj_m2adj_l, ansfer_graph
 import time
 from task2.process_task2 import get_model
 import torch
 
-weights_path = 'weights/jinan/task2New/best_model_0.0070.pth'
+weights_path = 'weights/jinan/task2/best_model_0.0294.pth'
 #python train.py --device cuda:3 --T 10 --max_len 20 --task_type 1 --vocab_size 8909 --batch_size 1024 --epochs 40 --learning_rate 0.001 --n_embd 32 --n_hidden 16 --n_layer 8 --dropout 0.1  --model_save_path weights/jinan/task2/ --trajs_path data/jinan/traj_jinan_min_one_by_one/
 
 cfg = {
     'model_read_path': None,
     'model_save_path': 'weights/jinan/task2',
-    'trajs_path': 'data/jinan/traj_min_test/',
+    'trajs_path': 'data/jinan/traj_jinan_min_one_by_one/',
     'trajs_path_train': 'data/jinan/traj_min_test1/',
     'max_len': 193,
     'vocab_size': 8909,
@@ -30,9 +29,37 @@ cfg = {
     'batch_size': 64,
     'learning_rate': 0.001,
     'epochs': 3,
-    'device': 'cuda:2'
+    'device': 'cuda:2',
+    'adjcent': 'data/jinan/adjcent.npy'
 }
 cfg['block_size'] = cfg['T']
+
+# weights_path = 'weights/boston/task2/best_model_0.0129.pth'
+# #python train.py --device cuda:3 --traj_num 100000 --T 48 --max_len 49 --task_type 1 --vocab_size 242 
+# # --batch_size 512 --epochs 5000 --learning_rate 0.001 --n_embd 16 --n_hidden 8 --n_layer 4 --dropout 0.0 
+# # --adjcent data/boston/adj_table_list.npy --model_save_path weights/boston/task2/ 
+# # --trajs_path data/boston/traj_boston_min_one_by_one/ --model_read_path weights/boston/task2/best_model_0.0412.pth 
+# cfg = {
+#     'model_read_path': None,
+#     'model_save_path': 'weights/jinan/task2',
+#     'trajs_path': 'data/boston/traj_boston_min_one_by_one/',
+#     'trajs_path_train': 'data/boston/traj_boston_min_one_by_one/',
+#     'max_len': 49,
+#     'vocab_size': 242,
+#     'n_embd': 32,
+#     'n_hidden': 8,
+#     'n_layer': 4,
+#     'n_head': 4,
+#     'dropout': 0.0,
+#     'window_size': 1,
+#     'T': 48,
+#     'batch_size': 64,
+#     'learning_rate': 0.001,
+#     'epochs': 3,
+#     'device': 'cuda:2',
+#     'adjcent': 'data/boston/adj_table_list.npy'
+# }
+# cfg['block_size'] = cfg['T']
 
 def get_weighted_adj_table(edges, pos, capacity, normalization = True, quantization_scale = None, max_connection = 4):
 
@@ -63,7 +90,7 @@ def train_presention(epochs=3,batch_size=64,lr=0.001):
     cfg['batch_size'] = batch_size
     cfg['learning_rate'] = lr
     dataset2 = SmartTrafficDataset(None,mode="task2",trajs_path=cfg['trajs_path_train'],T=cfg['T'],max_len=cfg['max_len']
-                                   ,adjcent_path='data/jinan/adjcent.npy') 
+                                   ,adjcent_path=cfg['adjcent']) 
     data_loader2 = SmartTrafficDataloader(dataset2,batch_size=cfg['batch_size'],shuffle=True, num_workers=4)
     from train import train2
   
@@ -76,9 +103,13 @@ def test_presention(num=1,od=None):
     task2_model.load_state_dict(torch.load(weights_path))
     task2_model.eval()
     task2_model.to(cfg['device'])
-    adjcent_path = 'data/jinan/adjcent.npy'
+    adjcent_path = cfg['adjcent']
     adjcent = np.load(adjcent_path)
-    adj_l = adj_m2adj_l(adjcent)
+    if adjcent.shape[0] == adjcent.shape[1]:
+        adj_l = adj_m2adj_l(adjcent)
+    else:
+        adj_l = adjcent
+    #print(adj_l.shape,adj_l)
     indices ,values =adj_l[:,:,0],adj_l[:,:,1]
     indices = torch.tensor(indices,dtype=torch.int).to(cfg['device'])
     values = torch.tensor(values,dtype=torch.float).to(cfg['device'])
@@ -93,13 +124,15 @@ def test_presention(num=1,od=None):
         idx[0,0,0] = od[i][0]
         condation[0,0,0,0] = od[i][1]
         od_list.append([od[i][0],od[i][1]])
-        G = transfer_graph_(adj_l)
+        #G = transfer_graph_(adj_l)
+        G = transfer_graph(adj_l.numpy())
+        #print(G.nodes())
         print('Origin_Destination:',od_list[-1])
         x0 = time.time()
-        path = nx.shortest_path(G, source=od[i][0], target=od[i][1], weight='weight')
-        time.sleep(1)
+        path = nx.shortest_path(G, source=od[i][0]-1, target=od[i][1]-1, weight='weight')
+        
         x1 = time.time()
-        Djs_trajs.append(path)
+        Djs_trajs.append([int(x+1) for x in path])
         print('Djs spend time:',x1-x0)
         y0 = time.time()
         with torch.no_grad():
@@ -123,7 +156,7 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task2_test.png'):
     # min_path: list of edges to be shown in blue
     # traj: list of nodes representing a path, shown as points
 
-    edges, pos = read_city('jinan',path='data/jinan')
+    edges, pos = read_city('jinan',path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
     G = transfer_graph(adj_table)
@@ -168,16 +201,22 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task2_test.png'):
 def task2_test(k):
     #train_presention()
     i = 0
-    dataset2 = SmartTrafficDataset(None,mode="task2",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],adjcent_path='data/jinan/adjcent.npy')
-    for traj_ ,valid_length,od,traj_targ,indices, values in dataset2:
+    dataset2 = SmartTrafficDataset(None,mode="task2",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],adjcent_path=cfg['adjcent'])
+    for traj_ ,valid_length,od,traj_targ,indices, values,_ in dataset2:
         i+=1
         if i<k:
             continue
         #print(indices,values)
-        #print(traj_)
+        # print('traj',traj_)
         traj,path = test_presention(1,[[od[0,0,1].item(),od[0,0,0].item()]])
         break
     path = np.array(path[0])-1
     traj = np.array(traj[0])-1
-    im = plot_volume1(path,traj,save_path='task2_test.png')
-    return im
+    #im = plot_volume1(path,traj,save_path='task2_test.png')
+    #return im
+
+if __name__ == '__main__':
+    for i in range(100):
+        task2_test(i)
+
+    #train_presention()

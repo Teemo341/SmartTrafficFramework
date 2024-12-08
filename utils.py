@@ -23,7 +23,7 @@ def adj_m2adj_l(adj_matrix:np.ndarray,max_connection:int=10)->torch.Tensor:
  
         for j in range(len(adj_nodes)):
   
-            adj_list[i,j,0] = adj_nodes[j]+1
+            adj_list[i,j,0] = int(adj_nodes[j]+1)
             adj_list[i,j,1] = adj_matrix[i][adj_nodes[j]]
     
     return adj_list
@@ -96,7 +96,7 @@ def decide_order(num:int,adj:List[int],map:dict)->List[int]:
         
 
 def generate_data(city = 'boston', total_trajectories = 5, max_length = 50, capacity_scale = 10, weight_quantization_scale = None, max_connection = 4):
-    edges, pos = read_city(city, path='data/'+city) #! 0-indexing
+    edges, pos = read_city(city) #! 0-indexing
     node_num = len(pos)
     edge_num = len(edges)
 
@@ -107,22 +107,25 @@ def generate_data(city = 'boston', total_trajectories = 5, max_length = 50, capa
     G = transfer_graph(adj_table) #! 0-indexing
     OD = generate_OD(G, node_num) #! 1-indexing
     i = 0
-    while i < total_trajectories:
-        edge_capacity = sample_capacity(capacity_scale,edge_num)
-        adj_table = get_weighted_adj_table(edges, pos, edge_capacity, normalization = True, quantization_scale = weight_quantization_scale, max_connection = max_connection)
-        G = transfer_graph(adj_table)
-        trajectory = generate_trajectory_list(G, OD, max_length=max_length)
+    with tqdm(total=total_trajectories, desc="Processing trajectories") as pbar:
 
-        if trajectory == None:
-            # current OD is too long, generate a new OD and restart
-            OD = generate_OD(G, node_num)
-            all_encoded_trajectories = []
-            all_adj_list = []
-            i = 0
-        else:
-            all_encoded_trajectories.append(trajectory)
-            all_adj_list.append(adj_table)
-            i += 1
+        while i < total_trajectories:
+            edge_capacity = sample_capacity(capacity_scale,edge_num)
+            adj_table = get_weighted_adj_table(edges, pos, edge_capacity, normalization = True, quantization_scale = weight_quantization_scale, max_connection = max_connection)
+            G = transfer_graph(adj_table)
+            trajectory = generate_trajectory_list(G, OD, max_length=max_length)
+
+            if trajectory == None:
+                # current OD is too long, generate a new OD and restart
+                OD = generate_OD(G, node_num)
+                all_encoded_trajectories = []
+                all_adj_list = []
+                i += 0
+            else:
+                all_encoded_trajectories.append(trajectory)
+                all_adj_list.append(adj_table)
+                i += 1
+                pbar.update(1)
 
     # all_encoded_trajectories: [total_trajectories, max_length] #! 1-indexing
     # all_adj_list: [total_trajectories, node_num, max_connection, 2] #! 0-indexing
@@ -331,15 +334,20 @@ def jinan_node_type(path='data/jinan/adjcent.npy'):
         types.append(sum([1 for x in adjlist[i,:,0].tolist() if x != 0]))
     return types
 
-def read_city(city, path='data/boston'):
+def read_city(city, path='data'):
     if city in ['boston', 'paris']:
-        origin_data = pd.read_csv(path + '/'+ city + '_data.csv').to_dict(orient='list')
+        origin_data = pd.read_csv(path + '/'+ city + f'/{city}_data.csv').to_dict(orient='list')
         edges, pos = preprocess_data_boston(origin_data) #! 0-indexing
     elif city in ['jinan']:
         node_dir = f"{path}/{city}/node_{city}.csv"
         edge_dir = f"{path}/{city}/edge_{city}.csv"
         pos = preprocess_node(node_dir) #! 0-indexing
         edges = preprocess_edge(edge_dir) #! 0-indexing
+    elif city in ['shenzhen']:
+        node_dir = f"{path}/{city}/node_{city}.csv"
+        edge_dir = f"{path}/{city}/edge_{city}.csv"
+        pos = preprocess_node(node_dir)
+        edges = preprocess_edge(edge_dir)
 
     return edges, pos
 
@@ -524,13 +532,41 @@ if __name__ == '__main__':
     #     np.save(path,all_encoded_trajectories[0])
     # print(f'one by one saved successfully!')
     
-    city = 'boston'
-    edges, pos = read_city(city, path='data/boston')
+    # city = 'boston'
+    # edges, pos = read_city(city, path='data/boston')
+    # node_num = len(pos)
+    # edge_num = len(edges)
+    # print(node_num,edge_num)   
+    # data_dir = 'data/boston/traj_min_one_by_one'
+    # save_dir = 'data/boston/traj_boston_min_one_by_one'
+    # files = os.listdir(save_dir)
+    # print(len(files))
+    # path = 'data/boston/adj_table_list.npy'
+    # data = np.load(path)
+    # print(data.shape)
+    # print(data)
+    # path = 'data/jinan/adjcent.npy'
+    # data = np.load(path)
+    # print(data)
+    city = 'shenzhen'
+    pos ,edges = read_city(city)
+    #11933,27410
     node_num = len(pos)
     edge_num = len(edges)
-    print(node_num,edge_num)   
-    data_dir = 'data/boston/traj_min_one_by_one'
-    save_dir = 'data/boston/traj_boston_min_one_by_one'
-    files = os.listdir(save_dir)
-    print(len(files))
+    print(node_num)
+    print(edge_num)
+    data_dir = 'data/shenzhen/traj_shenzhen_min_one_by_one'
+    os.makedirs(data_dir, exist_ok=True)
+    print('Start generating data...')
+    for t in tqdm(range(0, 400), desc=f'Generating data'):
+        all_encoded_trajectories, all_adj_list = generate_data(city = city, total_trajectories = 1000, max_length = 100, capacity_scale = 10, weight_quantization_scale = 20, max_connection = 8 )
+        if t == 0:
+            np.save(f'data/shenzhen/adj_table_list.npy',all_adj_list[0])
+        for i in range(1000):
+            path = data_dir+f'/{t*10000+i+1}.npy'
+            np.save(path,all_encoded_trajectories[i])
+    print(f'one by one saved successfully!')
+    # path = 'data/shenzhen/traj_shenzhen_min_one_by_one/1.npy'
+    # data = np.load(path)
+    # print(data)
     

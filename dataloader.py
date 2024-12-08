@@ -75,6 +75,7 @@ class SmartTrafficDataset(Dataset):
                  task4_path = 'data/simulation/task4_traj_data.npy',
                  trajs_path = '',
                  adjcent_path = None,
+                 weight_quantization_scale = 1,
                  T=None,window_size=1,mode = "task1",max_len=None,task4_num=2000,vocab_size=8909,need_repeat=True):
         super(SmartTrafficDataset,self).__init__()
        
@@ -82,6 +83,7 @@ class SmartTrafficDataset(Dataset):
         self.vocab_size = vocab_size
         self.traj_path = trajs_path
         self.need_repeat = need_repeat
+        self.weight_quantization_scale = weight_quantization_scale
 
         if self.mode == "task1":
         #task1
@@ -105,6 +107,8 @@ class SmartTrafficDataset(Dataset):
                 self.adjacent = torch.tensor(self.adjacent,dtype=torch.float)
 
             self.indices , self.values =self.adjacent[:,:,0],self.adjacent[:,:,1]
+            if self.weight_quantization_scale is not None:
+                self.values = torch.ceil(self.values/self.values.max()*self.weight_quantization_scale)
             
             #self.indices = torch.tensor(self.indices.clone().detach(),dtype=torch.int64)
             self.indices = self.indices.clone().detach().to(torch.int64)
@@ -118,6 +122,8 @@ class SmartTrafficDataset(Dataset):
             self.T = T if T else self.max_len//2
             self.adjacent= np.load(adjcent_path) if adjcent_path else simulation2adj(map_path)
             self.adj_l = adj_m2adj_l(self.adjacent)
+            if self.weight_quantization_scale is not None:
+                self.adj_l[:,:,1] = torch.ceil(self.adj_l[:,:,1]/self.adj_l[:,:,1].max()*self.weight_quantization_scale)
         #task4
         elif self.mode == "task4":
 

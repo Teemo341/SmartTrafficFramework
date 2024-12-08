@@ -187,6 +187,7 @@ if __name__ == '__main__':
         dataset = SmartTrafficDataset(trajs_node_repeat,mode="task3",
                                       trajs_path=cfg['trajs_path'],
                                       adjcent_path=cfg['adjcent'],
+                                      weight_quantization_scale=cfg['weight_quantization_scale'],
                                       T=cfg['T'],max_len=cfg['max_len'])
         
         data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,x=cfg['traj_num'],y=1000000,num_workers=4)

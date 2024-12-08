@@ -681,7 +681,7 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
         #! control bvec bv1c b11c
         # adj = self.adj_pooling(adj) # (B, 1, 1, C) or others
         adj = adj.mean(dim=2, keepdim=True) # (B, V, 1, C)
-        # adj = adj.mean(dim=1, keepdim=True) # (B, 1, 1, C)
+        adj = adj.mean(dim=1, keepdim=True) # (B, 1, 1, C)
         # print(adj.shape)
 
         if condition is not None:

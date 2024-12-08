@@ -682,8 +682,9 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
         elif sampling_strategy == "top_1":
             #print(adj_indices, idx)
             #print(probs.shape)
+            #boston 的邻接列表的索引有问题，需要调整
             mask = torch.zeros(V).to(self.device)
-            for i in adj_indices[idx[:,-1,:].item()]:
+            for i in adj_indices[idx[:,-1,:].item()-1]:
                 if i == 0:
                     break
                 mask[i] = 1
@@ -735,6 +736,7 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
         # Input: 
             # idx: (B, 1, N)  
             # condition: (B, 1, N, 1) 
+        #print('cond',condition)
         B, T, N = idx.shape
 
         # adj_indices: (B, V, max_degree+2), adj_values: (B, V, max_degree+2)
@@ -777,16 +779,19 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             
             # focus only on the last time step
             logits = logits[:, -1, :, :].view(B*N, -1)  # becomes (B*N, V)
+            #top_values, top_indices = torch.topk(logits.view(-1), 10)
+            #print(top_indices)
             #print(idx.shape)
             idx_next, probs = self.decode_strategy(logits, None, sampling_strategy,adj_indices,idx, **kwargs)
-            if idx_next==0:
-                break
+
             #if torch.all(idx_next == 0):
                 # (B, max_new_tokens, N)
             #    idx = torch.cat((idx, torch.zeros((B, max_new_tokens-i, N), device=idx.device, dtype=idx.dtype)), dim=1)
             #    break
             # append sampled index to the running sequence
-            idx = torch.cat((idx, idx_next.view(B, 1, N)), dim=1)  # (B, T+1, N)
+            idx = torch.cat([idx, idx_next.view(B, 1, N)], dim=1)  # (B, T+1, N)
+            if idx_next==0 or int(idx_next)==condition[0,0,0]:
+                break
 
         return idx.view(idx.shape[1]).cpu().tolist()
 

@@ -1,13 +1,11 @@
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 from task1.test1 import define_model
 import torch
-from utils import adj_m2adj_l
 import numpy as np
-from task3.utils import transfer_graph
 import networkx as nx
 import pickle
 import matplotlib.pyplot as plt
-from utils import calculate_bounds, read_city
+from utils import calculate_bounds, read_city, transfer_graph, adj_m2adj_l
 import pandas as pd
 import cv2
 import os
