@@ -15,12 +15,8 @@ class NormalizedEmbedding(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(vocab_size, n_embd)
         self.n_embd = n_embd
-        self.vocab_size = vocab_size
 
     def forward(self, x):
-        #print(torch.max(x), torch.min(x))
-        #print(self.vocab_size)
-        #print(self.embedding(x))
         x = self.embedding(x)
         return x/torch.norm(x, dim=-1, keepdim=True)
 
@@ -569,7 +565,8 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
                  use_ne=True,
                  use_ge=True,
                  use_agent_mask=False,
-                 norm_position='prenorm'):
+                 norm_position='prenorm',
+                 adj_type = "b11h"):
         super().__init__()
 
         if use_ne:
@@ -613,7 +610,16 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
                 self.geolocation_embedding = torch.zeros(
                     (1, vocab_size-1, vocab_size-1, n_embd))
         #! control bvec bv1c b11c
-        self.adj_pooling = nn.AdaptiveAvgPool3d((None, 1, None)) # (B, V, E, n_embd) -> (B, V, 1, n_embd)
+        if adj_type == 'bveh':
+            self.adj_pooling = nn.AdaptiveAvgPool3d((None, None, None)) # (B, V, E, n_embd) -> (B, V, E, n_embd)
+        elif adj_type == 'bv1h':
+            self.adj_pooling = nn.AdaptiveAvgPool3d((None, 1, None)) # (B, V, E, n_embd) -> (B, V, 1, n_embd)
+        elif adj_type == 'b11h':
+            self.adj_pooling = nn.AdaptiveAvgPool3d((1, 1, None)) # (B, V, E, n_embd) -> (B, 1, 1, n_embd)
+        elif adj_type == 'bk1h':
+            self.adj_pooling = nn.AdaptiveAvgPool3d((block_size, 1, None)) # (B, V, E, n_embd) -> (B, K, 1, n_embd)
+        else:
+            raise ValueError(f'adj_type {adj_type} not supported')
         
         self.time_embedding_table = nn.Embedding(3, n_embd)
 
@@ -679,10 +685,7 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
                 adj = self.adj_embed(weighted_adj[0].unsqueeze(-1)) + self.geolocation_embedding.to(x.device)
 
         #! control bvec bv1c b11c
-        # adj = self.adj_pooling(adj) # (B, 1, 1, C) or others
-        adj = adj.mean(dim=2, keepdim=True) # (B, V, 1, C)
-        adj = adj.mean(dim=1, keepdim=True) # (B, 1, 1, C)
-        # print(adj.shape)
+        adj = self.adj_pooling(adj) # (B, 1, 1, C) or others
 
         if condition is not None:
             condition = self.token_embedding_table(condition.int())  # (B, N, T, C)

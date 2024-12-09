@@ -8,12 +8,14 @@ from itertools import groupby
 import pickle
 import networkx as nx
 from typing import List
+import random
+import math
 
 def adj_m2adj_l(adj_matrix:np.ndarray,max_connection:int=10)->torch.Tensor:
     #adj_matrix: 0_index
     #jinan:max_connection=10
     n = len(adj_matrix)
-    adj_list = torch.zeros([n,max_connection,2],dtype=torch.float)
+    adj_list = torch.zeros([n,max_connection,2],dtype=torch.int)
     for i in range(n):
         adj_nodes = np.nonzero(adj_matrix[i])[0]
  
@@ -63,6 +65,23 @@ def calculate_load(traj_probability, method = 'map'):
         raise ValueError(f"method should be 'map', 'single_prob' or 'all_prob', but got {method}")
     return load
 
+def preprocess_traj(traj_dir):
+    trajs = pd.read_csv(traj_dir)
+    trajs = [
+            {"VehicleID": vid,
+             "TripID": tid,
+            "Points": [[int(p.split("-")[0]), float(p.split("-")[1])] for p in ps.split("_")],
+            "DepartureTime": dt,
+            "Duration": dr
+        } for _, (vid, tid, ps, dt, dr, l) in tqdm(trajs.iterrows(), desc='Loading trajectories')
+    ]
+    trajs_ = {}
+    for traj in tqdm(trajs, desc='Processing trajectories'):
+        if traj["VehicleID"] not in trajs_:
+            trajs_[traj["VehicleID"]] = []
+        trajs_[traj["VehicleID"]].append(traj)
+    return trajs_ 
+
 def decide_order(num:int,adj:List[int],map:dict)->List[int]:
     if num == 3:
         la_adj = [map[int(x)][0] for x in adj]
@@ -70,27 +89,28 @@ def decide_order(num:int,adj:List[int],map:dict)->List[int]:
         index1 = np.argmin(la_adj)
         lo_adj[index1] = 1000
         index2 = np.argmin(lo_adj)
-        ans = [3,3,3]
-        ans[index1] = 1
-        ans[index2] = 2
+        ans = [1,1,1]
+        ans[index1] = 2
+        ans[index2] = 3
         #print(la_adj,lo_adj)
         #print(index1,index2)
-        return ans
+        return {x:y for x,y in zip(adj,ans)}
     if num == 4:
         la_adj = [map[int(x)][0] for x in adj]
         lo_adj = [map[int(x)][1] for x in adj]
+        print(la_adj,lo_adj)
         index1 = np.argmin(la_adj)
         index3 = np.argmax(la_adj)
         lo_adj[index1] = 1000
         lo_adj[index3] = 1000
         index2 = np.argmin(lo_adj)
-        ans = [4,4,4,4]
-        ans[index1] = 1
-        ans[index2] = 2
-        ans[index3] = 3
+        ans = [2,2,2,2]
+        ans[index1] = 3
+        ans[index2] = 1
+        ans[index3] = 4
         #print(la_adj,lo_adj)
         #print(index1,index2,index3)
-        return ans
+        return {x:y for x,y in zip(adj,ans)}
     else:
         raise ValueError('Error: The number of adj is wrong')
         
@@ -209,10 +229,31 @@ def jinan_build_map(mode='edge2node'):
         for i in tqdm(range(len(map_)),desc='Building Map'):
             map_dict[str(map_[i][0])] = (map_[i][1],map_[i][2])
         return map_dict
-    
-def jinan_read_node_type(file_path=''):
-    #TODO
-    return
+
+def transfer_points_to_traj(traj_points):
+        # traj_points: [{"TripID": tid,"Points": [[id, time] for p in ps.split("_")],"DepartureTime": dt,"Duration": dr}]
+        traj = []
+        time_step = []
+        for i in range(len(traj_points)):
+            # choice time step
+            if traj_points[i]["Duration"] <= 60:
+                time_step.append(1)
+            elif traj_points[i]["Duration"] <= 3600:
+                time_step.append(60)
+            else:
+                time_step.append(3600)
+
+            # repeat times
+            repeat_times = []
+            for j in range(len(traj_points[i]["Points"])-1): #! 0-indexing
+                repeat_times.append(math.ceil((traj_points[i]["Points"][j+1][1]-traj_points[i]["Points"][j][1])/(time_step[i])))
+            traj_ = []
+            for j in range(len(traj_points[i]["Points"])-1):
+                traj_ += [traj_points[i]["Points"][j][0]+1]*repeat_times[j] #! 1-indexing
+            traj_ += [traj_points[i]["Points"][-1][0]+1] #! 1-indexing
+            traj.append(torch.tensor(traj_,dtype=torch.int32))
+        traj_num = len(traj)
+        return traj, time_step,traj_num
 
 def jinan_read_traj(file_path='data/jinan/traj_jinan.csv'):
     #columns:['VehicleID', 'TripID', 'Points', 'DepartureTime', 'Duration', 'Length']
@@ -370,6 +411,112 @@ def transfer_graph(adj_table):
 def translate_roadtype_to_capacity(roadtype):
     dic = {'living_street': 1, 'motorway': 10, 'motorway_link': 10, 'primary': 8, 'primary_link': 8, 'residential': 2, 'secondary': 6, 'secondary_link': 6, 'service': 3, 'tertiary': 4, 'tertiary_link': 4, 'trunk': 7, 'trunk_link': 7, 'unclassified': 5}
     return dic[roadtype]
+
+
+
+def get_task4_data(node_traj,V,adj_table,pos):
+    #node_traj: [B,T,1]
+    #V = 8909/243/11933
+
+    B, T, _ = node_traj.shape
+    node_traj = node_traj.numpy()
+    data = torch.zeros([T,V,7])
+    for i in range(0,T-2):
+        datai = node_traj[:,i:i+3,:]
+        car_type = decide_car_type(datai,adj_table,pos)
+        for key,value in car_type.items():
+            data[i+1,key,value] += 1
+    return data
+
+def decide_car_type(data,adj_table,pos):
+    #data: [B,3,1]
+    car_type = {}
+    B, _, _ = data.shape
+    for i in range(0,B):
+        key ,val = decide_car_type_(data[i,0],data[i,1],data[i,2],adj_table,pos)
+        if val != 100:
+            car_type[key] = val
+    return car_type
+
+
+def decide_car_type_(start,mid,end,adj_table,pos):
+    #to 0-index
+    mid,start,end = mid[0]-1,start[0]-1,end[0]-1
+    if sum((adj_table[mid, :, 0] != 0).tolist()) not in [3,4]:
+        return 100,100
+    if sum((adj_table[mid, :, 0] != 0).tolist())==3:
+        #0-index
+        nodes = [adj_table[mid,0,0]-1,adj_table[mid,1,0]-1,adj_table[mid,2,0]-1]
+        pos_ = {int(n):pos[int(n)] for n in nodes}
+        nodes_order = decide_order(3,nodes,pos_)
+        try:
+            start_order = nodes_order[start]
+            end_order = nodes_order[end]
+            type_dict = {
+                (1,3):4,
+                (3,1):4,
+                (1,2):5,
+                (2,1):5,
+                (2,3):6,
+                (3,2):6
+            }
+            return mid, type_dict[(start_order,end_order)]
+        except:
+            return mid,100
+    if sum((adj_table[mid, :, 0] != 0).tolist())==4:
+        #0-index
+        nodes = [adj_table[mid,0,0]-1,adj_table[mid,1,0]-1,adj_table[mid,2,0]-1,adj_table[mid,3,0]-1]
+        pos_ = {int(n):pos[int(n)] for n in nodes}
+        nodes_order = decide_order(4,nodes,pos_)
+        try:
+            start_order = nodes_order[start]
+            end_order = nodes_order[end]
+            type_dict = {
+                (1,3):0,
+                (3,1):0,
+                (1,2):1,
+                (3,4):1,
+                (2,4):2,
+                (4,2):2,
+                (4,1):3,
+                (2,3):3
+            }
+            if (start_order,end_order) in type_dict:
+                return mid, type_dict[(start_order,end_order)]
+            return mid,100
+        except:
+            return mid,100
+
+def decide_order(num:int,adj:List[int],map:dict)->dict:
+    if num == 3:
+        la_adj = [map[int(x)][0] for x in adj]
+        lo_adj = [map[int(x)][1] for x in adj]
+        index1 = np.argmin(la_adj)
+        lo_adj[index1] = 1000
+        index2 = np.argmin(lo_adj)
+        ans = [1,1,1]
+        ans[index1] = 2
+        ans[index2] = 3
+        #print(la_adj,lo_adj)
+        #print(index1,index2)
+        return {int(x):y for x,y in zip(adj,ans)}
+    if num == 4:
+        la_adj = [map[int(x)][0] for x in adj]
+        lo_adj = [map[int(x)][1] for x in adj]
+        index1 = np.argmin(la_adj)
+        index3 = np.argmax(la_adj)
+        lo_adj[index1] = 1000
+        lo_adj[index3] = 1000
+        index2 = np.argmin(lo_adj)
+        ans = [2,2,2,2]
+        ans[index1] = 3
+        ans[index2] = 1
+        ans[index3] = 4
+        #print(la_adj,lo_adj)
+        #print(index1,index2,index3)
+        return {int(x):y for x,y in zip(adj,ans)}
+    else:
+        raise ValueError('Error: The number of adj is wrong')
 
 if __name__ == '__main__':
 
@@ -548,25 +695,52 @@ if __name__ == '__main__':
     # path = 'data/jinan/adjcent.npy'
     # data = np.load(path)
     # print(data)
-    city = 'shenzhen'
-    pos ,edges = read_city(city)
-    #11933,27410
-    node_num = len(pos)
-    edge_num = len(edges)
-    print(node_num)
-    print(edge_num)
-    data_dir = 'data/shenzhen/traj_shenzhen_min_one_by_one'
-    os.makedirs(data_dir, exist_ok=True)
-    print('Start generating data...')
-    for t in tqdm(range(0, 400), desc=f'Generating data'):
-        all_encoded_trajectories, all_adj_list = generate_data(city = city, total_trajectories = 1000, max_length = 100, capacity_scale = 10, weight_quantization_scale = 20, max_connection = 8 )
-        if t == 0:
-            np.save(f'data/shenzhen/adj_table_list.npy',all_adj_list[0])
-        for i in range(1000):
-            path = data_dir+f'/{t*10000+i+1}.npy'
-            np.save(path,all_encoded_trajectories[i])
-    print(f'one by one saved successfully!')
+    # city = 'shenzhen'
+    # pos ,edges = read_city(city)
+    # #11933,27410
+    # node_num = len(pos)
+    # edge_num = len(edges)
+    # print(node_num)
+    # print(edge_num)
+    # data_dir = 'data/shenzhen/traj_shenzhen_min_one_by_one'
+    # os.makedirs(data_dir, exist_ok=True)
+    # print('Start generating data...')
+    # for t in tqdm(range(0, 400), desc=f'Generating data'):
+    #     all_encoded_trajectories, all_adj_list = generate_data(city = city, total_trajectories = 1000, max_length = 100, capacity_scale = 10, weight_quantization_scale = 20, max_connection = 8 )
+    #     if t == 0:
+    #         np.save(f'data/shenzhen/adj_table_list.npy',all_adj_list[0])
+    #     for i in range(1000):
+    #         path = data_dir+f'/{t*10000+i+1}.npy'
+    #         np.save(path,all_encoded_trajectories[i])
+    # print(f'one by one saved successfully!')
     # path = 'data/shenzhen/traj_shenzhen_min_one_by_one/1.npy'
     # data = np.load(path)
     # print(data)
-    
+
+    #生成task4数据
+    # pos,edges = read_city('jinan')
+    # path = 'data/jinan/node_traj_repeat_one_by_one'
+    # adj_path = 'data/jinan/adjcent.npy'
+    # adj_l = adj_m2adj_l(np.load(adj_path))
+    # adj_l = adj_l.numpy()
+    # files = os.listdir(path)
+
+    # for file in files:
+    #     traj = np.load(path+'/'+file)
+
+    #     traj = [traj[i] for i in range(len(traj)) if i == 0 or traj[i] != traj[i - 1]]
+    #     traj = torch.tensor([traj]).view(1,-1,1)
+    #     data = get_task4_data(traj,8909,adj_l,pos)
+
+    #重新生成task1，3数据
+    city = 'jinan'
+    csv_dir = 'data/jinan/traj_jinan.csv'
+    trajs = preprocess_traj(csv_dir)
+    path = 'data/jinan/edge_traj_repeat_one_by_one'
+    i = 1
+    for tid in tqdm(range(len(trajs)), desc=f'Transfering {city} points into trajectories'):
+            traj, time_step,length = transfer_points_to_traj(trajs[tid])
+            for j in range(length):
+                x = traj[j].numpy()
+                np.save(f'{path}/{tid+1}.npy', x)
+                i += 1

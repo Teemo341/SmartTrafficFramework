@@ -247,6 +247,7 @@ class SmartTrafficDataloader(DataLoader):
     
     def get_test_data(self):
         return SmartTrafficDataloader(self.test_dataset,batch_size=self.batch_size,shuffle=False)
+    
 
 
 if __name__ == '__main__':
