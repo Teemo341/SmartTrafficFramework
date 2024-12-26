@@ -1029,9 +1029,9 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         x = self.ln_f(x) # (B,T,N,C)
         logits:torch.Tensor = self.lm_head(x) # (B,T,N,V) or (...,2V+1)
         
-        #loss = self.loss_fn(logits,batch,agent_mask)
-        return logits, 1
-        #return logits, loss
+        loss = self.loss_fn(logits,batch,agent_mask)
+        #return logits, 1
+        return logits, loss
     
     def loss_fn(self,logits:torch.Tensor,batch,agent_mask=None):
         # raise NotImplementedError
@@ -1186,11 +1186,32 @@ class SpatialTemporalMultiAgentModel(nn.Module):
             logits, _ = self(x)
             logits[:,i,:,idx]=0
             idx = torch.topk(logits[0,i,0,:],1).indices
+            if i>3 and all(idx==x['traj'][0,i-3:i,0]):
+                idx = torch.topk(logits[0,i,0,:],5).indices
+                idx = idx[torch.randint(1,5,(1,))]
             x['traj'][0,i+1,0] = idx
             x['reagent_mask'][0,i+1,0] = 0
             i+=1
 
         return x['traj'][0,:,0].detach().cpu().tolist()
+
+    def generate4task3(self,num,save_path):
+        import random
+        import os
+        edges = range(self.vocab_size)
+        traj_list = []
+        for i in range(num):
+            o = random.choice(edges)
+            d = random.choice(edges)
+            while d==o:
+                d = random.choice(edges)
+            traj = self.generate_traj(o,d)
+            traj_list.append(traj)
+        os.makedirs(save_path,exist_ok=True)
+        for i in range(len(traj_list)):
+            traj_ = np.array(traj_list[i])
+            np.save(save_path+f"/{i+1}.npy",traj_)
+
 
 
     def generate(self, idx, max_new_tokens,

@@ -1,3 +1,4 @@
+from turtle import st
 from unicodedata import name
 import numpy as np
 import pandas as pd
@@ -10,6 +11,7 @@ import networkx as nx
 from typing import List
 import random
 import math
+import time
 
 def adj_m2adj_l(adj_matrix:np.ndarray,max_connection:int=10)->torch.Tensor:
     #adj_matrix: 0_index
@@ -246,7 +248,7 @@ def transfer_points_to_traj(traj_points):
             # repeat times
             repeat_times = []
             for j in range(len(traj_points[i]["Points"])-1): #! 0-indexing
-                repeat_times.append(math.ceil((traj_points[i]["Points"][j+1][1]-traj_points[i]["Points"][j][1])/(time_step[i])))
+                repeat_times.append(max(math.ceil((traj_points[i]["Points"][j+1][1]-traj_points[i]["Points"][j][1])/(time_step[i])),1))
             traj_ = []
             for j in range(len(traj_points[i]["Points"])-1):
                 traj_ += [traj_points[i]["Points"][j][0]+1]*repeat_times[j] #! 1-indexing
@@ -323,6 +325,13 @@ def node2edge(map_,lst):
         edges.append([e_l[i]]*repeats[i])
     edges = [item for sublist in edges for item in sublist]
     return edges
+def edge2node(map_,lst):
+    # map:{edge:node_o,node_d}
+    node_lst = []
+    for i in range(len(lst)):
+        node_lst.append(int(map_[str(lst[i])][0]))
+    node_lst.append(int(map_[str(lst[-1])][1]))
+    return node_lst 
 
 def padding_zero(traj:List,max_len:int)->np.ndarray:
     if len(traj) >= max_len:
@@ -425,6 +434,7 @@ def get_task4_data(node_traj,V,adj_table,pos):
         datai = node_traj[:,i:i+3,:]
         car_type = decide_car_type(datai,adj_table,pos)
         for key,value in car_type.items():
+            #print('add 1')
             data[i+1,key,value] += 1
     return data
 
@@ -449,43 +459,44 @@ def decide_car_type_(start,mid,end,adj_table,pos):
         nodes = [adj_table[mid,0,0]-1,adj_table[mid,1,0]-1,adj_table[mid,2,0]-1]
         pos_ = {int(n):pos[int(n)] for n in nodes}
         nodes_order = decide_order(3,nodes,pos_)
-        try:
-            start_order = nodes_order[start]
-            end_order = nodes_order[end]
-            type_dict = {
-                (1,3):4,
-                (3,1):4,
-                (1,2):5,
-                (2,1):5,
-                (2,3):6,
-                (3,2):6
-            }
-            return mid, type_dict[(start_order,end_order)]
-        except:
+        if start not in nodes_order or end not in nodes_order:
             return mid,100
+        start_order = nodes_order[start]
+        end_order = nodes_order[end]
+        type_dict = {
+            (1,3):4,
+            (3,1):4,
+            (1,2):5,
+            (2,1):5,
+            (2,3):6,
+            (3,2):6
+        }
+        if (start_order,end_order) in type_dict:
+            return mid, type_dict[(start_order,end_order)]
+        return mid,100
+
     if sum((adj_table[mid, :, 0] != 0).tolist())==4:
         #0-index
         nodes = [adj_table[mid,0,0]-1,adj_table[mid,1,0]-1,adj_table[mid,2,0]-1,adj_table[mid,3,0]-1]
         pos_ = {int(n):pos[int(n)] for n in nodes}
         nodes_order = decide_order(4,nodes,pos_)
-        try:
-            start_order = nodes_order[start]
-            end_order = nodes_order[end]
-            type_dict = {
-                (1,3):0,
-                (3,1):0,
-                (1,2):1,
-                (3,4):1,
-                (2,4):2,
-                (4,2):2,
-                (4,1):3,
-                (2,3):3
-            }
-            if (start_order,end_order) in type_dict:
-                return mid, type_dict[(start_order,end_order)]
+        if start not in nodes_order or end not in nodes_order:
             return mid,100
-        except:
-            return mid,100
+        start_order = nodes_order[start]
+        end_order = nodes_order[end]
+        type_dict = {
+            (1,3):0,
+            (3,1):0,
+            (1,2):1,
+            (3,4):1,
+            (2,4):2,
+            (4,2):2,
+            (4,1):3,
+            (2,3):3
+        }
+        if (start_order,end_order) in type_dict:
+            return mid, type_dict[(start_order,end_order)]
+        return mid,100
 
 def decide_order(num:int,adj:List[int],map:dict)->dict:
     if num == 3:
@@ -518,8 +529,36 @@ def decide_order(num:int,adj:List[int],map:dict)->dict:
     else:
         raise ValueError('Error: The number of adj is wrong')
 
-if __name__ == '__main__':
+def save_process_traj(city,csv_path,traj_save_path,time_step_save_path):
+    #city = 'jinan'
+    #csv_dir = 'data/jinan/traj_jinan.csv'
+    trajs = preprocess_traj(csv_path)
+    #path = 'data/jinan/node_traj_repeat_one_by_one'
+    for tid in tqdm(range(len(trajs)), desc=f'Transfering {city} points into trajectories'):
+            traj, time_step,length = transfer_points_to_traj(trajs[tid])
+            #for j in range(length):
+            x = np.array(traj)
+            y = np.array(time_step)
+            np.save(f'{time_step_save_path}/{tid+1}.npy', y)
+            np.save(f'{traj_save_path}/{tid+1}.npy', x)
 
+def generate_node_type(adj_l):
+    node_type = []
+    if isinstance(adj_l,str):
+        adj_l = np.load(adj_l)
+    if len(adj_l.shape) == 2:
+        adj_l = adj_m2adj_l(adj_l)
+    for i in range(len(adj_l)-1):
+        e = sum([1 for y in adj_l[i] if y[0] != 0])
+        if e == 3:
+            node_type.append([i,'T'])
+        elif e == 4:
+            node_type.append([i,'C'])
+        # else:
+        #     node_type.append(['O'])
+    return node_type
+if __name__ == '__main__':
+    pass
     #save the traj in data/jinan/traj_repeat_one_by_one,name:1.npy,2.npy,...
     # trajs,time= jinan_read_traj()
     # trajs = jinan_trajs_repeat(trajs,time)
@@ -726,21 +765,157 @@ if __name__ == '__main__':
     # files = os.listdir(path)
 
     # for file in files:
+    #     # if file[-5] =='t':
+    #     #     continue
     #     traj = np.load(path+'/'+file)
-
     #     traj = [traj[i] for i in range(len(traj)) if i == 0 or traj[i] != traj[i - 1]]
     #     traj = torch.tensor([traj]).view(1,-1,1)
-    #     data = get_task4_data(traj,8909,adj_l,pos)
+    #     data = get_task4_data(traj,8908,adj_l,pos)
+    #     print(torch.sum(data))
+     
 
-    #重新生成task1，3数据
-    city = 'jinan'
-    csv_dir = 'data/jinan/traj_jinan.csv'
-    trajs = preprocess_traj(csv_dir)
-    path = 'data/jinan/edge_traj_repeat_one_by_one'
-    i = 1
-    for tid in tqdm(range(len(trajs)), desc=f'Transfering {city} points into trajectories'):
-            traj, time_step,length = transfer_points_to_traj(trajs[tid])
-            for j in range(length):
-                x = traj[j].numpy()
-                np.save(f'{path}/{tid+1}.npy', x)
-                i += 1
+    #重新生成node数据
+    # city = 'jinan'
+    # csv_dir = 'data/jinan/traj_jinan.csv'
+    # trajs = preprocess_traj(csv_dir)
+    # path = 'data/jinan/node_traj_repeat_one_by_one'
+    # i = 1
+    # for tid in tqdm(range(len(trajs)), desc=f'Transfering {city} points into trajectories'):
+    #         traj, time_step,length = transfer_points_to_traj(trajs[tid])
+    #         for j in range(length):
+    #             x = traj[j].numpy()
+    #             y = np.array(time_step[j])
+    #             np.save(f'data/jinan/time_step/{i}.npy', y)
+    #             np.save(f'data/jinan/node_traj_repeat_one_by_one/{i}.npy', x)
+    #             i += 1
+
+    #重新生成edge数据
+    # path = 'data/jinan/node_traj_repeat_one_by_one'
+    # save_path = 'data/jinan/edge_traj_repeat_one_by_one'
+    # files = os.listdir(path)
+    # map_dict = jinan_build_map(mode='node2edge')
+    # for file in tqdm(files,desc='Processing'):
+    #     node = np.load(path+'/'+file)
+ 
+    #     node = [i-1 for i in node]
+    #     try:
+    #         edge = node2edge(map_dict,node)
+    #     except:
+    #         print(node)
+    #         break
+
+    #     edge = np.array(edge)
+       
+    #     np.save(save_path+'/'+file,edge)
+
+    # path = 'data/jinan/edge_traj_repeat_one_by_one'
+    # files = os.listdir(path)
+    # ans = 1
+    # for file in tqdm(files,desc='Processing'):
+    #    if len(np.load(path+'/'+file)) > 60:
+    #        ans+=1
+    # print(ans)
+
+    #深圳数据查看
+    # path = 'data/shenzhen/traj_shenzhen_20210824.csv'
+    # data = pd.read_csv(path)
+    # print(data.columns)
+    # print(data.head())
+    # print(len(data)) 
+
+    #
+    # city = 'shenzhen'
+    # csv_dir = 'data/shenzhen/traj_shenzhen_20210824.csv'
+    # trajs = preprocess_traj(csv_dir)
+    # #path = 'data/jinan/node_traj_repeat_one_by_one'
+    # i = 1
+    # for tid in tqdm(range(len(trajs)), desc=f'Transfering {city} points into trajectories'):
+    #         traj, time_step,length = transfer_points_to_traj(trajs[tid])
+    #         print(traj)
+    #         print(time_step)
+    #         print(length)
+    #         break
+    #         for j in range(length):
+    #             x = traj[j].numpy()
+    #             y = np.array(time_step[j])
+    #             #np.save(f'{time_step_save_path}/{i}.npy', y)
+    #             #np.save(f'{traj_save_path}/{i}.npy', x)
+    
+    # path = 'data/jinan/edge_traj_repeat_one_by_one'
+    # files = os.listdir(path)
+    # for file in files:
+    #     edge = np.load(path+'/'+file)
+    #     print(edge)
+
+    # path = 'data/jinan/node_traj_repeat_one_by_one'
+    # time_path = 'data/jinan/jinan_time_step'
+    # files = os.listdir(path)
+    # time_files = os.listdir(time_path)
+    # for file in tqdm(files,desc='Processing'):
+    #     os.remove(path+'/'+file)
+    # for file in tqdm(time_files,desc='Processing'):
+    #     os.remove(time_path+'/'+file)
+
+    # city = 'jinan'
+    # csv_dir = 'data/jinan/traj_jinan.csv'
+    # trajs = preprocess_traj(csv_dir)
+    # traj_save_path = 'data/jinan/node_traj_repeat_one_by_one'
+    # time_step_save_path = 'data/jinan/jinan_time_step'
+
+    # for tid in tqdm(range(len(trajs)), desc=f'Transfering {city} points into trajectories'):
+    #         traj, time_step,length = transfer_points_to_traj(trajs[tid])
+    #         #for j in range(length):
+    #         traj = [t.tolist() for t in traj]
+    #         max_length = max(len(sublist) for sublist in traj)
+    #         padded_traj = [sublist + [0] * (max_length - len(sublist)) for sublist in traj]
+    #         x = np.array(padded_traj).transpose(1, 0)
+    #         y = np.array(time_step)
+    #         np.save(f'{time_step_save_path}/{tid+1}.npy', y)
+    #         np.save(f'{traj_save_path}/{tid+1}.npy', x)
+
+    #生成并保存task4数据
+    # path = 'data/jinan/node_traj_repeat_one_by_one'
+    # files = os.listdir(path)
+    # adj = np.load('data/jinan/adjcent.npy')
+    # adj_l = adj_m2adj_l(adj)
+    # for i in tqdm(range(1,101),desc='Processing'):
+    #     sclice = np.random.choice(files,1000,replace=False)
+    #     data_all = np.zeros((60,8908,7))
+    #     for file in tqdm(sclice,desc='Processing'):
+    #         data = np.load(path+'/'+file)
+    #         if len(data[0])>1:
+    #             index = np.random.randint(0,len(data[0])-1)
+    #             data = data[:,index]
+    #         if len(data.shape) == 1:
+    #             data = data[:,None]
+    #         data = data.transpose(1,0)
+    #         data = padding_zero(data[0],60)
+    #         data = data[None,:,None]
+    #         data = torch.tensor(data,dtype=torch.int32)
+    #         data = get_task4_data(data,8908,adj_l,preprocess_node('data/jinan/node_jinan.csv'))
+    #         data = data.numpy()
+    #         data_all += data
+    #     print(data_all)
+    #     print(np.sum(data_all))
+    #     print(data_all.shape)
+    #     np.save('data/jinan/task4_data/'+str(i)+'.npy',data_all)
+
+    # path = 'data/jinan/adjcent.npy'
+    # adj_l = adj_m2adj_l(np.load(path))
+    # adj_l = adj_l.numpy()
+    # node_type = generate_node_type(adj_l)
+    # print(len(node_type))
+    
+    #* 生成task4数据
+    # path = 'data/jinan/task4_data'
+    # files = os.listdir(path)
+    # save_path = 'data/jinan/task4_data1'
+    # sum_num = 50
+    # save_data_num = 1000
+    # for i in tqdm(range(save_data_num),desc='Processing'):
+    #     data = np.zeros((60,8908,7))
+    #     index = np.random.choice(files,sum_num,replace=False)
+    #     for j in index:
+    #         data += np.load(path+'/'+j)
+    #     np.save(save_path+'/'+str(i+1)+'.npy',data)
+    

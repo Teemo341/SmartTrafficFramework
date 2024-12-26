@@ -1,6 +1,7 @@
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 from task1.test1 import define_model
 import torch
+import argparse
 import numpy as np
 import networkx as nx
 import pickle
@@ -10,12 +11,11 @@ import pandas as pd
 import cv2
 import os
 
-
-weights_path = 'weights/jinan/task1New/best_model_0.0004.pth'
-cfg = { 'T':192,
-        'max_len':193,
+weights_path = 'weights/jinan/task1/best_model_0.1457.pth'
+cfg = { 'T':60,
+        'max_len':63,
         'vocab_size':23313,
-        'batch_size':256,
+        'batch_size':128,
         'epochs':5,
         'learning_rate':0.001,
         'n_embd':32,
@@ -25,30 +25,9 @@ cfg = { 'T':192,
         'model_read_path':None,
         'model_save_path':'weights/jinan/task1',
         'trajs_path_train':'data/jinan/edge_traj_test1/',
-        'trajs_path':'data/jinan/edge_traj_test/',
+        'trajs_path':'data/jinan/edge_traj_repeat_one_by_one/',
         'device':'cuda:1',
-        'n_head':4,    
-        }
-cfg['block_size'] = cfg['T']
-
-
-weights_path = 'weights/jinan/task1/best_model_0.0102.pth'
-cfg = { 'T':300,
-        'max_len':303,
-        'vocab_size':23313,
-        'batch_size':256,
-        'epochs':5,
-        'learning_rate':0.001,
-        'n_embd':32,
-        'n_hidden':16,
-        'n_layer':8,
-        'dropout':0.1,
-        'model_read_path':None,
-        'model_save_path':'weights/jinan/task1',
-        'trajs_path_train':'data/jinan/edge_traj_test1/',
-        'trajs_path':'data/jinan/edge_traj_test/',
-        'device':'cuda:1',
-        'n_head':4,    
+        'n_head':8,    
         }
 cfg['block_size'] = cfg['T']
 
@@ -106,7 +85,7 @@ def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
     cfg['epochs'] = epochs
     cfg['learning_rate'] = lr
     cfg['device'] = device
-    dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len']) 
+    dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path_train'],T=cfg['T'],max_len=cfg['max_len']) 
     data_loader1 = SmartTrafficDataloader(dataset1,batch_size=cfg['batch_size'],shuffle=True, num_workers=4).get_test_data()
 
     from train import train1
@@ -139,30 +118,16 @@ def test_presention(x=None,edge=None):
     return traj
 
 def transfer_edge_to_node(od_list):
+
     node_list = []
     for i in range(len(od_list)):
-        if i == 0:
-            od1 = od_list[i]
-            od2 = od_list[i+1]
-            if od1[0] == od2[0] or od1[0] == od2[1]:
-                node_list.append(od1[1])
-                node_list.append(od1[0])
-            else:
-                node_list.append(od1[0])
-                node_list.append(od1[1])
+        if i == 0 :
+            node_list.append(od_list[i][0])
+            node_list.append(od_list[i][1])
         else:
-            od = od_list[i]
-            if od[0] == node_list[-1]:
-                node_list.append(od[1])
-            else:
-                node_list.append(od[0])
-        if i == len(od_list)-1:
-            od = od_list[i]
-            if od[1] == node_list[-1]:
-                node_list.append(od[0])
-            else:
-                node_list.append(od[1])
+            node_list.append(od_list[i][1])
     return node_list
+
 
 
 # get weighted adjacency table, return 0-indexing
@@ -208,32 +173,36 @@ def test_presention1(k):
     map_path = 'data/jinan/edge_node_map_dict.pkl'
     with open(map_path,'rb') as f:
         map_dict = pickle.load(f)
-    dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],need_repeat=False) 
+    #dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len']) 
     #data_loader1 = SmartTrafficDataloader(dataset1,batch_size=1,shuffle=False, num_workers=4)
     # i = 0
 
-    x = dataset1[k]
+    #x = dataset1[k]
 
-    od = x['cond']
-    e1 = od[0,0,0]
-    e_1 = od[0,0,1]
+    #od = x['cond']
+    #e1 = od[0,0,0]
+    #e_1 = od[0,0,1]
+    #o = map_dict[str(e1.item())][0]
+    #d = map_dict[str(e_1.item())][1]
+    # traj = test_presention((o-1,d-1),(e1,e_1))
+    e1,e_1 = np.random.choice(np.arange(1,23313),2)
     o = map_dict[str(e1.item())][0]
     d = map_dict[str(e_1.item())][1]
     traj = test_presention((o-1,d-1),(e1,e_1))
 
-    print('traj',traj)
-    print('real_traj',x['traj'].view(x['traj'].shape[0]).tolist())
+    #print('traj',traj)
+    # print('real_traj',x['traj'].view(x['traj'].shape[0]).tolist())
     # print(x['traj'].shape)
     # print('x',x['traj'].view(x['traj'].shape[0]).tolist())
 
     # transfer node into edge
-    real_traj_ = x['traj'].view(x['traj'].shape[0]).tolist()
-    real_traj_ = np.array(real_traj_)
-    real_traj_ = real_traj_[real_traj_>0]
-    real_traj_ = [map_dict[str(x)] for x in real_traj_]
-    real_traj = transfer_edge_to_node(real_traj_)
-    real_traj = np.array(real_traj) # 1-indexing
-    print('real_traj',real_traj)
+    # real_traj_ = x['traj'].view(x['traj'].shape[0]).tolist()
+    # real_traj_ = np.array(real_traj_)
+    # real_traj_ = real_traj_[real_traj_>0]
+    # real_traj_ = [map_dict[str(x)] for x in real_traj_]
+    # real_traj = transfer_edge_to_node(real_traj_)
+    # real_traj = np.array(real_traj) # 1-indexing
+    # print('real_traj',real_traj)
 
     traj = np.array(traj)
     traj = traj[traj>0]
@@ -242,12 +211,10 @@ def test_presention1(k):
     pred_traj = np.array(pred_traj) # 1-indexing
     print('pred_traj',pred_traj)
 
-    dj_traj = djikstra(real_traj[0],real_traj[-1])
+    dj_traj = djikstra(pred_traj[0],pred_traj[-1])
     dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
     print('Djs:',dj_traj)
 
-    print(map_dict['2503'],map_dict['21721'],map_dict['21720'])
-    
     # for i in range(len(pred_traj)):
     #     plot_volume1(pred_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/pred/frames/frame_{i}.png')
 
@@ -284,7 +251,9 @@ def test_presention1(k):
     # out.release()
     
 if __name__ == '__main__':
-    
-    test_presention1(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--k', type=int, default=1)
+    args = parser.parse_args()
+    test_presention1(args.k)
     #test_presention1(3)
 

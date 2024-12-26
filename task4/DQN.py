@@ -86,7 +86,8 @@ class DQN(nn.Module):
         return act_values
 
 class DQNAgent:
-    def __init__(self, device, memory_device = 'cpu', memory_len=2000, batch_size = 32, num_layers = 6, hidden_size = 64, num_heads = 4, wait_quantization = 10, dropout = 0.1):
+    #agent = DQNAgent(args.device, args.memory_device, args.memory_len, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout,lr=args.learning_rate)
+    def __init__(self, device, memory_device = 'cpu', memory_len=2000, num_layers = 6, hidden_size = 64, num_heads = 4, wait_quantization = 10, dropout = 0.1,lr=5e-4, batch_size = 32):
         self.memory = deque(maxlen=memory_len)
         self.gamma = 0.95    # 折扣因子
         self.epsilon = 1.0    # 探索率
@@ -95,9 +96,10 @@ class DQNAgent:
         self.batch_size = batch_size
         self.device = device
         self.memory_device = memory_device
+        self.lr = lr
 
         self.model = DQN(num_layers, hidden_size, num_heads, wait_quantization, dropout)
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3, weight_decay=1e-5)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-5)
         self.criterion = nn.MSELoss()
 
     def act(self, wait, cross_type, light, epsilon = 0):

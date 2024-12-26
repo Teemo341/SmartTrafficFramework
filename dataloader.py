@@ -31,40 +31,6 @@ def read_node_type(file_path='data/simulation/node_type_10*10.csv'):
     node_type = data['Type'].tolist()
     return node_type
 
-def task4data_process(trajs,max_len,map_path='data/simulation/edge_node_10*10.csv',
-                      state_path='data/simulation/edge_node_10*10_state.csv',
-                      node_type_path='data/simulation/node_type_10*10.csv'):
-        node_type = read_node_type(node_type_path)
-        state = pd.read_csv(state_path)
-        traj_ = padding_zero(trajs,max_len)
-        traj_ = torch.tensor(traj_,dtype=torch.int64)
-        result = torch.zeros([max_len,101,7])
-        for i in range(len(traj_)-1):
-            if not (traj_[i]==traj_[i+1] or traj_[i+1]==0):
-                #print(traj_[i],traj_[i+1])
-                state1 = state[state['EdgeID_x']==int(traj_[i])]
-                #print(state1)
-                state2 = state1[state1['EdgeID_y']==int(traj_[i+1])]
-                #print(state2)
-                value = state2['state'].values[0]
-                #print('value:',value)
-                if value != 0:
-                    a = [0]*7
-                    a[value-1]=1
-                    node1 = state2['Origin_y'].values[0]
-                    #print('111111',i,int(node1),a)
-                    result[i,int(node1)]+=torch.tensor(a)
-
-        for i in range(1,101):
-            if node_type[i-1]=="T":
-                result[:,i,0:4]=-1
-            elif node_type[i-1]=="C":
-                result[:,i,4:]=-1
-            else:
-                result[:,i,:]=-1
-
-        return result
-
 class SmartTrafficDataset(Dataset):
     # trajs: list of list of int
     # map_: np.array([[edge,o,d,length],...])
@@ -72,17 +38,20 @@ class SmartTrafficDataset(Dataset):
 
 
     def __init__(self,trajs,map_path='data/simulation/edge_node_10*10.csv',
-                 task4_path = 'data/simulation/task4_traj_data.npy',
+                 #task4_path = 'data/simulation/task4_traj_data.npy',
                  trajs_path = '',
+                 time_step_path = '',
                  adjcent_path = None,
                  weight_quantization_scale = 1,
-                 T=None,window_size=1,mode = "task1",max_len=None,task4_num=2000,vocab_size=8909,need_repeat=True):
+                 max_history = 5,
+                 T=None,window_size=1,mode = "task1",max_len=None,task4_num=2000,vocab_size=8909):
         super(SmartTrafficDataset,self).__init__()
        
         self.mode = mode
+        self.max_history = max_history
         self.vocab_size = vocab_size
         self.traj_path = trajs_path
-        self.need_repeat = need_repeat
+        self.time_step_path = time_step_path
         self.weight_quantization_scale = weight_quantization_scale
 
         if self.mode == "task1":
@@ -122,43 +91,54 @@ class SmartTrafficDataset(Dataset):
             self.T = T if T else self.max_len//2
             self.adjacent= np.load(adjcent_path) if adjcent_path else simulation2adj(map_path)
             self.adj_l = adj_m2adj_l(self.adjacent)
+            self.adj_l = torch.tensor(self.adj_l,dtype=torch.float)
             if self.weight_quantization_scale is not None:
                 self.adj_l[:,:,1] = torch.ceil(self.adj_l[:,:,1]/self.adj_l[:,:,1].max()*self.weight_quantization_scale)
         #task4
         elif self.mode == "task4":
 
             self.task4_num = task4_num
-            self.task4_path = task4_path
-            self.trajs = np.load(self.task4_path)
-            self.max_len = self.trajs.shape[1]
-            
+            self.task4_path = trajs_path
+            self.trajs = trajs
+            if self.trajs is not None:
+                self.max_len = self.trajs.shape[1]
+         
 
     def __len__(self):
         if self.mode == "task4":
-            return len(self.trajs)//10
+            return len(self.trajs)//10 if self.trajs else len(os.listdir(self.traj_path))
         return len(self.trajs) if self.trajs else len(os.listdir(self.traj_path))
     
     def __getitem__(self,idx):
         
         if self.mode == 'task4':
             # data:[T,V,7]
-            idx = np.arange(0,len(self.trajs))
-            choice  = np.random.choice(idx,size = self.task4_num)
-            results = np.sum(self.trajs[choice],axis=0)
-            return torch.tensor(results, dtype=torch.int)
-        
+            if self.trajs is not None:
+                idx = np.arange(0,len(self.trajs))
+                choice  = np.random.choice(idx,size = self.task4_num)
+                results = np.sum(self.trajs[choice],axis=0)
+                return torch.tensor(results, dtype=torch.int)
+            if self.trajs is None:
+                trajs = np.load(self.traj_path+str(idx+1)+'.npy')
+                return torch.tensor(trajs, dtype=torch.int)        
         else:
             if self.T + self.window_size > self.max_len:
                 raise ValueError('Error: T + window_size is too large')
             if self.trajs is None:
                 traj = np.load(self.traj_path+str(idx+1)+'.npy')
                 traj_o = np.load(self.traj_path+str(idx+1)+'.npy')
-                if self.traj_path == 'data/jinan/node_traj_repeat_one_by_one/':
-                    traj = [ t+1 for t in traj]
+                 
             else:
                 traj = self.trajs[idx]
-            if not self.need_repeat:
-                traj = remove_consecutive_duplicates(traj)
+        
+        if self.mode != 'task3':
+            # if len(traj.shape) == 1:
+            #     traj = traj[None,:]
+            #     traj_o = traj_o[None,:] 
+            # index = np.random.randint(0,len(traj))  
+            # traj = traj[:,index]
+            # traj_o = traj_o[:,index]
+    
             traj = padding_zero(traj,self.max_len)
             traj_ = traj[0:self.T]
             traj_targ = traj[self.window_size:self.T+self.window_size]
@@ -190,27 +170,43 @@ class SmartTrafficDataset(Dataset):
                 # x_valid: (1, 1), valid length for each trajectory
                 # condition: (1, T, 1, 2) 
                 # incides and values: (2, num_edges)
-           
+            
                 o = od[0,0,0].item() 
                 d = od[0,0,1].item()
-             
+                
                 od[:,:,0]=d
                 od[:,:,1]=o
                 #print('dataset',od)
                 return traj_ ,valid_length,od,traj_targ,self.indices,self.values,reagent_mask
-            
-            if self.mode == "task3":
-                # traj: (1, T, 1)
-                #time_step(not uesd) is set [0]
-                #reagent_mask: (1, T, 1)
-                #adj_l: (1, V , max_connection , 2)
+        
+        if self.mode == "task3":
+            # traj: (1, T, 1)
+            #time_step(not uesd) is set [0]
+            #reagent_mask: (1, T, 1)
+            #adj_l: (1, V , max_connection , 2)
+            time_step = np.load(self.time_step_path+str(idx+1)+'.npy')
+            traj_list = []
+            traj_targ_list = []
+            traj_mask_list = []
+            time_step_list = []
+            for j in range(self.max_history):
+                i = j
+                if i > len(traj[0])-1:
+                    i = np.random.randint(0,len(traj[0]))
+                traj_=padding_zero(traj[:,i],self.max_len)
+                traj_ = traj_[0:self.T]
+                traj_list.append(traj_[0:self.T])
+                traj_targ_list.append(traj_[self.window_size:self.T+self.window_size])
+                reagent_mask_ = [ 1 if x!=0 else 0 for x in traj_]
+                traj_mask_list.append(reagent_mask_)
+                time_step_list.append(time_step[i])
+                
 
-                traj_ = traj_[:,0]
-                traj_ = traj_[None,:]
-                reagent_mask = reagent_mask[:,0]
-                reagent_mask = reagent_mask[None,:]
-
-                return traj_  , [0], reagent_mask , self.adj_l[None,:,:,:]
+            traj_ = torch.tensor(traj_list,dtype=torch.int64)
+            traj_targ = torch.tensor(traj_targ_list,dtype=torch.int64)
+            reagent_mask = torch.tensor(traj_mask_list,dtype=torch.int64)
+            time_step = torch.tensor(time_step_list,dtype=torch.int64)
+            return traj_, time_step, reagent_mask , self.adj_l[None,:,:,:]
 
     
     def __getattribute__(self, name: str) -> torch.Any:
@@ -354,19 +350,19 @@ if __name__ == '__main__':
     
     #train3(cfg3,data_loader3)
     #print(dataset2[0][2].shape)
-    # dataset1 = SmartTrafficDataset(None,mode="task1",T=100,max_len=200,
-    #                                 trajs_path='data/jinan/node_traj_repeat_one_by_one/',
-    #                                 map_path='data/jinan/edge_node_jinan.csv',
-    #                                 need_edge=True,need_repeat=True)
-    # dataloader1 = SmartTrafficDataloader(dataset1,batch_size=32,shuffle=False)
-    # import time
-    # time0 = time.time()
-    # for data in dataloader1:
-    #     print(data['traj'].shape)
-    #     print(data['cond'].shape)
-    #     print(data['traj_targ'].shape)
-    #     print(data['reagent_mask'].shape)
-    #     print(time.time()-time0)
+    dataset1 = SmartTrafficDataset(None,mode="task1",T=60,max_len=63,
+                                    trajs_path='data/jinan/edge_traj_repeat_one_by_one/')
+    print(dataset1[0])
+    dataloader1 = SmartTrafficDataloader(dataset1,batch_size=32,shuffle=False)
+    import time
+    time0 = time.time()
+    for data in dataloader1:
+        print(data['traj'].shape)
+        print(data['cond'].shape)
+        print(data['traj_targ'].shape)
+        print(data['reagent_mask'].shape)
+        print(time.time()-time0)
+        break
         
     # adjcent = np.load('data/jinan/adjcent.npy')
     # print(adjcent.shape)
@@ -377,15 +373,22 @@ if __name__ == '__main__':
     #         if adjcent[i][j] != 0:
     #             num+=1
     # print(num)
-    # dataset3 = SmartTrafficDataset(None,mode="task3",T=100,max_len=200,
-    #                                trajs_path='data/jinan/node_traj_repeat_one_by_one/',
-    #                                adjcent_path='data/jinan/adjcent.npy',need_repeat=True)
-    # dataloader2 = SmartTrafficDataloader(dataset3,batch_size=32,shuffle=False)
-    # for data in dataloader2:
+    # dataset3 = SmartTrafficDataset( None,mode="task3",T=60,max_len=63,
+    #                                 time_step_path ='data/jinan/jinan_time_step/', 
+    #                                 trajs_path='data/jinan/node_traj_repeat_one_by_one/',
+    #                                 adjcent_path='data/jinan/adjcent.npy')
+    # for i in range(100):
+    #     print(dataset3[i][0].shape)
+    #     print(dataset3[i][1].shape)
+    #     print(dataset3[i][2].shape)
+    #     print(dataset3[i][3].shape)
+    #     break
+    # dataloader3 = SmartTrafficDataloader(dataset3,batch_size=32,shuffle=False)
+    # for data in dataloader3:
     #     print(data[0].shape)
     #     print(data[2].shape)
     #     print(data[3].shape)
-    #     break
+
     # map = pd.read_csv('data/jinan/edge_node_jinan.csv')
     # print(map['EdgeID','Origin','Destination'].values)
     # path = 'data/jinan/edge_traj_repeat_one_by_one/'
@@ -404,15 +407,15 @@ if __name__ == '__main__':
 #         print(special_mask.shape)
 #         print(adj_table.shape)
 #         break
-    dataset = SmartTrafficDataset(trajs = None,mode="task1",trajs_path='data/jinan/edge_traj_new/',need_repeat=True,max_len=203,T=200)
-    dataloader = SmartTrafficDataloader(dataset,batch_size=1,max_len=203,shuffle=False, num_workers=4,vocab_size=23313)
-    train_dataloader = dataloader.get_train_data()
-    test_dataloader = dataloader.get_test_data()
-    for data in train_dataloader:
-        print(data['traj'])
-        print(data['cond'])
-        print(data['traj_targ'])
-        print(data['reagent_mask'])
-        break
+    # dataset = SmartTrafficDataset(trajs = None,mode="task1",trajs_path='data/jinan/edge_traj_new/',need_repeat=True,max_len=203,T=200)
+    # dataloader = SmartTrafficDataloader(dataset,batch_size=1,max_len=203,shuffle=False, num_workers=4,vocab_size=23313)
+    # train_dataloader = dataloader.get_train_data()
+    # test_dataloader = dataloader.get_test_data()
+    # for data in train_dataloader:
+    #     print(data['traj'])
+    #     print(data['cond'])
+    #     print(data['traj_targ'])
+    #     print(data['reagent_mask'])
+    #     break
  
         

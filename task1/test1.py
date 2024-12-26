@@ -152,33 +152,35 @@ def train(cfg, dataloader):
             inputs = {key: value.to(device) for key, value in batch.items() if isinstance(value, torch.Tensor)}
         
             optimizer.zero_grad()
-            logits, _ = model(inputs)
-            mask = batch['reagent_mask'].to(device)
-            target = batch['traj_targ'].to(device)
-            logits = logits.squeeze(2)
-            target = target.squeeze(-1).squeeze(-1)
-            loss = criterion(logits.view(-1,logits.shape[-1]), target.view(-1))
-            mask = mask.squeeze(-1).float()
-            loss = loss.view(mask.shape)
-            loss = loss * mask
-            final_loss = loss.sum() / mask.sum()
-            final_loss.backward()
+            logits, loss = model(inputs)
+            
+            # mask = batch['reagent_mask'].to(device)
+            # target = batch['traj_targ'].to(device)
+            # logits = logits.squeeze(2)
+            # target = target.squeeze(-1).squeeze(-1)
+            # loss = criterion(logits.view(-1,logits.shape[-1]), target.view(-1))
+            # mask = mask.squeeze(-1).float()
+            # loss = loss.view(mask.shape)
+            # loss = loss * mask
+            # final_loss = loss.sum() / mask.sum()
+            # final_loss.backward()
 
 
-            # state_loss, ratio_loss = loss[0].mean(), loss[1].mean()
-            # sl_loss:torch.Tensor = (state_loss + ratio_loss*1 ) 
+            state_loss, ratio_loss = loss[0].mean(), loss[1].mean()
+            sl_loss:torch.Tensor = (state_loss + ratio_loss*1 ) 
             
             
             
-            # kl_loss = torch.tensor(0.0,device=device)
+            kl_loss = torch.tensor(0.0,device=device)
 
             
-            # total_loss:torch.Tensor = (sl_loss + 0.001 * kl_loss)/ 1 #grad_accumulation
+            total_loss:torch.Tensor = (sl_loss + 0.001 * kl_loss)/ 1 #grad_accumulation
             
-            # total_loss.backward()
+            total_loss.backward()
             optimizer.step()
             lr_scheduler.step()
-            running_loss += final_loss.item()
+            running_loss += total_loss.item()
+            #running_loss += final_loss.item()
 
         # 计算每个epoch的平均损失
         avg_loss = running_loss / len(dataloader)

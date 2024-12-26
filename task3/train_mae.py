@@ -89,11 +89,11 @@ def train(cfg,dataloader):
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9, weight_decay=1e-4)
     lr_sched = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, max_epochs, eta_min=0, last_epoch=-1 if not load_dir_id else load_dir_id)
    
-    dataloader.randomize_condition(observe_ratio)
+    #! randomly sample the observed nodes
+    # dataloader.randomize_condition(observe_ratio)
     start = 0
     for i in range (start+1, max_epochs+1):
         model.train()
-        # dataloader.randomize_condition(observe_ratio)
 
         epoch_time = time.time()
         load_data_time = 0
@@ -102,6 +102,9 @@ def train(cfg,dataloader):
         backward_time = 0
         a = time.time()
         for condition, time_step, special_mask, adj_table in tqdm(dataloader, desc=f'Train epoch {i:>6}/{max_epochs:<6}'):
+
+            #! randomly sample the observed nodes
+            dataloader.randomize_condi00tion(observe_ratio)
      
             loss1 = []
             load_data_time += time.time()-epoch_time
@@ -126,9 +129,10 @@ def train(cfg,dataloader):
             # condition = None
 
             if use_adj_table:
+
                 if isinstance(adj_table, torch.FloatTensor):
                     #print(shuffled_indices[0])
-                    adj_table = adj_table[:,shuffled_indices[0],:,:,:].to(device) # [B x V x 4 x 2]
+                    adj_table = adj_table[:,0,:,:,:].to(device) # [B x V x 4 x 2]
                     adj_table = [adj_table[...,0],adj_table[...,1]] # [B x V x 4], [B x V x 4]
                 elif isinstance(adj_table, torch.sparse.FloatTensor):
                     adj_table = adj_table.to_dense()[:,shuffled_indices[0],:,:,:] # [B x V x 4 x 2]
@@ -144,9 +148,14 @@ def train(cfg,dataloader):
 
             preprocess_data_time += time.time()-epoch_time
             epoch_time = time.time()
-       
+            # print(x[0])
+            # print(y[0])
+            # print(condition[0])
+            # print(special_mask[0])
+            # print(adj_table)
             logits, loss = model(x, condition, adj_table, y, None , None, special_mask_)
-    
+
+            # print(torch.argmax(logits[0], dim=-1),y[0])
             loss = torch.mean(loss)
             loss1.append(loss)
 
