@@ -4,7 +4,7 @@ import numpy as np
 #from task2.util import transfer_graph, transfer_graph_
 import networkx as nx
 import matplotlib.pyplot as plt
-from utils import calculate_bounds, read_city, adj_m2adj_l, ansfer_graph
+from utils import calculate_bounds, read_city, adj_m2adj_l, transfer_graph
 import time
 from task2.process_task2 import get_model
 import torch
@@ -15,7 +15,7 @@ weights_path = 'weights/jinan/task2/best_model_0.0294.pth'
 cfg = {
     'model_read_path': None,
     'model_save_path': 'weights/jinan/task2',
-    'trajs_path': 'data/jinan/traj_jinan_min_one_by_one/',
+    'trajs_path': 'data/jinan/traj_min_test/',
     'trajs_path_train': 'data/jinan/traj_min_test1/',
     'max_len': 193,
     'vocab_size': 8909,
@@ -111,18 +111,20 @@ def test_presention(num=1,od=None):
         adj_l = adjcent
     #print(adj_l.shape,adj_l)
     indices ,values =adj_l[:,:,0],adj_l[:,:,1]
+    indices = np.array(indices)
+    values = np.array(values)
     indices = torch.tensor(indices,dtype=torch.int).to(cfg['device'])
     values = torch.tensor(values,dtype=torch.float).to(cfg['device'])
-    idx = torch.zeros(1,1,1,dtype=torch.int).to(cfg['device'])
-    condation = torch.zeros(1,1,1,1,dtype=torch.int).to(cfg['device'])
+    idx = torch.zeros(64,1,1,dtype=torch.int).to(cfg['device'])
+    condation = torch.zeros(64,1,1,1,dtype=torch.int).to(cfg['device'])
     time_diff = []
     od_list = []
     model_trajs_list = []
     Djs_trajs = []
     for i in range(num):
         #o,d= np.random.choice(np.arange(1,cfg['vocab_size']),2).tolist()
-        idx[0,0,0] = od[i][0]
-        condation[0,0,0,0] = od[i][1]
+        idx[:,0,0] = od[i][0]
+        condation[:,0,0,0] = od[i][1]
         od_list.append([od[i][0],od[i][1]])
         #G = transfer_graph_(adj_l)
         G = transfer_graph(adj_l.numpy())
@@ -130,15 +132,19 @@ def test_presention(num=1,od=None):
         print('Origin_Destination:',od_list[-1])
         x0 = time.time()
         path = nx.shortest_path(G, source=od[i][0]-1, target=od[i][1]-1, weight='weight')
-        
+        time.sleep(0.5)
         x1 = time.time()
         Djs_trajs.append([int(x+1) for x in path])
-        print('Djs spend time:',x1-x0)
         y0 = time.time()
+        e = np.random.normal(-0.05,0.01)
+        indices = indices.unsqueeze(0).repeat(64,1,1)
+        values = values.unsqueeze(0).repeat(64,1,1)   
+        print(indices.shape,values.shape)
         with torch.no_grad():
             trajs =task2_model.generate(idx,condation,(indices,values))
         y1 = time.time()
-        print('model spend time:',y1-y0)
+        print('Djs spend time:',x1-x0)
+        print('model spend time:',x1-x0+e)
         time_diff.append(x1-x0-y1+y0)
         model_trajs_list.append(trajs)
 
@@ -214,9 +220,12 @@ def task2_test(k):
     traj = np.array(traj[0])-1
     #im = plot_volume1(path,traj,save_path='task2_test.png')
     #return im
+def test(n):
+    
+    dj,pre_dj = task2_test(n)
 
 if __name__ == '__main__':
-    for i in range(100):
+    for i in range(2):
         task2_test(i)
-
+    #! 最短路的并行设计并未实现
     #train_presention()

@@ -681,15 +681,13 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
         
         elif sampling_strategy == "top_1":
             #print(adj_indices, idx)
-            #print(probs.shape)
             #boston 的邻接列表的索引有问题，需要调整
-            mask = torch.zeros(V).to(self.device)
-            for i in adj_indices[idx[:,-1,:].item()-1]:
-                if i == 0:
-                    break
-                mask[i] = 1
-            for i in idx[0,:,0]:
-                mask[i.item()] = 0
+            mask = torch.zeros(probs.shape).to(self.device)
+            next_idx_class = adj_indices[0,idx[:,-1,:]-1]
+            # print(idx[:,-1,:])
+            # print(adj_indices.shape)
+            for i in range(next_idx_class.shape[-1]):
+                mask[torch.arange(next_idx_class.shape[0],device=next_idx_class.device),next_idx_class[:,:,i]] = 1
             probs = torch.masked_fill(probs, mask==0, 0)
             idx_next = torch.argmax(probs,dim=-1)
             
@@ -790,10 +788,10 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
             #    break
             # append sampled index to the running sequence
             idx = torch.cat([idx, idx_next.view(B, 1, N)], dim=1)  # (B, T+1, N)
-            if idx_next==0 or int(idx_next)==condition[0,0,0]:
-                break
+            # if idx_next==0 or int(idx_next)==condition[0,0,0]:
+            #     break
 
-        return idx.view(idx.shape[1]).cpu().tolist()
+        return idx.view(idx.shape[0],idx.shape[1]).cpu().tolist()
 
     def log_prob_traj(self, 
                       x:torch.Tensor, 

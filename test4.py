@@ -6,7 +6,7 @@ import pickle
 import random
 import matplotlib.pyplot as plt
 import cv2
-from train import train
+from train import train4
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 sys.path.append('..')
@@ -53,7 +53,7 @@ def train_presention(device='cuda:2',epochs=4):
     dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=1,shuffle=True, num_workers=4)
     agent = DQNAgent(device,memory_device, memory_len, 1, n_layer, n_embd, n_head,wait_quantization, cfg['dropout'])
-    train(agent, cfg, data_loader4, epochs = epochs, log_dir = cfg['log_dir'])
+    train4(agent, cfg, data_loader4, epochs = epochs, log_dir = cfg['log_dir'])
 
 
 def draw_frame(wait,light):
@@ -168,7 +168,7 @@ def test_presention(method=1):
     load_dir = './task4/log/best_model.pth'
     save_frame_path = './task4/video/frames'
     save_video_path = "./task4/video"
-    batch_size = 1
+    batch_size = 64
     device = 'cuda:2'
     memory_device = 'cuda:2'
     memory_len = 2000
@@ -185,11 +185,12 @@ def test_presention(method=1):
     
     # dataloader
     trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
+    trajs_edge = np.load('data/simulation/task4.npy')
     dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
 
-    agent = DQNAgent(device, memory_device, memory_len, 1, n_layer, n_embd, n_head, wait_quantization, 0)
-    agent.model.load_state_dict(torch.load(load_dir))
+    agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0)
+    # agent.model.load_state_dict(torch.load(load_dir))
     agent.model = agent.model.to(device)
 
     ids = filter()
@@ -197,7 +198,7 @@ def test_presention(method=1):
     cross_type = read_node_type('data/simulation/node_type_10*10.csv') # 1,...,100 V
     cross_type = [3 if i == 'T' else 4 for i in cross_type]
     cross_type = torch.tensor(cross_type, dtype=torch.int, device = device) # (V,)
-    print(cross_type[ids])
+    # print(cross_type[ids])
 
     if mask_ratio:
         mask_id = np.random.choice(len(cross_type), int(len(cross_type)*mask_ratio), replace=False)+1

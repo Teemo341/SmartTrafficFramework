@@ -100,13 +100,13 @@ class SmartTrafficDataset(Dataset):
             self.task4_num = task4_num
             self.task4_path = trajs_path
             self.trajs = trajs
-            if self.trajs is not None:
-                self.max_len = self.trajs.shape[1]
+            # if self.trajs is not None:
+            #     self.max_len = self.trajs.shape[1]
          
 
     def __len__(self):
         if self.mode == "task4":
-            return len(self.trajs)//10 if self.trajs else len(os.listdir(self.traj_path))
+            return len(self.trajs)//10 if self.trajs is not None else len(os.listdir(self.traj_path))
         return len(self.trajs) if self.trajs else len(os.listdir(self.traj_path))
     
     def __getitem__(self,idx):
@@ -114,7 +114,7 @@ class SmartTrafficDataset(Dataset):
         if self.mode == 'task4':
             # data:[T,V,7]
             if self.trajs is not None:
-                idx = np.arange(0,len(self.trajs))
+                idx = np.arange(0,len(self.trajs))#.astype(np.int)
                 choice  = np.random.choice(idx,size = self.task4_num)
                 results = np.sum(self.trajs[choice],axis=0)
                 return torch.tensor(results, dtype=torch.int)
@@ -184,7 +184,8 @@ class SmartTrafficDataset(Dataset):
             #time_step(not uesd) is set [0]
             #reagent_mask: (1, T, 1)
             #adj_l: (1, V , max_connection , 2)
-            time_step = np.load(self.time_step_path+str(idx+1)+'.npy')
+            # time_step = np.load(self.time_step_path+str(idx+1)+'.npy')
+            time_step=  np.array([0]) 
             traj_list = []
             traj_targ_list = []
             traj_mask_list = []
@@ -199,7 +200,7 @@ class SmartTrafficDataset(Dataset):
                 traj_targ_list.append(traj_[self.window_size:self.T+self.window_size])
                 reagent_mask_ = [ 1 if x!=0 else 0 for x in traj_]
                 traj_mask_list.append(reagent_mask_)
-                time_step_list.append(time_step[i])
+                time_step_list.append(time_step[0])
                 
 
             traj_ = torch.tensor(traj_list,dtype=torch.int64)

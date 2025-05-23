@@ -144,7 +144,7 @@ class DQNAgent:
         # next_state = (wait, cross_type, light)
         self.memory.append(((state[0].to(self.memory_device),state[1].to(self.memory_device),state[2].to(self.memory_device)), action.to(self.memory_device), reward.to(self.memory_device), (next_state[0].to(self.memory_device),next_state[1].to(self.memory_device),next_state[2].to(self.memory_device)), done))
 
-    def replay(self):
+    def replay(self, optimize = True):
         if len(self.memory) < self.batch_size:
             return torch.tensor(0)
         loss_list = []
@@ -164,8 +164,9 @@ class DQNAgent:
 
             self.optimizer.zero_grad()
             loss = self.criterion(target_f, self.model(state[0],state[1],state[2]))
-            loss.backward()
-            self.optimizer.step()
+            if optimize:
+                loss.backward()
+                self.optimizer.step()
             loss_list.append(loss.item())
 
         if self.epsilon > self.epsilon_min:

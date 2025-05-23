@@ -6,7 +6,7 @@ import sys
 import pickle
 import argparse
 import random
-from ..utils import generate_node_type
+#from ..utils import generate_node_type
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 sys.path.append('..')
@@ -15,6 +15,41 @@ sys.path.append('../data')
 from .DQN import DQNAgent
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader, read_node_type
 from process_data import read_traj
+
+def adj_m2adj_l(adj_matrix:np.ndarray,max_connection:int=10)->torch.Tensor:
+    #adj_matrix: 0_index
+    #jinan:max_connection=10
+    n = len(adj_matrix)
+    adj_list = torch.zeros([n,max_connection,2],dtype=torch.int)
+    for i in range(n):
+        adj_nodes = np.nonzero(adj_matrix[i])[0]
+ 
+        if len(adj_nodes) > max_connection:
+            print(len(adj_nodes))
+            raise ValueError('Error: Max connection is wrong')
+ 
+        for j in range(len(adj_nodes)):
+  
+            adj_list[i,j,0] = int(adj_nodes[j]+1)
+            adj_list[i,j,1] = adj_matrix[i][adj_nodes[j]]
+    
+    return adj_list
+
+def generate_node_type(adj_l):
+    node_type = []
+    if isinstance(adj_l,str):
+        adj_l = np.load(adj_l)
+    if len(adj_l.shape) == 2:
+        adj_l = adj_m2adj_l(adj_l)
+    for i in range(len(adj_l)-1):
+        e = sum([1 for y in adj_l[i] if y[0] != 0])
+        if e == 3:
+            node_type.append([i,'T'])
+        elif e == 4:
+            node_type.append([i,'C'])
+        # else:
+        #     node_type.append(['O'])
+    return node_type
 
 def train(agent:DQNAgent, cfg, dataloader, epochs = 10, log_dir = './log'):
 
@@ -235,7 +270,7 @@ if __name__ == '__main__':
     dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=args.batch_size,shuffle=True, num_workers=4)
 
-    agent = DQNAgent(args.device, args.memory_device, args.memory_len, 1, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout)
+    agent = DQNAgent(args.device, args.memory_device, args.memory_len, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout)
 
     train(agent, vars(args), data_loader4, epochs = args.epochs, log_dir = args.log_dir)
     print('Training finished!')

@@ -10,6 +10,8 @@ from utils import calculate_bounds, read_city, transfer_graph, adj_m2adj_l
 import pandas as pd
 import cv2
 import os
+from tqdm import tqdm
+import time
 
 weights_path = 'weights/jinan/task1/best_model_0.1457.pth'
 cfg = { 'T':60,
@@ -31,7 +33,33 @@ cfg = { 'T':60,
         }
 cfg['block_size'] = cfg['T']
 
-def plot_volume1(traj1, traj2, fig_size=20, save_path='task1.png'):
+
+def plot_map(fig_size=20, save_path='./task1/map.png'):
+    edges, pos = read_city('jinan', path='data')
+    weight = [edge[2] for edge in edges]
+    adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+    G = transfer_graph(adj_table)
+    for i in pos:
+        pos[i] = pos[i][:-1]
+    x_min, x_max, y_min, y_max = calculate_bounds(pos)
+    fig, ax = plt.subplots(1, 1, figsize=(fig_size, fig_size * (y_max - y_min) / (x_max - x_min)))
+    ax.set_facecolor('black')
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xticks(np.arange(x_min, x_max, 1))
+    ax.set_yticks(np.arange(y_min, y_max, 1))
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
+    ax.axvline(x=0, color='k', linestyle='--', linewidth=0.5)
+    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=0.3, edge_color='white', ax=ax, arrows=False)
+    # Display the figure
+    plt.tight_layout()
+    # plt.show()
+    if save_path is not None:
+        plt.savefig(save_path)
+    plt.close()
+
+def plot_volume1(traj1, traj2 = None, fig_size=20, save_path='task1.png', return_cv = False):
     # G networkx graph
     # pos position of the nodes, get from read_city('boston')[1]
     # volume_single: V
@@ -57,27 +85,102 @@ def plot_volume1(traj1, traj2, fig_size=20, save_path='task1.png'):
     nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=0.3, edge_color='white', ax=ax, arrows=False)
 
     start_1 = traj1[0]
-    start_2 = traj2[0]
     nx.draw_networkx_nodes(G, pos, nodelist=[start_1], node_size=fig_size/10, node_color='blue', ax=ax)
-    nx.draw_networkx_nodes(G, pos, nodelist=[start_2], node_size=fig_size/10, node_color='blue', ax=ax)
     end_1 = traj1[-1]
-    end_2 = traj2[-1]
     nx.draw_networkx_nodes(G, pos, nodelist=[end_1], node_size=fig_size/10, node_color='blue', ax=ax)
-    nx.draw_networkx_nodes(G, pos, nodelist=[end_2], node_size=fig_size/10, node_color='blue', ax=ax)
-    
     traj1 = [(traj1[i], traj1[i + 1]) for i in range(len(traj1) - 1)]
-    traj2 = [(traj2[i], traj2[i + 1]) for i in range(len(traj2) - 1)]
     nx.draw_networkx_edges(G, pos, edgelist=traj1, width=fig_size / 15, alpha=1.0, edge_color='green', ax=ax, arrows = False)
-    nx.draw_networkx_edges(G, pos, edgelist=traj2, width=fig_size / 15, alpha=0.3, edge_color='red', ax=ax, arrows = False)
     
+    if traj2 is not None:
+        start_2 = traj2[0]
+        nx.draw_networkx_nodes(G, pos, nodelist=[start_2], node_size=fig_size/10, node_color='blue', ax=ax)
+        end_2 = traj2[-1]
+        nx.draw_networkx_nodes(G, pos, nodelist=[end_2], node_size=fig_size/10, node_color='blue', ax=ax)
+        traj2 = [(traj2[i], traj2[i + 1]) for i in range(len(traj2) - 1)]
+        nx.draw_networkx_edges(G, pos, edgelist=traj2, width=fig_size / 15, alpha=0.3, edge_color='red', ax=ax, arrows = False)
     
-
     # Display the figure
     plt.tight_layout()
     # plt.show()
     if save_path is not None:
         plt.savefig(save_path)
-    plt.close()
+        plt.close()
+    if return_cv:
+        fig.canvas.draw()
+        img = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        plt.close()
+        return img
+
+
+def plot_video(traj, fig_size=20, save_video_path=None):
+    if save_video_path is None:
+        save_video_path = './task1/video/pred'
+    
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    
+    # 初始化 tqdm 进度条
+    progress_bar = tqdm(range(len(traj)-1), desc="Generating Video")
+    
+    # 初始化地图
+    edges, pos = read_city('jinan', path='data')
+    weight = [edge[2] for edge in edges]
+    adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+    G = transfer_graph(adj_table)
+    for i in pos:
+        pos[i] = pos[i][:-1]
+    
+    x_min, x_max, y_min, y_max = calculate_bounds(pos)
+    fig, ax = plt.subplots(1, 1, figsize=(fig_size, fig_size * (y_max - y_min) / (x_max - x_min)))
+    ax.set_facecolor('black')
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xticks(np.arange(x_min, x_max, 1))
+    ax.set_yticks(np.arange(y_min, y_max, 1))
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
+    ax.axvline(x=0, color='k', linestyle='--', linewidth=0.5)
+    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=0.3, edge_color='white', ax=ax, arrows=False)
+    start_1 = traj[0]
+    nx.draw_networkx_nodes(G, pos, nodelist=[start_1], node_size=fig_size/10, node_color='blue', ax=ax)
+    end_1 = traj[-1]
+    nx.draw_networkx_nodes(G, pos, nodelist=[end_1], node_size=fig_size/10, node_color='blue', ax=ax)
+    
+    for i in progress_bar:
+        # 1. 计算画图时间
+        start_plot = time.time()
+
+        # 画对应的路段
+        traj1 = [(traj[i], traj[i + 1])]
+        nx.draw_networkx_edges(G, pos, edgelist=traj1, width=fig_size / 15, alpha=1.0, edge_color='green', ax=ax, arrows = False)
+        plt.tight_layout()
+        fig.canvas.draw()
+        frame = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+        frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        plt.close()
+        plot_time = time.time() - start_plot
+        
+        # 2. 初始化 VideoWriter（如果是第一帧）
+        if i == 0:
+            frame_height, frame_width, _ = frame.shape
+            out = cv2.VideoWriter(f'{save_video_path}/video.mp4', fourcc, 2, (frame_width, frame_height))
+        
+        # 3. 计算保存时间
+        start_save = time.time()
+        out.write(frame)  # 注意原代码是 frame_bgr，这里假设 frame 已经是 BGR 格式
+        save_time = time.time() - start_save
+        
+        # 4. 更新 tqdm 的实时信息
+        progress_bar.set_postfix({
+            "plot_time (s)": f"{plot_time:.3f}",
+            "save_time (s)": f"{save_time:.3f}",
+            "total_time (s)": f"{plot_time + save_time:.3f}"
+        })
+    
+    out.release()
+    return f'{save_video_path}/video.mp4'
 
 def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
     
@@ -169,7 +272,9 @@ def djikstra(start, end):
     return path
         
 
-def test_presention1(k):
+def test_presention1(num, generate_type = 'pred', save_path = None):
+    if save_path is None:
+        save_path = f'./task1/video'
     map_path = 'data/jinan/edge_node_map_dict.pkl'
     with open(map_path,'rb') as f:
         map_dict = pickle.load(f)
@@ -185,75 +290,45 @@ def test_presention1(k):
     #o = map_dict[str(e1.item())][0]
     #d = map_dict[str(e_1.item())][1]
     # traj = test_presention((o-1,d-1),(e1,e_1))
+
+    # make od
     e1,e_1 = np.random.choice(np.arange(1,23313),2)
     o = map_dict[str(e1.item())][0]
     d = map_dict[str(e_1.item())][1]
-    traj = test_presention((o-1,d-1),(e1,e_1))
 
-    #print('traj',traj)
-    # print('real_traj',x['traj'].view(x['traj'].shape[0]).tolist())
-    # print(x['traj'].shape)
-    # print('x',x['traj'].view(x['traj'].shape[0]).tolist())
+    # generate traj
+    if generate_type == 'pred':
+        traj = test_presention((o-1,d-1),(e1,e_1))
+        traj = np.array(traj)
+        traj = traj[traj>0]
+        pred_traj_ = [map_dict[str(traj[i])] for i in range(len(traj))]
+        pred_traj = transfer_edge_to_node(pred_traj_)
+        pred_traj = np.array(pred_traj) # 1-indexing
+        print('pred_traj',pred_traj)
 
-    # transfer node into edge
-    # real_traj_ = x['traj'].view(x['traj'].shape[0]).tolist()
-    # real_traj_ = np.array(real_traj_)
-    # real_traj_ = real_traj_[real_traj_>0]
-    # real_traj_ = [map_dict[str(x)] for x in real_traj_]
-    # real_traj = transfer_edge_to_node(real_traj_)
-    # real_traj = np.array(real_traj) # 1-indexing
-    # print('real_traj',real_traj)
+        #video_dir= plot_video(pred_traj,fig_size=20, save_video_path=f'{save_path}/pred')
+        return video_dir
 
-    traj = np.array(traj)
-    traj = traj[traj>0]
-    pred_traj_ = [map_dict[str(traj[i])] for i in range(len(traj))]
-    pred_traj = transfer_edge_to_node(pred_traj_)
-    pred_traj = np.array(pred_traj) # 1-indexing
-    print('pred_traj',pred_traj)
+    elif generate_type == 'dj':
+        dj_traj = djikstra(o-1,d-1)
+        dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
+        print('Djs:',dj_traj)
 
-    dj_traj = djikstra(pred_traj[0],pred_traj[-1])
-    dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
-    print('Djs:',dj_traj)
-
-    # for i in range(len(pred_traj)):
-    #     plot_volume1(pred_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/pred/frames/frame_{i}.png')
-
-    # for i in range(len(dj_traj)):
-    #     plot_volume1(dj_traj[:i+1],real_traj,fig_size=20, save_path=f'./task1/video/dj/frames/frame_{i}.png')
-
-
-    # # Create a VideoCapture object
-    # save_frame_path0 = './task1/video/dj/frames'
-    # save_video_path0 = './task1/video/dj'
-    # save_frame_path1 = './task1/video/pred/frames'
-    # save_video_path1 = './task1/video/pred'
-    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # frame = cv2.imread(f'{save_frame_path0}/frame_{0}.png')
-    # frame_height, frame_width, _ = frame.shape
-    # out = cv2.VideoWriter(f'{save_video_path0}/video.mp4', fourcc, 2, (frame_width, frame_height))
-
-    # # Iterate over all the frames
-    # for i in range(len(os.listdir(save_frame_path0))):
-    #     frame = cv2.imread(f'{save_frame_path0}/frame_{i}.png')
-    #     frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    #     out.write(frame_bgr)
-    # frame = cv2.imread(f'{save_frame_path1}/frame_{0}.png')
-    # frame_height, frame_width, _ = frame.shape
-    # out = cv2.VideoWriter(f'{save_video_path1}/video.mp4', fourcc, 2, (frame_width, frame_height))
-
-    # # Iterate over all the frames
-    # for i in range(len(os.listdir(save_frame_path1))):
-    #     frame = cv2.imread(f'{save_frame_path1}/frame_{i}.png')
-    #     frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    #     out.write(frame_bgr)
-
-    # # Release the VideoCapture object
-    # out.release()
+        video_dir = plot_video(dj_traj,fig_size=20, save_video_path=f'{save_path}/dj')
+    
+    else:
+        raise ValueError('generate_type is not in [pred, dj]')
+    
+    return video_dir
     
 if __name__ == '__main__':
+    #! 轨迹预测的模型并行也未完成
+
+    # plot_map()
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--k', type=int, default=1)
     args = parser.parse_args()
     test_presention1(args.k)
-    #test_presention1(3)
+    #test_presention1(3)``
 

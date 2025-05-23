@@ -557,8 +557,9 @@ def generate_node_type(adj_l):
         # else:
         #     node_type.append(['O'])
     return node_type
+
 if __name__ == '__main__':
-    pass
+    #pass
     #save the traj in data/jinan/traj_repeat_one_by_one,name:1.npy,2.npy,...
     # trajs,time= jinan_read_traj()
     # trajs = jinan_trajs_repeat(trajs,time)
@@ -719,11 +720,11 @@ if __name__ == '__main__':
     # print(f'one by one saved successfully!')
     
     # city = 'boston'
-    # edges, pos = read_city(city, path='data/boston')
+    # edges, pos = read_city(city, path='data')
     # node_num = len(pos)
     # edge_num = len(edges)
     # print(node_num,edge_num)   
-    # data_dir = 'data/boston/traj_min_one_by_one'
+    # data_dir = 'data/boston/traj_boston_min_one_by_one'
     # save_dir = 'data/boston/traj_boston_min_one_by_one'
     # files = os.listdir(save_dir)
     # print(len(files))
@@ -742,19 +743,30 @@ if __name__ == '__main__':
     # print(node_num)
     # print(edge_num)
     # data_dir = 'data/shenzhen/traj_shenzhen_min_one_by_one'
+    # files = os.listdir(data_dir)
+    # print(len(files))
+    city = 'jinan'
+    pos ,edges = read_city(city)
+    node_num = len(pos)
+    edge_num = len(edges)
+    print(node_num)
+    print(edge_num)
+    data_dir = 'data/jinan/traj_jinan_min_one_by_one'
+    files = os.listdir(data_dir)
+    print(len(files))
     # os.makedirs(data_dir, exist_ok=True)
-    # print('Start generating data...')
-    # for t in tqdm(range(0, 400), desc=f'Generating data'):
-    #     all_encoded_trajectories, all_adj_list = generate_data(city = city, total_trajectories = 1000, max_length = 100, capacity_scale = 10, weight_quantization_scale = 20, max_connection = 8 )
-    #     if t == 0:
-    #         np.save(f'data/shenzhen/adj_table_list.npy',all_adj_list[0])
-    #     for i in range(1000):
-    #         path = data_dir+f'/{t*10000+i+1}.npy'
-    #         np.save(path,all_encoded_trajectories[i])
-    # print(f'one by one saved successfully!')
-    # path = 'data/shenzhen/traj_shenzhen_min_one_by_one/1.npy'
-    # data = np.load(path)
-    # print(data)
+    print('Start generating data...')
+    for t in tqdm(range(500, 1000), desc=f'Generating data'):
+        all_encoded_trajectories, all_adj_list = generate_data(city = city, total_trajectories = 1000, max_length = 100, capacity_scale = 10, weight_quantization_scale = 20, max_connection = 9 )
+        # if t == 0:
+        #     np.save(f'data/shenzhen/adj_table_list.npy',all_adj_list[0])
+        for i in range(1000):
+            path = data_dir+f'/{t*1000+i+1}.npy'
+            np.save(path,all_encoded_trajectories[i])
+    print(f'one by one saved successfully!')
+    path = 'data/shenzhen/traj_shenzhen_min_one_by_one/1.npy'
+    data = np.load(path)
+    print(data)
 
     #生成task4数据
     # pos,edges = read_city('jinan')

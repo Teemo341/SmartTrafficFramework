@@ -17,7 +17,7 @@ import sys
 import time
 
 
-weight_path = 'weights/jinan/task3/best_model1.pth'
+weight_path = 'weights/jinan/task3/best_model.pth'
 device = 'cuda:3'
 args_path = 'weights/jinan/task3/args.pkl'
 #load argparse from pkl
@@ -172,7 +172,7 @@ def test_presention(observe_ratio):
     model.to(device)
     model = model.eval()
     #weights = torch.load(weight_path)
-    model.load_state_dict(torch.load(weight_path))
+    #model.load_state_dict(torch.load(weight_path))
     # load data
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -195,10 +195,12 @@ def test_presention(observe_ratio):
             # return trajectory: [B x N x T], special_mask: [B x N x T], adj_table: [B x N x V x 4 x 2]
 
             # random choice a traj as input, the rest as condition
+            adj_table=adj_table.repeat(1,condition.size(1),1,1,1)
             shuffled_indices = torch.randperm(condition.size(1))
             condition = condition[:,shuffled_indices,:]
             special_mask = special_mask[:,shuffled_indices,:]
             adj_table = adj_table[:,shuffled_indices,:,:,:]
+            # adj_table = adj_table[:,0,:,:,:]
 
             # get y, filter trajecotry into condition and get x
             condition = condition.to(device)
@@ -419,6 +421,6 @@ def plot_presention():
     plot_volume(G, pos, volume, max_volume, fig_size,save_path='task3_predic_load.png')
 
 if __name__ == '__main__':
-    train_presention(0.5)
-    #test_presention(0.5)
+    #train_presention(0.5)
+    test_presention(0.5)
     #plot_presention()
