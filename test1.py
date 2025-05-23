@@ -156,8 +156,9 @@ def plot_video(traj, fig_size=20, save_video_path=None):
         nx.draw_networkx_edges(G, pos, edgelist=traj1, width=fig_size / 15, alpha=1.0, edge_color='green', ax=ax, arrows = False)
         plt.tight_layout()
         fig.canvas.draw()
-        frame = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-        frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        frame = np.frombuffer(fig.canvas.tostring_argb(), dtype=np.uint8)
+        frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (4,))
+        frame = frame[:,:,1:]
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         plt.close()
         plot_time = time.time() - start_plot
@@ -200,9 +201,9 @@ def test_presention(x=None,edge=None):
     node_edge_map_path ='data/jinan/node_edge_map_dict.pkl' 
     with open(node_edge_map_path,'rb') as f:
         map_dict = pickle.load(f)
-    # adjcent_path = 'data/jinan/adjcent.npy'
-    # adjcent = np.load(adjcent_path)
-    # adj_l = adj_m2adj_l(adjcent)
+    adjcent_path = 'data/jinan/adjcent.npy'
+    adjcent = np.load(adjcent_path)
+    adj_l = adj_m2adj_l(adjcent)
     # G = transfer_graph(adj_l)
     if x is None:
         o,d = np.random.choice(np.arange(1,8909),2)
@@ -215,8 +216,10 @@ def test_presention(x=None,edge=None):
     model.eval()
     if edge is None:
         raise ValueError('edge is None')
-    print(edge[0],edge[1])
-    traj = model.generate_traj(edge[0],edge[1])
+    # print(edge[0],edge[1])
+    adjcent = np.load('data/jinan/adjcent.npy')
+    traj = model.generate_traj(edge[0],edge[1],adj_l)
+    # print(traj)
 
     return traj
 
@@ -272,7 +275,7 @@ def djikstra(start, end):
     return path
         
 
-def test_presention1(num, generate_type = 'pred', save_path = None):
+def test_presention1(num=10, generate_type = 'pred', save_path = None):
     if save_path is None:
         save_path = f'./task1/video'
     map_path = 'data/jinan/edge_node_map_dict.pkl'
@@ -292,21 +295,35 @@ def test_presention1(num, generate_type = 'pred', save_path = None):
     # traj = test_presention((o-1,d-1),(e1,e_1))
 
     # make od
-    e1,e_1 = np.random.choice(np.arange(1,23313),2)
-    o = map_dict[str(e1.item())][0]
-    d = map_dict[str(e_1.item())][1]
+    all_numbers = np.random.choice(np.arange(1, 23313), size=num*2, replace=False)
+    
+    # 重组为10对（二维数组）
+    pairs = all_numbers.reshape(num, 2)
+    e1 = pairs[:,0:1]
+    e_1 = pairs[:,1:2]
+    o = np.zeros_like(e1)
+    d = np.zeros_like(e_1)
+    for i in range(num):
+        o[i,:] = map_dict[str(e1[i,:].item())][0]
+        d[i,:] = map_dict[str(e_1[i,:].item())][1]
 
     # generate traj
     if generate_type == 'pred':
         traj = test_presention((o-1,d-1),(e1,e_1))
-        traj = np.array(traj)
-        traj = traj[traj>0]
-        pred_traj_ = [map_dict[str(traj[i])] for i in range(len(traj))]
-        pred_traj = transfer_edge_to_node(pred_traj_)
-        pred_traj = np.array(pred_traj) # 1-indexing
+        print(traj.shape)
+        # traj = np.array(traj)
+        pred_traj = []
+        for i in range(traj.shape[0]):
+            traji = traj[i,:,:]
+            traji = traji[traji>0]
+        
+            pred_traj_ = [map_dict[str(traji[i])] for i in range(len(traji))]
+            pred_traji= transfer_edge_to_node(pred_traj_)
+            pred_traji = np.array(pred_traji) # 1-indexing
+            pred_traj.append(pred_traji)
         print('pred_traj',pred_traj)
 
-        #video_dir= plot_video(pred_traj,fig_size=20, save_video_path=f'{save_path}/pred')
+        video_dir= plot_video(pred_traj[0],fig_size=20, save_video_path=f'{save_path}/pred')
         return video_dir
 
     elif generate_type == 'dj':
@@ -327,7 +344,7 @@ if __name__ == '__main__':
     # plot_map()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--k', type=int, default=1)
+    parser.add_argument('--k', type=int, default=10)
     args = parser.parse_args()
     test_presention1(args.k)
     #test_presention1(3)``

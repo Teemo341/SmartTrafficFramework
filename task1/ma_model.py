@@ -1170,32 +1170,43 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         probs = probs_state #TODO: add ratio prob
         return idx_next,ratio_next, probs
     
-    def generate_traj(self, o,d):
+    def generate_traj(self, o,d, adjcent):
         
         B = len(o)
-        print(B)
+        
         x = {
             'traj': torch.zeros(B, self.block_size, 1, dtype=torch.int64).to(self.device),
             'cond': torch.zeros(B, self.block_size, 1,2, dtype=torch.int64).to(self.device),
             'reagent_mask': torch.ones(B,self.block_size,1 ,dtype=torch.int64).to(self.device),
             }
-        x['traj'][:,0,0] = o
-        x['cond'][:,:,:,0] = o
-        x['cond'][:,:,:,1] = d
+        for i in range(B):
+            x['traj'][i,0,0] = o[i,0]
+            x['cond'][i,:,:,0] = o[i,0]
+            x['cond'][i,:,:,1] = d[i,0]
+            x['reagent_mask'][i,:,:] = 1
+        # print(x['traj'])
         idx = o
         i = 0
+        # adjcent = np.load('data/jinan/adjcent.npy')
         while i<self.block_size-1: #all(idx>0) and i<self.block_size-1 and idx != d:
             logits, _ = self(x)
-            logits[:,i,:,idx]=0
-            idx = torch.topk(logits[:,i,0,:],1).indices
+            
+            if i<3:
+                logits[:,i,:,0] = -10000
+                
+            idx = torch.topk(logits[:,i,0,:],2).indices
+            idx = idx[np.arange(idx.shape[0]),np.random.choice([0,1],idx.shape[0])]
+        
             # if i>3 and all(idx==x['traj'][0,i-3:i,0]):
             #     idx = torch.topk(logits[0,i,0,:],5).indices
             #     idx = idx[torch.randint(1,5,(1,))]
-            x['traj'][:,i+1,:] = idx
+            x['traj'][:,i+1,0] = idx
+            x['traj'][x['traj'][:,i,0]==0,i+1,0]=0
             x['reagent_mask'][:,i+1,0] = 0
             i+=1
-
-        return x['traj'][:,:,0].detach().cpu().tolist()
+        
+        # print(x['traj'].tolist())
+        return x['traj'].detach().cpu().numpy()
 
     def generate4task3(self,num,save_path):
         import random
