@@ -45,26 +45,50 @@ def calculate_bounds(pos):
 def calculate_load(traj_probability, method = 'map'):
     # traj_probability: B, T, V
 
-    if method == 'map':
-        max_indices = np.argmax(traj_probability, axis=-1)
-        one_hot = np.zeros_like(traj_probability)
-        B, T, V = traj_probability.shape
-        one_hot[np.arange(B)[:, None], np.arange(T), max_indices] = 1
-        load = np.sum(one_hot, axis = 0) # T, V
-        load = load[:,1:] # remove the special token
-    elif method == 'single_prob':
-        max_indices = np.argmax(traj_probability, axis=-1)
-        one_hot = np.zeros_like(traj_probability)
-        B, T, V = traj_probability.shape
-        one_hot[np.arange(B)[:, None], np.arange(T), max_indices] = 1
-        filtered = traj_probability*one_hot
-        load = np.sum(filtered, axis = 0)
-        load = load[:,1:]
-    elif method == 'all_prob':
-        traj_probability = traj_probability[:,:,1:] # remove the special token
-        load = np.sum(traj_probability, axis = 0) # T, V-1
+    if type(traj_probability) == np.ndarray:
+        if method == 'map':
+            max_indices = np.argmax(traj_probability, axis=-1)
+            one_hot = np.zeros_like(traj_probability)
+            B, T, V = traj_probability.shape
+            one_hot[np.arange(B)[:, None], np.arange(T), max_indices] = 1
+            load = np.sum(one_hot, axis = 0) # T, V
+            load = load[:,1:] # remove the special token
+        elif method == 'single_prob':
+            max_indices = np.argmax(traj_probability, axis=-1)
+            one_hot = np.zeros_like(traj_probability)
+            B, T, V = traj_probability.shape
+            one_hot[np.arange(B)[:, None], np.arange(T), max_indices] = 1
+            filtered = traj_probability*one_hot
+            load = np.sum(filtered, axis = 0)
+            load = load[:,1:]
+        elif method == 'all_prob':
+            traj_probability = traj_probability[:,:,1:] # remove the special token
+            load = np.sum(traj_probability, axis = 0) # T, V-1
+        else:
+            raise ValueError(f"method should be 'map', 'single_prob' or 'all_prob', but got {method}")
+    elif type(traj_probability) == torch.Tensor:
+        if method == 'map':
+            max_indices = torch.argmax(traj_probability, dim=-1)
+            one_hot = torch.zeros_like(traj_probability)
+            B, T, V = traj_probability.shape
+            one_hot[torch.arange(B)[:, None], torch.arange(T), max_indices] = 1
+            load = torch.sum(one_hot, dim = 0)
+            load = load[:,1:]
+        elif method == 'single_prob':
+            max_indices = torch.argmax(traj_probability, dim=-1)
+            one_hot = torch.zeros_like(traj_probability)
+            B, T, V = traj_probability.shape
+            one_hot[torch.arange(B)[:, None], torch.arange(T), max_indices] = 1
+            filtered = traj_probability*one_hot
+            load = torch.sum(filtered, dim = 0)
+            load = load[:,1:]
+        elif method == 'all_prob':
+            traj_probability = traj_probability[:,:,1:]
+            load = torch.sum(traj_probability, dim = 0) # T, V-1
+        else:
+            raise ValueError(f"method should be 'map', 'single_prob' or 'all_prob', but got {method}")
     else:
-        raise ValueError(f"method should be 'map', 'single_prob' or 'all_prob', but got {method}")
+        raise ValueError(f"traj_probability should be np.ndarray or torch.Tensor, but got {type(traj_probability)}")
     return load
 
 def preprocess_traj(traj_dir):

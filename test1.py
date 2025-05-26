@@ -12,6 +12,7 @@ import cv2
 import os
 from tqdm import tqdm
 import time
+import random
 
 weights_path = 'weights/jinan/task1/best_model_0.1457.pth'
 cfg = { 'T':60,
@@ -38,6 +39,7 @@ def plot_map(fig_size=20, save_path='./task1/map.png'):
     edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+    adj_table = np.load('data/jinan/adj_l.npy')
     G = transfer_graph(adj_table)
     for i in pos:
         pos[i] = pos[i][:-1]
@@ -121,12 +123,15 @@ def plot_video(traj, fig_size=20, save_video_path=None):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     
     # 初始化 tqdm 进度条
-    progress_bar = tqdm(range(len(traj)-1), desc="Generating Video")
+    max_len = max([len(t) for t in traj])
+    progress_bar = tqdm(range(max_len), desc="Generating Video")
     
     # 初始化地图
     edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+    adj_table = np.array(adj_table)
+    np.save('data/jinan/adj_l.npy', adj_table)
     G = transfer_graph(adj_table)
     for i in pos:
         pos[i] = pos[i][:-1]
@@ -142,19 +147,24 @@ def plot_video(traj, fig_size=20, save_video_path=None):
     ax.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
     ax.axvline(x=0, color='k', linestyle='--', linewidth=0.5)
     nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=0.3, edge_color='white', ax=ax, arrows=False)
-    start_1 = traj[0]
-    nx.draw_networkx_nodes(G, pos, nodelist=[start_1], node_size=fig_size/10, node_color='blue', ax=ax)
-    end_1 = traj[-1]
-    nx.draw_networkx_nodes(G, pos, nodelist=[end_1], node_size=fig_size/10, node_color='blue', ax=ax)
+    for j in range(len(traj)):
+        start_1 = traj[j][0]
+        nx.draw_networkx_nodes(G, pos, nodelist=[start_1], node_size=fig_size/4, node_color='blue', ax=ax)
+        end_1 = traj[j][-1]
+        nx.draw_networkx_nodes(G, pos, nodelist=[end_1], node_size=fig_size/4, node_color='blue', ax=ax)
     
     for i in progress_bar:
         # 1. 计算画图时间
         start_plot = time.time()
 
         # 画对应的路段
-        traj1 = [(traj[i], traj[i + 1])]
-        nx.draw_networkx_edges(G, pos, edgelist=traj1, width=fig_size / 15, alpha=1.0, edge_color='green', ax=ax, arrows = False)
-        plt.tight_layout()
+        for j in range(len(traj)):
+            if i > len(traj[j])-2:
+                continue
+            traj1 = [(traj[j][i], traj[j][i + 1])]
+            nx.draw_networkx_edges(G, pos, edgelist=traj1, width=fig_size / 5, alpha=1.0, edge_color='red', ax=ax, arrows = False)
+            plt.tight_layout()
+        
         fig.canvas.draw()
         frame = np.frombuffer(fig.canvas.tostring_argb(), dtype=np.uint8)
         frame = frame.reshape(fig.canvas.get_width_height()[::-1] + (4,))
@@ -179,7 +189,7 @@ def plot_video(traj, fig_size=20, save_video_path=None):
             "save_time (s)": f"{save_time:.3f}",
             "total_time (s)": f"{plot_time + save_time:.3f}"
         })
-    
+
     out.release()
     return f'{save_video_path}/video.mp4'
 
@@ -266,11 +276,20 @@ def translate_roadtype_to_capacity(roadtype):
     return dic[roadtype]
 
 
-def djikstra(start, end):
+def get_valid_start_end_with_check(G):
+        nodes = list(G.nodes())
+        while True:
+            start, end = random.sample(nodes, 2)
+            if nx.has_path(G, start, end):
+                return start, end
+            
+def djikstra(start=None, end=None):
     edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
     G = transfer_graph(adj_table)
+    if start is None or end is None:
+        start, end = get_valid_start_end_with_check(G)
     path = nx.dijkstra_path(G, start, end)
     return path
         
@@ -311,6 +330,7 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
     if generate_type == 'pred':
         traj = test_presention((o-1,d-1),(e1,e_1))
         print(traj.shape)
+        print(traj)
         # traj = np.array(traj)
         pred_traj = []
         for i in range(traj.shape[0]):
@@ -322,16 +342,20 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
             pred_traji = np.array(pred_traji) # 1-indexing
             pred_traj.append(pred_traji)
         print('pred_traj',pred_traj)
-
-        video_dir= plot_video(pred_traj[0],fig_size=20, save_video_path=f'{save_path}/pred')
+        video_dir = plot_video(pred_traj ,fig_size=20, save_video_path=f'{save_path}/pred')
+        
         return video_dir
 
     elif generate_type == 'dj':
-        dj_traj = djikstra(o-1,d-1)
-        dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
-        print('Djs:',dj_traj)
-
-        video_dir = plot_video(dj_traj,fig_size=20, save_video_path=f'{save_path}/dj')
+        dj = []
+        
+        for i in range(num):
+            dj_traj = djikstra()
+            dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
+            dj.append(dj_traj)
+        
+        print('Djs:',dj)
+        video_dir = plot_video(dj,fig_size=20, save_video_path=f'{save_path}/dj')
     
     else:
         raise ValueError('generate_type is not in [pred, dj]')
@@ -344,8 +368,9 @@ if __name__ == '__main__':
     # plot_map()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--k', type=int, default=10)
+    parser.add_argument('--k', type=int, default=1)
     args = parser.parse_args()
-    test_presention1(args.k)
+    video_path = test_presention1(args.k,'pred')
+ 
     #test_presention1(3)``
 

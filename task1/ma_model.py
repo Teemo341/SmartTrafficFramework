@@ -126,17 +126,18 @@ class NormalizedEmbedding(nn.Module):
         x = self.embedding(x)
         return x/torch.norm(x,dim=-1,keepdim=True)
 
-def _generate_sliding_window_mask(seq_len:int,win:int=5)->torch.Tensor:
-    """
-    Create a sliding window attention mask.
+def _generate_sliding_window_mask(seq_len:int,win:int=5) -> torch.Tensor:
+
+    # """
+    # Create a sliding window attention mask.
     
-    Parameters:
-    seq_len (int): Length of the sequence.
-    window_size (int): Size of the sliding window.
+    # Parameters:
+    # seq_len (int): Length of the sequence.
+    # window_size (int): Size of the sliding window.
     
-    Returns:
-    torch.Tensor: Attention mask of shape (seq_len, seq_len).
-    """
+    # Returns:
+    # torch.Tensor: Attention mask of shape (seq_len, seq_len).
+    # """
     mask = torch.ones(seq_len, seq_len, dtype=torch.bool)
     
     for i in range(seq_len):
@@ -1171,6 +1172,7 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         return idx_next,ratio_next, probs
     
     def generate_traj(self, o,d, adjcent):
+        edge_adj_l = np.load('data/jinan/edge_adj_l.npy')
         
         B = len(o)
         
@@ -1190,11 +1192,37 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         # adjcent = np.load('data/jinan/adjcent.npy')
         while i<self.block_size-1: #all(idx>0) and i<self.block_size-1 and idx != d:
             logits, _ = self(x)
-            
-            if i<3:
-                logits[:,i,:,0] = -10000
-                
-            idx = torch.topk(logits[:,i,0,:],2).indices
+            logits = logits[:,i,0,:]
+            if i<10:
+                logits[:,0] = -9000
+            adj = edge_adj_l[x['traj'][:,i,0].cpu().numpy()]
+            index = []
+            for j in range(adj.shape[0]):
+                if i >= 10:
+                    index.append((j,0))
+                for k in range(adj.shape[1]):
+                    if adj[j,k] == 0:
+                        break
+                    index.append((j,adj[j,k]))
+            # print(index)
+            rows = [row for row, col in index]
+            cols = [col for row, col in index]
+
+            # 转换为张量
+            rows_tensor = torch.tensor(rows)
+            cols_tensor = torch.tensor(cols)
+            mask = torch.zeros_like(logits)
+            # print(mask.shape)
+            # print(rows_tensor.shape)
+            # print(cols_tensor.shape)
+            # print(rows_tensor)
+            # print(cols_tensor)
+            if rows_tensor.shape[0] != 0 and cols_tensor.shape[0] != 0:
+                mask[rows_tensor, cols_tensor] = 1
+
+            logits[mask==0] = -10000 
+            # logits[:,idx] = -10000   
+            idx = torch.topk(logits,2).indices
             idx = idx[np.arange(idx.shape[0]),np.random.choice([0,1],idx.shape[0])]
         
             # if i>3 and all(idx==x['traj'][0,i-3:i,0]):

@@ -4,10 +4,12 @@ import numpy as np
 #from task2.util import transfer_graph, transfer_graph_
 import networkx as nx
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from utils import calculate_bounds, read_city, adj_m2adj_l, transfer_graph
 import time
 from task2.process_task2 import get_model
 import torch
+import os
 
 weights_path = 'weights/jinan/task2/best_model_0.0294.pth'
 #python train.py --device cuda:3 --T 10 --max_len 20 --task_type 1 --vocab_size 8909 --batch_size 1024 --epochs 40 --learning_rate 0.001 --n_embd 32 --n_hidden 16 --n_layer 8 --dropout 0.1  --model_save_path weights/jinan/task2/ --trajs_path data/jinan/traj_jinan_min_one_by_one/
@@ -26,7 +28,7 @@ cfg = {
     'dropout': 0.1,
     'window_size': 1,
     'T': 192,
-    'batch_size': 64,
+    'batch_size': 600,
     'learning_rate': 0.001,
     'epochs': 3,
     'device': 'cuda:2',
@@ -204,28 +206,157 @@ def plot_volume1(min_path, traj, fig_size=20, save_path='task2_test.png'):
         plt.savefig(save_path)
     return fig
 
-def task2_test(k):
-    #train_presention()
-    i = 0
-    dataset2 = SmartTrafficDataset(None,mode="task2",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],adjcent_path=cfg['adjcent'])
-    for traj_ ,valid_length,od,traj_targ,indices, values,_ in dataset2:
-        i+=1
-        if i<k:
-            continue
-        #print(indices,values)
-        # print('traj',traj_)
-        traj,path = test_presention(1,[[od[0,0,1].item(),od[0,0,0].item()]])
-        break
-    path = np.array(path[0])-1
-    traj = np.array(traj[0])-1
-    #im = plot_volume1(path,traj,save_path='task2_test.png')
-    #return im
-def test(n):
+def plot_volume2(traj_list, fig_size=20, save_path='task2_test.png'):
+    # G networkx graph
+    # pos position of the nodes, get from read_city('boston')[1]
+    # volume_single: V
+    # min_path: list of edges to be shown in blue
+    # traj: list of nodes representing a path, shown as points
+
+    edges, pos = read_city('jinan',path='data')
+    weight = [edge[2] for edge in edges]
+    adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+    G = transfer_graph(adj_table)
+    for i in pos:
+        pos[i] = pos[i][:-1]
     
-    dj,pre_dj = task2_test(n)
+    x_min, x_max, y_min, y_max = calculate_bounds(pos)
+    fig, ax = plt.subplots(1, 1, figsize=(fig_size, fig_size * (y_max - y_min) / (x_max - x_min)))
+    ax.set_facecolor('black')
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_xticks(np.arange(x_min, x_max, 1))
+    ax.set_yticks(np.arange(y_min, y_max, 1))
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
+    ax.axvline(x=0, color='k', linestyle='--', linewidth=0.5)
+    edge_colors = np.array([0 for u, v in G.edges()])
+    edge_colors = plt.cm.coolwarm(1 - edge_colors)
+    # edge_colors = plt.cm.RdYlBu(1 - edge_colors)
+    # Plot min_path as blue edges
+    nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=1, edge_color=edge_colors, ax=ax, arrows=False)
+    nx.draw_networkx_edges(G, pos, width=fig_size / 15, alpha=1, edge_color='white', ax=ax, arrows=False)
+
+    colors = cm.get_cmap('viridis', len(traj_list))  # 可以换成其它 colormap
+    for idx, traj in enumerate(traj_list):
+        traj = traj[traj != 0]  # 去掉0
+        traj = traj -1
+        traj_path = [(traj[i], traj[i + 1]) for i in range(len(traj) - 1)]
+        color = colors(idx)
+        nx.draw_networkx_edges(G, pos, edgelist=traj_path, width=fig_size / 5, alpha=0.5, edge_color=[color], ax=ax, arrows=False)
+        nx.draw_networkx_nodes(G, pos, nodelist=[traj[0]], node_size=fig_size / 4, node_color='green', ax=ax)
+        nx.draw_networkx_nodes(G, pos, nodelist=[traj[-1]], node_size=fig_size / 4, node_color='red', node_shape='s', ax=ax)
+    
+    # Display the figure
+    plt.tight_layout()
+    plt.show()
+    if save_path is not None:
+        plt.savefig(save_path)
+    plt.close()
+
+def task2_test(num, generate_type = 'pred', save_path = f'./UI_element/task3'):
+
+    batch_num = num//cfg['batch_size']
+    last_batch = num % cfg['batch_size']
+    traj_list = []
+    time_list = []
+
+    if generate_type == 'pred':
+        dataset2 = SmartTrafficDataset(None,mode="task2",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len'],adjcent_path=cfg['adjcent'])
+        _, _, _, _, adj_indices, adj_values,_ = dataset2[0]
+        adj_indices = adj_indices.unsqueeze(0).repeat(cfg['batch_size'],1,1)
+        adj_values = adj_values.unsqueeze(0).repeat(cfg['batch_size'],1,1)
+        cfg['model_read_path'] = weights_path
+        task2_model = get_model(cfg)
+        task2_model.load_state_dict(torch.load(weights_path))
+        task2_model.eval()
+        task2_model.to(cfg['device'])
+        for i in range(batch_num):
+            od_condition = torch.randint(1, cfg['vocab_size'], size=(cfg['batch_size'], 1, 1, 2))
+            idx = od_condition[:,:,:,0]
+            condition = od_condition[:,:1,:,1].unsqueeze(-1)
+            idx = idx.to(cfg['device'])
+            condition = condition.to(cfg['device'])
+            adj_indices = adj_indices.to(cfg['device'])
+            adj_values = adj_values.to(cfg['device'])
+            with torch.no_grad():
+                start_time = time.time()
+                trajs = task2_model.generate(idx=idx, condition=condition, adj=(adj_indices, adj_values))
+                end_time = time.time()
+            # trajs = trajs.cpu().numpy()
+            traj_list.append(trajs)
+            time_list.append(end_time - start_time)
+        if last_batch != 0:
+            od_condition = torch.randint(1, cfg['vocab_size'], size=(last_batch, 1, 1, 2))
+            idx = od_condition[:,:1,:,0]
+            condition = od_condition[:,:1,:,1].unsqueeze(-1)
+            idx = idx.to(cfg['device'])
+            condition = condition.to(cfg['device'])
+            adj_indices = adj_indices.to(cfg['device'])[:last_batch]
+            adj_values = adj_values.to(cfg['device'])[:last_batch]
+            with torch.no_grad():
+                start_time = time.time()
+                trajs = task2_model.generate(idx=idx, condition=condition, adj=(adj_indices, adj_values))
+                end_time = time.time()
+            # trajs = trajs.cpu().numpy()
+            traj_list.append(trajs)
+            time_list.append(end_time - start_time)
+        traj_list = np.concatenate(traj_list, axis=0)
+
+    elif generate_type == 'dj':
+        adjcent_path = cfg['adjcent']
+        adjcent = np.load(adjcent_path)
+        if adjcent.shape[0] == adjcent.shape[1]:
+            adj_l = adj_m2adj_l(adjcent)
+        else:
+            adj_l = adjcent
+        G = transfer_graph(adj_l.numpy())
+        for i in range(batch_num):
+            for j in range(cfg['batch_size']):
+                o = np.random.randint(1, cfg['vocab_size'])
+                d = np.random.randint(1, cfg['vocab_size'])
+                flag = False
+                while not flag:
+                    try:
+                        start_time = time.time()
+                        path = nx.shortest_path(G, source=o-1, target=d-1, weight='weight')
+                        end_time = time.time()
+                        traj_list.append(np.array(path)+1) # +1是因为数据集是从1开始的
+                        time_list.append(end_time - start_time)
+                        flag = True
+                    except nx.NetworkXNoPath:
+                        o = np.random.randint(1, cfg['vocab_size'])
+                        d = np.random.randint(1, cfg['vocab_size'])
+        if last_batch != 0:
+            for j in range(last_batch):
+                o = np.random.randint(1, cfg['vocab_size'])
+                d = np.random.randint(1, cfg['vocab_size'])
+                flag = False
+                while not flag:
+                    try:
+                        start_time = time.time()
+                        path = nx.shortest_path(G, source=o-1, target=d-1, weight='weight')
+                        end_time = time.time()
+                        traj_list.append(np.array(path)+1) # +1是因为数据集是从1开始的
+                        time_list.append(end_time - start_time)
+                        flag = True
+                    except nx.NetworkXNoPath:
+                        o = np.random.randint(1, cfg['vocab_size'])
+                        d = np.random.randint(1, cfg['vocab_size'])
+
+    else:
+        raise ValueError(f"Invalid type selected: {generate_type}")
+    
+    # 画图
+    save_path = f'{save_path}/{generate_type}/image.png'
+    if not os.path.exists(os.path.dirname(save_path)):
+        os.makedirs(os.path.dirname(save_path))
+    plot_volume2(traj_list, fig_size=20, save_path=save_path)
+
+    return save_path, np.sum(time_list)
+        
 
 if __name__ == '__main__':
-    for i in range(2):
-        task2_test(i)
+    task2_test(600, 'pred')
     #! 最短路的并行设计并未实现
     #train_presention()

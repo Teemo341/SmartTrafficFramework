@@ -161,19 +161,16 @@ def filter():
     ids = [33,32,23,34,43]
     return ids
 
-def test_presention(method=1):
-    method = method
+def test_presention(num, method, save_path = './UI_element/task4'):
     iteration = 1
     seed = 0
     load_dir = './task4/log/best_model.pth'
-    save_frame_path = './task4/video/frames'
-    save_video_path = "./task4/video"
     batch_size = 64
     device = 'cuda:2'
     memory_device = 'cuda:2'
     memory_len = 2000
-    n_layer = 6
-    n_embd = 64
+    n_layer = 4
+    n_embd = 16
     n_head = 4
     wait_quantization = 15
     mask_ratio = 0.0
@@ -185,12 +182,13 @@ def test_presention(method=1):
     
     # dataloader
     trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
-    trajs_edge = np.load('data/simulation/task4.npy')
-    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
+    trajs_edge = np.load('data/simulation/new_task4_data_add.npy')
+    # print(trajs_edge.shape)
+    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4",task4_num=num)
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
 
-    agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0)
-    # agent.model.load_state_dict(torch.load(load_dir))
+    agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0.1)
+    agent.model.load_state_dict(torch.load(load_dir))
     agent.model = agent.model.to(device)
 
     ids = filter()
@@ -223,16 +221,29 @@ def test_presention(method=1):
             light = 0
             light_list = []
 
+            best_run_list = []
+            action_run_list = []
             for t in range(T):
                 if t == 0:
                     light = agent.best_light(full_wait[:,t,:,:]) # (B, V, 7)
-                    print(full_wait[0,t,:,:])
+                    # print(full_wait[0,t,:,:])
                     # print(light[0,:,:])
                     # print(full_wait[0,t,ids,:])
                     # print(light[0,ids,:])
+                    # print(light.shape)
+                    # print(light)
+                    # break
+                    # print(torch.sum(full_wait[:,t,:,:] * light))
+                    # print(torch.sum(full_wait[:,t,:,:][full_wait[:,t,:,:]>0]))
+                    best_run = torch.sum(full_wait[:,t,:,:] * light) / torch.sum(full_wait[:,t,:,:][full_wait[:,t,:,:]>0]) 
+                    best_run_list.append(best_run.item())
+                    # print(best_run)
+                    # break
+                    
                     light = torch.argmax(light, dim = -1) # (B, V)
                     # print(light[0,ids])
                     light_list.append(light[0,ids]) # (5)
+                    
                 else:
                     if method == 0:
                         action = torch.ones((B, V), dtype=torch.int, device=device)
@@ -243,19 +254,42 @@ def test_presention(method=1):
                         raise ValueError(f'{method} method not supported')
                     # next light
                     light = agent.turn_light(cross_type, light, action) # (B, V)
+                    print(light.shape)
+                    print(light)
+                    print(torch.max(light))
+                    print(full_wait[:,t,:,:].shape)
+                    print(torch.sum(full_wait[:,t,:,:] * light))
+                    print(torch.sum(full_wait[:,t,:,:][full_wait[:,t,:,:]>0]))
+                    action_run = torch.sum(full_wait[:,t,:,:] * light) / torch.sum(full_wait[:,t,:,:][full_wait[:,t,:,:]>0])
+                    print(action_run)
+                    
+                    break
+                    action_run_list.append(action_run.item())
                     light_list.append(light[0,ids]) # (5)
 
             light_list = torch.stack(light_list, dim = 0) # (T, 5)
             wait_list = wait[0, :, ids, :] # (T, 5, 7)
-            light_list = np.array(light_list.detach().cpu())
-            wait_list = np.array(wait_list.detach().cpu())
-            draw_video(wait_list, light_list, save_frame_path, save_video_path)
+            light_list = light_list.detach().cpu().numpy()
+            wait_list = wait_list.detach().cpu().numpy()
+            if method == 0:
+                video_path = f'{save_path}/traditional/video/video.mp4'
+                wait_time = wait_list/(np.max(wait_list)+1e-6)
+                wait_time = np.average(wait_time)
+                draw_video(wait_list, light_list, f'{save_path}/traditional/frames', f'{save_path}/traditional/video')
+            elif method == 1:
+                wait_time = wait_list/(np.max(wait_list)+1e-6)
+                wait_time = np.average(wait_time)
+                video_path = f'{save_path}/pred/video/video.mp4'
+                draw_video(wait_list, light_list, f'{save_path}/pred/frames', f'{save_path}/pred/video')
             break
 
-    print('Finish') 
+    print('Finish')
+    return  video_path, wait_time
 
 
 
 if __name__ == '__main__':
 
-    test_presention(method=1)
+    video_path,wait_time = test_presention(num=1000,method=1,save_path = './UI_element/task4')
+    print(video_path)
+    print(wait_time)

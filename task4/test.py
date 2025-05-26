@@ -149,8 +149,8 @@ if __name__ == '__main__':
     device = 'cuda:2'
     memory_device = 'cuda:2'
     memory_len = 2000
-    n_layer = 6
-    n_embd = 64
+    n_layer = 4
+    n_embd = 16
     n_head = 4
     wait_quantization = 15
     mask_ratio = 0.0
@@ -165,7 +165,7 @@ if __name__ == '__main__':
     dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
 
-    agent = DQNAgent(device, memory_device, memory_len, 1, n_layer, n_embd, n_head, wait_quantization, 0)
+    agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0)
     agent.model.load_state_dict(torch.load(load_dir))
     agent.model = agent.model.to(device)
 

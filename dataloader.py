@@ -203,10 +203,10 @@ class SmartTrafficDataset(Dataset):
                 time_step_list.append(time_step[0])
                 
 
-            traj_ = torch.tensor(traj_list,dtype=torch.int64)
-            traj_targ = torch.tensor(traj_targ_list,dtype=torch.int64)
-            reagent_mask = torch.tensor(traj_mask_list,dtype=torch.int64)
-            time_step = torch.tensor(time_step_list,dtype=torch.int64)
+            traj_ = torch.tensor(np.array(traj_list),dtype=torch.int64)
+            traj_targ = torch.tensor(np.array(traj_targ_list),dtype=torch.int64)
+            reagent_mask = torch.tensor(np.array(traj_mask_list),dtype=torch.int64)
+            time_step = torch.tensor(np.array(time_step_list),dtype=torch.int64)
             return traj_, time_step, reagent_mask , self.adj_l[None,:,:,:]
 
     
