@@ -106,7 +106,12 @@ class SmartTrafficDataset(Dataset):
 
     def __len__(self):
         if self.mode == "task4":
-            return len(self.trajs)//10 if self.trajs is not None else len(os.listdir(self.traj_path))
+            # return 4*256*100
+            if self.trajs is not None and isinstance(self.trajs,str):
+                return len(os.listdir(self.trajs))
+            else:
+                return len(self.trajs) if self.trajs is not None else len(os.listdir(self.task4_path))
+            # return len(self.trajs)//10 if self.trajs is not None else len(os.listdir(self.traj_path))
         return len(self.trajs) if self.trajs else len(os.listdir(self.traj_path))
     
     def __getitem__(self,idx):
@@ -114,10 +119,24 @@ class SmartTrafficDataset(Dataset):
         if self.mode == 'task4':
             # data:[T,V,7]
             if self.trajs is not None:
-                idx = np.arange(0,len(self.trajs))#.astype(np.int)
-                choice  = np.random.choice(idx,size = self.task4_num)
-                results = np.sum(self.trajs[choice],axis=0)
-                return torch.tensor(results, dtype=torch.int)
+                if isinstance(self.trajs,str):
+                    # print(self.trajs)
+                    path = os.listdir(self.trajs)
+                    choice = np.random.choice(len(path),size = self.task4_num)
+                    choice_path = [os.path.join(self.trajs,path[i]) for i in choice]
+                    for i in range(len(choice_path)):
+                        trajs = np.load(choice_path[i])
+                        if i == 0:
+                            results = trajs
+                        else:
+                            results += trajs
+                    results = torch.tensor(results, dtype=torch.int)
+                    return results 
+                else:
+                    idx = np.arange(0,len(self.trajs))#.astype(np.int)
+                    choice  = np.random.choice(idx,size = self.task4_num)
+                    results = np.sum(self.trajs[choice],axis=0)
+                    return torch.tensor(results, dtype=torch.int)
             if self.trajs is None:
                 trajs = np.load(self.traj_path+str(idx+1)+'.npy')
                 return torch.tensor(trajs, dtype=torch.int)        

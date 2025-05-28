@@ -75,7 +75,7 @@ def signal_control(num, generate_type):
     video_path, orical, pred = fun_4(num, generate_type, save_path = f'./UI_element/task4')
 
     video_path = refine_video(video_path)
-    return video_path, orical, pred
+    return video_path, pred
 
 
 def show_map(city):
@@ -194,9 +194,9 @@ if __name__ == "__main__":
             with gr.Column(scale=3) as right_panel:
                 with gr.Group(visible=False) as task4_panel_right:
                     task4_video = gr.Video(label="相邻道路状态")
-                    task4_orical = gr.Textbox(label="理论通行率")
-                    task4_pass = gr.Textbox(label="实际通行率")
-                    task4_btn.click(fn=signal_control, inputs=[task4_num, task4_type], outputs=[task4_video, task4_orical, task4_pass])
+                    # task4_orical = gr.Textbox(label="理论通行率")
+                    task4_pass = gr.Textbox(label="通行效率：通过车辆/等待车辆")
+                    task4_btn.click(fn=signal_control, inputs=[task4_num, task4_type], outputs=[task4_video, task4_pass])
             
             
 
@@ -220,4 +220,4 @@ if __name__ == "__main__":
         ])
 
     # 启动
-    demo.launch()
+    demo.launch(server_port=8388)

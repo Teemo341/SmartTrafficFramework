@@ -67,7 +67,8 @@ def draw_frame(wait,light):
 
     wait = wait[:,:4] # remove the triangle light
     wait = wait / (np.max(wait)+1e-6)
-    wait_colors = plt.cm.RdYlBu_r(wait)
+    print(wait.max(), wait.min())
+    wait_colors = plt.cm.RdYlBu(1 - wait)
 
     def draw_cross(x,y, wait_,light_):
         width1 = 0.05
@@ -137,12 +138,9 @@ def draw_video(wait,light, save_video_path = "./task4/video"):
         plt.axis('off')
         plt.gca().set_position([0, 0, 1, 1])
         plt.draw()
-        canvas = plt.gcf().canvas
-        canvas.draw()
-        width, height = canvas.get_width_height()
-        frame = np.frombuffer(canvas.tostring_argb(), dtype=np.uint8).reshape((height, width, 4))
-        frame = frame[:, :, [1, 2, 3, 0]] # Convert ARGB to RGBA
-        frame = cv2.cvtColor(frame[:, :, :3], cv2.COLOR_RGB2BGR) # Drop alpha channel (optional) and convert to BGR for OpenCV
+        frame = np.frombuffer(plt.gcf().canvas.tostring_argb(), dtype=np.uint8)
+        frame = frame.reshape(plt.gcf().canvas.get_width_height()[::-1] + (4,))
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         plt.close()
         
         if t == 0:
@@ -165,48 +163,30 @@ def filter():
     ids = [33,32,23,34,43]
     return ids
 
-def weight_quantization(wait, wait_quantization):
-    """
-    Quantize the wait time to the nearest multiple of wait_quantization.
-    """
-    wait_max = wait.max()
-    if wait_max > 0:
-        wait = wait / wait_max * wait_quantization
-    wait[wait < 0] = -1  # Set negative values to -1 (special token)
-    wait = torch.round(wait).int()  # Round to the nearest integer
-    return wait
-
-def pass_rate(wait, light):
-    """wait: (B, V, 7), light: (B, V)"""
-
-    wait[wait < 0] = 0  # Set negative values to 0 (special token)
-    no_zero_BV_mask = (wait > 0).any(dim=-1)  # (B, V)
-    if no_zero_BV_mask.sum() == 0:
-        return None
-    light_7 = torch.nn.functional.one_hot(light, num_classes=7).float()  # (B, V, 7)
-    val = wait * light_7  # (B, V, 7)
-    pass_rate = val.sum(dim=-1) / (wait.sum(dim=-1)+1e-32)  # (B, V)
-    pass_rate = torch.sum(pass_rate)/ (no_zero_BV_mask.sum())  # average pass rate over no zero crossings
-    return pass_rate
-
 def test_presention(num, method, save_path = './UI_element/task4'):
-    iteration = 0
+    iteration = 1
     seed = 0
     load_dir = './task4/log/best_model.pth'
-    batch_size = 128
+    batch_size = 64
     device = 'cuda:2'
     memory_device = 'cuda:2'
     memory_len = 2000
-    n_layer = 8
-    n_embd = 128
+    n_layer = 4
+    n_embd = 16
     n_head = 4
-    wait_quantization = 20
+    wait_quantization = 15
     mask_ratio = 0.0
-    task_4_num = np.ceil(num/1000).astype(int) # 1000 is the number of samples in one task4 dataset
+
+
+    random.seed(seed)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
     
     # dataloader
-    trajs_edge = './data/simulation/new_task4_data_one_by_one'
-    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4",task4_num=task_4_num)
+    trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
+    trajs_edge = np.load('data/simulation/task4_data.npy')
+    # print(trajs_edge.shape)
+    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4",task4_num=num)
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
 
     agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0.1)
@@ -234,7 +214,7 @@ def test_presention(num, method, save_path = './UI_element/task4'):
                 continue
             wait = wait[:,:,1:,:] # remove the special token, (B, T, V, 7)
             wait = wait.to(device)
-            wait = weight_quantization(wait, wait_quantization) # (B, T, V, 7), all negative values become special token, round the wait value to the nearest integer
+            wait = torch.clamp(wait, -1, wait_quantization) # (B, T, V, 7), all negative values become special token, clamp the wait value max to wait_quantization
             full_wait = wait.int().clone()
             B, T, V, _ = wait.shape
             wait = wait*mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1) - torch.ones_like(wait,dtype=int)*(1-mask).unsqueeze(0).unsqueeze(0).unsqueeze(-1) # change the value of the masked position to -1
@@ -243,64 +223,73 @@ def test_presention(num, method, save_path = './UI_element/task4'):
             light = 0
             light_list = []
 
-            action_rate_list = []
-            best_rate_list = []
+            action_run_list = []
             for t in range(T):
                 if t == 0:
                     
                     light = agent.best_light(full_wait[:,t,:,:]) # (B, V, 7)
-                    light = torch.argmax(light, dim = -1) # (B, V)                    
+                    # print(full_wait[0,t,:,:])
+                    # print(light[0,:,:])
+                    # print(full_wait[0,t,ids,:])
+                    # print(light[0,ids,:])
+                    # print(light.shape)
+                    # print(light)
+                    # break
+ 
+                    
+                    light = torch.argmax(light, dim = -1) # (B, V)
+                    # print(light[0,ids])
+                    
                     light_list.append(light[0,ids]) # (5)
                     # light_7 = torch.nn.functional.one_hot(light, num_classes=7).float()
-                    # val = torch.max(full_wait[:,:,:,:],dim=3).values
-                    # best_run = torch.sum(val[val>0])/torch.sum(full_wait[full_wait>0])
-                    # best_run = best_run.item()
+                    val = torch.max(full_wait[:,:,:,:],dim=3).values
+                    best_run = torch.sum(val[val>0])/torch.sum(full_wait[:,:,:,:][full_wait[:,:,:,:]>0])
+                    best_run = best_run.item()
                 else:
                     if method == 0:
                         action = torch.ones((B, V), dtype=torch.int, device=device)
-                        light = agent.turn_light(cross_type, light, action) # (B, V)
-                        light_list.append(light[0,ids]) # (5)
-                        action_rate = pass_rate(full_wait[:,t,:,:], light)
-                        best_light = agent.best_light(full_wait[:,t,:,:]).argmax(dim=-1) # (B, V)
-                        best_rate = pass_rate(full_wait[:,t,:,:], best_light)
-                        if action_rate is not None:
-                            action_rate_list.append(action_rate.item())
-                        if best_rate is not None:
-                            best_rate_list.append(best_rate.item())
-
-                        # if torch.sum(wait[:,t,:,:][wait[:,t,:,:]>0]) > 0:
-                        #     light_7 = torch.nn.functional.one_hot(light, num_classes=7).float()
-                        #     val = wait[:,t,:,:] * light_7 # (B, V, 7)
-                        #     rate = val.sum(dim=-1)/ (wait[:,t,:,:].sum(dim=-1)+1e-6) # (B, V)
-                        #     action_rate += torch.sum(val[val>0]) / (torch.sum(wait[:,t,:,:][wait[:,t,:,:]>0])+1e-6)
                     elif method == 1:
                         state = (wait[:,t,:,:], cross_type, light)
-                        action = agent.act(state[0],state[1],state[2],0) # (B, V)
-                        light = agent.turn_light(cross_type, light, action) # (B, V)
-                        light_list.append(light[0,ids]) # (5)
-                        action_rate = pass_rate(full_wait[:,t,:,:], light)
-                        best_light = agent.best_light(full_wait[:,t,:,:]).argmax(dim=-1) # (B, V)
-                        best_rate = pass_rate(full_wait[:,t,:,:], best_light)
-                        if action_rate is not None:
-                            action_rate_list.append(action_rate.item())
-                        if best_rate is not None:
-                            best_rate_list.append(best_rate.item())
+                        action = agent.act(state[0],state[1],state[2],agent.epsilon) # (B, V)
                     else: 
                         raise ValueError(f'{method} method not supported')
+                    # next light
+                    light = agent.turn_light(cross_type, light, action) # (B, V)
+                    light_7 = torch.nn.functional.one_hot(light, num_classes=7).float()
+                    # print(light)
+                    # print(torch.sum(wait[:,t,:,:][wait[:,t,:,:]>0]),)
+                    # print(wait.shape)
+                    # print(wait.sum())
+                    # print(wait[:,t,:,:])
+                    val = wait[:,t,:,:] * light_7
+                    action_run = torch.sum(val[val>0]) / (torch.sum(wait[:,t,:,:][wait[:,t,:,:]>0])+1e-6)
+                    # print(action_run.item())
+                    action_run_list.append(action_run.item())
+                    light_list.append(light[0,ids]) # (5)
 
-            action_rate = np.mean(action_rate_list) if len(action_rate_list) > 0 else 0
-            best_rate = np.mean(best_rate_list) if len(best_rate_list) > 0 else 0
+            action_run = np.mean(action_run_list)
+            print(action_run)
+            print(best_run)
             light_list = torch.stack(light_list, dim = 0) # (T, 5)
             wait_list = wait[0, :, ids, :] # (T, 5, 7)
             light_list = light_list.detach().cpu().numpy()
             wait_list = wait_list.detach().cpu().numpy()
 
-            # video_path = None
-            video_path = draw_video(wait_list, light_list, save_video_path = save_path)
+            video_path = None
+            # if method == 0:
+            #     video_path = f'{save_path}/traditional/video/video.mp4'
+            #     wait_time = wait_list/(np.max(wait_list)+1e-6)
+            #     wait_time = np.average(wait_time)
+            #     draw_video(wait_list, light_list, f'{save_path}/traditional/frames', f'{save_path}/traditional/video')
+            # elif method == 1:
+            #     wait_time = wait_list/(np.max(wait_list)+1e-6)
+            #     wait_time = np.average(wait_time)
+            #     video_path = f'{save_path}/pred/video/video.mp4'
+            #     draw_video(wait_list, light_list, f'{save_path}/pred/frames', f'{save_path}/pred/video')
             break
 
     print('Finish')
-    return  video_path, best_rate, action_rate, 
+    return  video_path, best_run, action_run, 
 
 
 

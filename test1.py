@@ -12,7 +12,6 @@ import cv2
 import os
 from tqdm import tqdm
 import time
-import random
 
 weights_path = 'weights/jinan/task1/best_model_0.1457.pth'
 cfg = { 'T':60,
@@ -123,8 +122,7 @@ def plot_video(traj, fig_size=20, save_video_path=None):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     
     # 初始化 tqdm 进度条
-    max_len = max([len(t) for t in traj])
-    progress_bar = tqdm(range(max_len), desc="Generating Video")
+    progress_bar = tqdm(range(len(traj)-1), desc="Generating Video")
     
     # 初始化地图
     edges, pos = read_city('jinan', path='data')
@@ -152,7 +150,7 @@ def plot_video(traj, fig_size=20, save_video_path=None):
         nx.draw_networkx_nodes(G, pos, nodelist=[start_1], node_size=fig_size/4, node_color='blue', ax=ax)
         end_1 = traj[j][-1]
         nx.draw_networkx_nodes(G, pos, nodelist=[end_1], node_size=fig_size/4, node_color='blue', ax=ax)
-    
+        
     for i in progress_bar:
         # 1. 计算画图时间
         start_plot = time.time()
@@ -276,20 +274,11 @@ def translate_roadtype_to_capacity(roadtype):
     return dic[roadtype]
 
 
-def get_valid_start_end_with_check(G):
-        nodes = list(G.nodes())
-        while True:
-            start, end = random.sample(nodes, 2)
-            if nx.has_path(G, start, end):
-                return start, end
-            
-def djikstra(start=None, end=None):
+def djikstra(start, end):
     edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
     G = transfer_graph(adj_table)
-    if start is None or end is None:
-        start, end = get_valid_start_end_with_check(G)
     path = nx.dijkstra_path(G, start, end)
     return path
         
@@ -348,9 +337,8 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
 
     elif generate_type == 'dj':
         dj = []
-        
-        for i in range(num):
-            dj_traj = djikstra()
+        for i in range(len(o)):
+            dj_traj = djikstra(o[i][0]-1,d[i][0]-1)
             dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
             dj.append(dj_traj)
         
@@ -368,9 +356,9 @@ if __name__ == '__main__':
     # plot_map()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--k', type=int, default=1)
+    parser.add_argument('--k', type=int, default=10)
     args = parser.parse_args()
-    video_path = test_presention1(args.k,'pred')
+    video_path = test_presention1(args.k,'dj')
  
     #test_presention1(3)``
 

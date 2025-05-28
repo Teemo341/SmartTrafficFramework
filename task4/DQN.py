@@ -34,6 +34,7 @@ class blcok(nn.Module):
         cross = self.ln_cross_1(cross)
         cross = cross+self.sa_cross(cross, cross, cross)[0]
         cross = self.ln_cross_2(cross+self.ffwd_cross(cross))
+        cross = cross.unsqueeze(0).expand(wait.shape[0], -1, -1) # (B, V, hidden_size)
 
         # light (B, V, hidden_size)
         light = self.ln_light_1(light)
@@ -42,11 +43,9 @@ class blcok(nn.Module):
 
         # wait (B, V, hidden_size)
         wait = self.ln_wait_1(wait)
+        wait = wait + self.ca_wait_corss(wait, cross, cross)[0] + self.ca_wait_light(wait, light, light)[0]
         wait = wait+self.sa_wait(wait, wait, wait)[0]
         wait = self.ln_wait_2(wait)
-        cross = self.ln_wait_2(cross).unsqueeze(0).expand(wait.shape[0], -1, -1) # (B, V, hidden_size)
-        light = self.ln_wait_2(light)
-        wait = wait + self.ca_wait_corss(wait, cross, cross)[0] + self.ca_wait_light(wait, light, light)[0]
         wait = self.ln_wait_3(wait+self.ffwd_wait(wait))
 
         return wait # (B, V, E)
@@ -55,6 +54,7 @@ class blcok(nn.Module):
 class DQN(nn.Module):
     def __init__(self, num_layers = 6, hidden_size = 64, num_heads = 4, wait_quantization = 10, dropout = 0.1):
         super(DQN, self).__init__()
+        self.wait_quantization = wait_quantization
         self.wait_embedding = nn.Embedding(wait_quantization+2, hidden_size)
         self.cross_embedding = nn.Embedding(2, hidden_size)
         self.light_embedding = nn.Embedding(7, hidden_size)
@@ -69,7 +69,7 @@ class DQN(nn.Module):
         # light (B, V): current traffic light status, int 0-3 or 4-6, corresponding to 4-direction or 3-direction
 
         wait = wait+1 # -1 -> 0
-        if wait.max() > 16 or wait.min() < 0:
+        if wait.max() > self.wait_quantization+1 or wait.min() < 0:
             print(wait.max(), wait.min())
         wait = self.wait_embedding(wait) # (B, V, 7, hidden_size)
         wait = self.in_proj(wait).squeeze(2) # (B, V, 1, hidden_size)
@@ -85,9 +85,10 @@ class DQN(nn.Module):
         # act_values (B, V, 2): the Q value of each node, 0 means the value of keep, 1 means the value of change
         return act_values
 
-class DQNAgent:
+class DQNAgent(nn.Module):
     #agent = DQNAgent(args.device, args.memory_device, args.memory_len, args.n_layer, args.n_embd, args.n_head, args.wait_quantization, args.dropout,lr=args.learning_rate)
     def __init__(self, device, memory_device = 'cpu', memory_len=2000, num_layers = 6, hidden_size = 64, num_heads = 4, wait_quantization = 10, dropout = 0.1,lr=5e-4, batch_size = 32):
+        super(DQNAgent, self).__init__()
         self.memory = deque(maxlen=memory_len)
         self.gamma = 0.95    # 折扣因子
         self.epsilon = 1.0    # 探索率
@@ -111,10 +112,13 @@ class DQNAgent:
         with torch.no_grad():
             act_values = self.model(wait, cross_type, light) # (B, V, 2)
         action = torch.argmax(act_values, dim = -1) # (B, V), 0 or 1, 0 means keep, 1 means change
-        random_index = torch.rand(B, V, device = action.device) < epsilon
-        random_action = torch.randint(0, 2, (B, V), device = action.device)
-        action = torch.where(random_index, random_action, action)
-        return action # (B, V), 0 or 1, 0 means keep, 1 means change
+        if epsilon == 0:
+            return action
+        else:
+            random_index = torch.rand(B, V, device = action.device) < epsilon
+            random_action = torch.randint(0, 2, (B, V), device = action.device)
+            action = torch.where(random_index, random_action, action)
+            return action # (B, V), 0 or 1, 0 means keep, 1 means change
     
     def turn_light(self, cross_type, light, action):
         B, V = light.shape
@@ -146,7 +150,7 @@ class DQNAgent:
 
     def replay(self, optimize = True):
         if len(self.memory) < self.batch_size:
-            return torch.tensor(0)
+            return torch.tensor(0, device=self.device)  # Not enough samples to replay
         loss_list = []
         minibatch = random.sample(self.memory, self.batch_size)
         for state, action, reward, next_state, done in minibatch:
@@ -155,23 +159,24 @@ class DQNAgent:
             reward = reward.clone().to(self.device)
             next_state = (next_state[0].clone().to(self.device),next_state[1].clone().to(self.device),next_state[2].clone().to(self.device))
             
-            target = reward # (B, V)
-            if not done:
-                target += self.gamma * torch.max(self.model(next_state[0],next_state[1],next_state[2]))
-            target_f = self.model(state[0],state[1],state[2]) # (B, V, 2)
-            action = nn.functional.one_hot(action, 2).float()
-            target_f = target_f* (1 - action) + target.unsqueeze(-1) * action # (B, V, 2) change the corresponding action to target
+            target = reward # (B, V) reward current state and action
+            # if not done:
+            #     target += self.gamma * torch.max(self.model(next_state[0],next_state[1],next_state[2]), dim=-1)[0] # (B, V), current reward + next predicted q value
+            target_f = self.model(state[0],state[1],state[2]) # (B, V, 2) # current predicted q value
+            action = nn.functional.one_hot(action, 2).float() # (B, V, 2), one-hot encoding the action
+            target_f = target_f* (1 - action) + target.unsqueeze(-1) * action # (B, V, 2) currrent predicted q value * no action + future reward * action
 
             self.optimizer.zero_grad()
             loss = self.criterion(target_f, self.model(state[0],state[1],state[2]))
             if optimize:
                 loss.backward()
                 self.optimizer.step()
-            loss_list.append(loss.item())
+            loss_list.append(loss)
 
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-        return np.mean(loss_list)
+        loss = torch.tensor(loss_list, device = self.device).mean()
+        return loss
 
 
 if __name__ == '__main__':
