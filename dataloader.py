@@ -146,7 +146,6 @@ class SmartTrafficDataset(Dataset):
             if self.trajs is None:
                 traj = np.load(self.traj_path+str(idx+1)+'.npy')
                 traj_o = np.load(self.traj_path+str(idx+1)+'.npy')
-                 
             else:
                 traj = self.trajs[idx]
         
@@ -209,11 +208,13 @@ class SmartTrafficDataset(Dataset):
             traj_targ_list = []
             traj_mask_list = []
             time_step_list = []
+            if len(traj.shape) ==1:
+                traj = traj[None,:]
             for j in range(self.max_history):
                 i = j
-                if i > len(traj[0])-1:
-                    i = np.random.randint(0,len(traj[0]))
-                traj_=padding_zero(traj[:,i],self.max_len)
+                if i > traj.shape[0]-1:
+                    i = np.random.randint(0,traj.shape[0])
+                traj_=padding_zero(traj[i,:],self.max_len)
                 traj_ = traj_[0:self.T]
                 traj_list.append(traj_[0:self.T])
                 traj_targ_list.append(traj_[self.window_size:self.T+self.window_size])
@@ -226,7 +227,7 @@ class SmartTrafficDataset(Dataset):
             traj_targ = torch.tensor(np.array(traj_targ_list),dtype=torch.int64)
             reagent_mask = torch.tensor(np.array(traj_mask_list),dtype=torch.int64)
             time_step = torch.tensor(np.array(time_step_list),dtype=torch.int64)
-            return traj_, time_step, reagent_mask , self.adj_l[None,:,:,:]
+            return traj_, time_step, reagent_mask , self.adj_l.unsqueeze(0).repeat(traj_.shape[0],1,1,1)
 
     
     def __getattribute__(self, name: str) -> torch.Any:
@@ -237,7 +238,8 @@ class SmartTrafficDataloader(DataLoader):
         super(SmartTrafficDataloader,self).__init__(dataset,batch_size=batch_size,shuffle=shuffle, **kwargs)
         self.max_len = max_len
         self.vocab_size = vocab_size
-        
+        x = min(x,dataset.__len__()*8//10)
+        y = min(y,dataset.__len__()*8//10)
         self.train_dataset = [i for i in range(x)]
         self.train_dataset = Subset(dataset,self.train_dataset)
         self.test_dataset = [i for i in range(y,dataset.__len__())]

@@ -11,7 +11,7 @@ from task2.process_task2 import get_model
 import torch
 import os
 
-weights_path = 'weights/jinan/task2/best_model_0.0294.pth'
+weights_path = 'weights/best/jinan/task2/best_model_0.0294.pth'
 #python train.py --device cuda:3 --T 10 --max_len 20 --task_type 1 --vocab_size 8909 --batch_size 1024 --epochs 40 --learning_rate 0.001 --n_embd 32 --n_hidden 16 --n_layer 8 --dropout 0.1  --model_save_path weights/jinan/task2/ --trajs_path data/jinan/traj_jinan_min_one_by_one/
 
 cfg = {

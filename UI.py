@@ -6,10 +6,10 @@ import queue
 import numpy as np
 import gradio as gr
 from PIL import Image
-from test1 import test_presention1 as fun_1
-from test2 import task2_test as fun_3
-from test3 import test_presentation_lightning as fun_2
-from test4 import test_presention as fun_4
+from test_script.test1 import test_presention1 as fun_1
+from test_script.test2 import task2_test as fun_3
+from test_script.test3 import test_presentation_lightning as fun_2
+from test_script.test4 import test_presention as fun_4
 
 # 功能函数
 def traj_gen(generate_type, num):
@@ -33,7 +33,7 @@ def vol_pred(num, observation_ratio):
 
     def run_task2(num, observation_ratio, save_path):
         print("runing subprocess...")
-        cmd = f"python test3.py --num {num} --observe_ratio {observation_ratio} --save_path {save_path}"
+        cmd = f"python -m test_script.test3 --num {num} --observe_ratio {observation_ratio} --save_path {save_path}"
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         if process.returncode != 0:

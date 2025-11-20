@@ -1,3 +1,13 @@
+# 将 task3 目录加入环境变量与 sys.path
+import os
+import sys
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..'))
+TASK3_PATH = os.path.join(PROJECT_ROOT, 'task3')
+if TASK3_PATH not in sys.path:
+    sys.path.insert(0, TASK3_PATH)
+os.environ['PYTHONPATH'] = TASK3_PATH + os.pathsep + os.environ.get('PYTHONPATH', '')
+
 from task3.model_mae import no_diffusion_model_cross_attention_parallel as task3_model
 import argparse
 import pickle
@@ -14,16 +24,14 @@ from utils import calculate_load,transfer_graph,calculate_bounds,read_city
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import cv2
-import os
 import networkx as nx
 from train import train3
-import sys
 import time
 
 
-weight_path = 'weights/jinan/task3/best_model.pth'
+weight_path = 'weights/best/jinan/task3/best_model.pth'
 device = 'cuda:3'
-args_path = 'weights/jinan/task3/args.pkl'
+args_path = 'weights/best/jinan/task3/args.pkl'
 #load argparse from pkl
 with open(args_path, 'rb') as f:
     args = pickle.load(f)
@@ -84,7 +92,8 @@ def train_presention(observe_ratio=0.5,device='cuda:3',batch_size=16,epochs=3,lr
 
             if use_adj_table:
                 if isinstance(adj_table, torch.FloatTensor):
-                    #print(shuffled_indices[0])
+                    # print(adj_table.shape)
+                    # print(shuffled_indices[0])
                     adj_table = adj_table[:,shuffled_indices[0],:,:,:].to(device) # [B x V x 4 x 2]
                     adj_table = [adj_table[...,0],adj_table[...,1]] # [B x V x 4], [B x V x 4]
                 elif isinstance(adj_table, torch.sparse.FloatTensor):

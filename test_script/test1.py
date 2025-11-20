@@ -13,7 +13,7 @@ import os
 from tqdm import tqdm
 import time
 
-weights_path = 'weights/jinan/task1/best_model_0.1457.pth'
+weights_path = 'weights/best/jinan/task1/best_model_0.1457.pth'
 cfg = { 'T':60,
         'max_len':63,
         'vocab_size':23313,
@@ -252,7 +252,6 @@ def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
     cfg['device'] = device
     dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path_train'],T=cfg['T'],max_len=cfg['max_len']) 
     data_loader1 = SmartTrafficDataloader(dataset1,batch_size=cfg['batch_size'],shuffle=True, num_workers=4).get_test_data()
-
     from train import train1
     train1(cfg, data_loader1)        
 
