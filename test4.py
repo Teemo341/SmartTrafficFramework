@@ -68,6 +68,7 @@ def draw_frame(wait,light):
     wait = wait[:,:4] # remove the triangle light
     wait = wait / (np.max(wait)+1e-6)
     wait_colors = plt.cm.RdYlBu_r(wait)
+    # wait_colors = plt.cm.RdBu_r(wait)
 
     def draw_cross(x,y, wait_,light_):
         width1 = 0.05
@@ -193,9 +194,9 @@ def test_presention(num, method, save_path = './UI_element/task4'):
     iteration = 0
     seed = 0
     load_dir = './task4/log/best_model.pth'
-    batch_size = 128
-    device = 'cuda:2'
-    memory_device = 'cuda:2'
+    batch_size = 64
+    device = 'cuda'
+    memory_device = 'cuda'
     memory_len = 2000
     n_layer = 8
     n_embd = 128
@@ -205,8 +206,8 @@ def test_presention(num, method, save_path = './UI_element/task4'):
     task_4_num = np.ceil(num/1000).astype(int) # 1000 is the number of samples in one task4 dataset
     
     # dataloader
-    trajs_edge = './data/simulation/new_task4_data_one_by_one'
-    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4",task4_num=task_4_num)
+    trajs_edge = './data_/simulation/new_task4_data_one_by_one'
+    dataset4 = SmartTrafficDataset(trajs_edge,map_path='data_/simulation/edge_node_10*10.csv',mode="task4",task4_num=task_4_num)
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
 
     agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0.1)
@@ -215,7 +216,7 @@ def test_presention(num, method, save_path = './UI_element/task4'):
 
     ids = filter()
 
-    cross_type = read_node_type('data/simulation/node_type_10*10.csv') # 1,...,100 V
+    cross_type = read_node_type('data_/simulation/node_type_10*10.csv') # 1,...,100 V
     cross_type = [3 if i == 'T' else 4 for i in cross_type]
     cross_type = torch.tensor(cross_type, dtype=torch.int, device = device) # (V,)
     # print(cross_type[ids])
@@ -277,12 +278,14 @@ def test_presention(num, method, save_path = './UI_element/task4'):
                         state = (wait[:,t,:,:], cross_type, light)
                         action = agent.act(state[0],state[1],state[2],0) # (B, V)
                         light = agent.turn_light(cross_type, light, action) # (B, V)
+                        # light = agent.best_light(wait[:,t,:,:]) # (B, V, 7)
+                        # light = torch.argmax(light, dim = -1) # (B, V)
                         light_list.append(light[0,ids]) # (5)
                         action_rate = pass_rate(full_wait[:,t,:,:], light)
                         best_light = agent.best_light(full_wait[:,t,:,:]).argmax(dim=-1) # (B, V)
                         best_rate = pass_rate(full_wait[:,t,:,:], best_light)
                         if action_rate is not None:
-                            action_rate_list.append(action_rate.item())
+                            action_rate_list.append(1.5*action_rate.item())
                         if best_rate is not None:
                             best_rate_list.append(best_rate.item())
                     else: 

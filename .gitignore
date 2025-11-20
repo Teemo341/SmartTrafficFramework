@@ -176,3 +176,4 @@ events.out.tfevents.*
 *.pkl
 *.out
 *.tar.gz
+*.zip

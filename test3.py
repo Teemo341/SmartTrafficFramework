@@ -340,8 +340,7 @@ def plot_presention(real_load,predic_load,observe_ratio,save_path=None):
     if save_path is None:
         save_path = './UI_element/task2'
 
-    adj_table = np.load('data/jinan/test/task3_test_adj_table.npy')
-    adj_table = adj_table[0] #[v,e,2]
+    adj_table = np.load('data/jinan/adj_l.npy')
     G = transfer_graph(adj_table) # 0-indexed
 
     # _, pos = read_city('boston')

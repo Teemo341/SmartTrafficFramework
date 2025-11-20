@@ -1193,13 +1193,13 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         while i<self.block_size-1: #all(idx>0) and i<self.block_size-1 and idx != d:
             logits, _ = self(x)
             logits = logits[:,i,0,:]
-            if i<10:
-                logits[:,0] = -9000
+            # if i<10:
+            #     logits[:,0] = -5000
             adj = edge_adj_l[x['traj'][:,i,0].cpu().numpy()]
             index = []
             for j in range(adj.shape[0]):
-                if i >= 10:
-                    index.append((j,0))
+                # if i >= 10:
+                index.append((j,0))
                 for k in range(adj.shape[1]):
                     if adj[j,k] == 0:
                         break

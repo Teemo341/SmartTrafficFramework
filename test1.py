@@ -33,8 +33,22 @@ cfg = { 'T':60,
         }
 cfg['block_size'] = cfg['T']
 
+def select(list):
+    result = []
+    for arr in list:
+        mask = (arr == 0) | (arr == 1)
+        indices = np.where(mask)[0]
+        if indices.size > 0:
+            first_idx = indices[0]
+            truncated = arr[:first_idx]
+        else:
+            truncated = arr
+        result.append(truncated)
+    return result
 
-def plot_map(fig_size=20, save_path='./task1/map.png'):
+       
+
+def plot_map1(fig_size=200, save_path='./task1/map1.png'):
     edges, pos = read_city('jinan', path='data')
     weight = [edge[2] for edge in edges]
     adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
@@ -52,13 +66,47 @@ def plot_map(fig_size=20, save_path='./task1/map.png'):
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
     ax.axhline(y=0, color='k', linestyle='--', linewidth=0.5)
     ax.axvline(x=0, color='k', linestyle='--', linewidth=0.5)
+    
+    # 绘制边
     nx.draw_networkx_edges(G, pos, width=fig_size/15, alpha=0.3, edge_color='white', ax=ax, arrows=False)
-    # Display the figure
+    
+    # 新增代码：绘制节点编号
+    node_labels = {node: str(node) for node in G.nodes()}
+    nx.draw_networkx_labels(
+        G, pos,
+        labels=node_labels,
+        font_size=fig_size/30,        # 字体大小与图像尺寸关联
+        font_color='yellow',       # 高对比度颜色
+        ax=ax,
+        verticalalignment='center' # 垂直居中
+    )
+    
     plt.tight_layout()
-    # plt.show()
     if save_path is not None:
         plt.savefig(save_path)
     plt.close()
+
+
+def filter_connected_paths(all_paths, G):
+    """
+    过滤掉不连通的路径
+    :param all_paths: 路径列表，每个路径是节点数组（如 [0, 1, 2]）
+    :param G: NetworkX 图对象
+    :return: 连通路径的列表
+    """
+    valid_paths = []
+    for path in all_paths:
+        is_valid = True
+        # 遍历路径中的每一对相邻节点
+        for i in range(len(path) - 1):
+            u, v = path[i], path[i+1]
+            # 检查边是否存在
+            if not G.has_edge(u, v):
+                is_valid = False
+                break
+        if is_valid:
+            valid_paths.append(path)
+    return valid_paths
 
 def plot_volume1(traj1, traj2 = None, fig_size=20, save_path='task1.png', return_cv = False):
     # G networkx graph
@@ -116,13 +164,18 @@ def plot_volume1(traj1, traj2 = None, fig_size=20, save_path='task1.png', return
 
 
 def plot_video(traj, fig_size=20, save_video_path=None):
+    """Generate a video from a list of trajectories.
+    Args:
+        traj (list of list): List of trajectories, where each trajectory is a list of nodes.
+    """
     if save_video_path is None:
         save_video_path = './task1/video/pred'
     
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     
     # 初始化 tqdm 进度条
-    progress_bar = tqdm(range(len(traj)-1), desc="Generating Video")
+    max_len = max(len(t) for t in traj)
+    progress_bar = tqdm(range(max_len), desc="Generating Video")
     
     # 初始化地图
     edges, pos = read_city('jinan', path='data')
@@ -206,10 +259,10 @@ def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
 def test_presention(x=None,edge=None):
 
     cfg['model_read_path'] = weights_path
-    node_edge_map_path ='data/jinan/node_edge_map_dict.pkl' 
+    node_edge_map_path ='data_/jinan/node_edge_map_dict.pkl' 
     with open(node_edge_map_path,'rb') as f:
         map_dict = pickle.load(f)
-    adjcent_path = 'data/jinan/adjcent.npy'
+    adjcent_path = 'data_/jinan/adjcent.npy'
     adjcent = np.load(adjcent_path)
     adj_l = adj_m2adj_l(adjcent)
     # G = transfer_graph(adj_l)
@@ -225,7 +278,7 @@ def test_presention(x=None,edge=None):
     if edge is None:
         raise ValueError('edge is None')
     # print(edge[0],edge[1])
-    adjcent = np.load('data/jinan/adjcent.npy')
+    adjcent = np.load('data_/jinan/adjcent.npy')
     traj = model.generate_traj(edge[0],edge[1],adj_l)
     # print(traj)
 
@@ -286,7 +339,7 @@ def djikstra(start, end):
 def test_presention1(num=10, generate_type = 'pred', save_path = None):
     if save_path is None:
         save_path = f'./task1/video'
-    map_path = 'data/jinan/edge_node_map_dict.pkl'
+    map_path = 'data_/jinan/edge_node_map_dict.pkl'
     with open(map_path,'rb') as f:
         map_dict = pickle.load(f)
     #dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path'],T=cfg['T'],max_len=cfg['max_len']) 
@@ -318,8 +371,8 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
     # generate traj
     if generate_type == 'pred':
         traj = test_presention((o-1,d-1),(e1,e_1))
-        print(traj.shape)
-        print(traj)
+        # print(traj.shape)
+        # print(traj)
         # traj = np.array(traj)
         pred_traj = []
         for i in range(traj.shape[0]):
@@ -330,17 +383,38 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
             pred_traji= transfer_edge_to_node(pred_traj_)
             pred_traji = np.array(pred_traji) # 1-indexing
             pred_traj.append(pred_traji)
+        
+        edges, pos = read_city('jinan', path='data')
+        weight = [edge[2] for edge in edges]
+        adj_table = get_weighted_adj_table(edges, pos, weight, max_connection=9)
+        G = transfer_graph(adj_table)
+        pred_traj = filter_connected_paths(pred_traj, G)
         print('pred_traj',pred_traj)
+
         video_dir = plot_video(pred_traj ,fig_size=20, save_video_path=f'{save_path}/pred')
         
         return video_dir
 
     elif generate_type == 'dj':
         dj = []
-        for i in range(len(o)):
-            dj_traj = djikstra(o[i][0]-1,d[i][0]-1)
-            dj_traj = np.array(dj_traj,dtype=int) # 1-indexing
-            dj.append(dj_traj)
+        for i in tqdm(range(len(o))):
+            success = False
+            attempts = 0
+            while not success:
+                try:
+                    dj_traj = djikstra(o[i][0], d[i][0])
+                    dj_traj = np.array(dj_traj, dtype=int)  # 1-indexing
+                    dj.append(dj_traj)
+                    success = True
+                except Exception:
+                    # 随机重新生成od直到成功
+                    all_numbers = np.random.choice(np.arange(1, 23313), size=2, replace=False)
+                    e1_new, e_1_new = all_numbers[0], all_numbers[1]
+                    o[i][0] = map_dict[str(e1_new)][0]
+                    d[i][0] = map_dict[str(e_1_new)][1]
+                    attempts += 1
+                    if attempts > 100:  # 防止死循环
+                        raise RuntimeError("无法生成连通的od对，请检查数据或增加尝试次数")
         
         print('Djs:',dj)
         video_dir = plot_video(dj,fig_size=20, save_video_path=f'{save_path}/dj')
@@ -353,12 +427,12 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
 if __name__ == '__main__':
     #! 轨迹预测的模型并行也未完成
 
-    # plot_map()
+    plot_map1()
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--k', type=int, default=10)
-    args = parser.parse_args()
-    video_path = test_presention1(args.k,'dj')
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('--k', type=int, default=10)
+    # args = parser.parse_args()
+    # video_path = test_presention1(args.k,'dj')
  
     #test_presention1(3)``
 
