@@ -104,7 +104,7 @@ def train(cfg,dataloader):
         for condition, time_step, special_mask, adj_table in tqdm(dataloader, desc=f'Train epoch {i:>6}/{max_epochs:<6}'):
 
             #! randomly sample the observed nodes
-            dataloader.randomize_condi00tion(observe_ratio)
+            dataloader.randomize_condition(observe_ratio)
      
             loss1 = []
             load_data_time += time.time()-epoch_time

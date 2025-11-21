@@ -51,10 +51,10 @@ cfg = {
 
 def train_presention(device='cuda:2',epochs=4):
 
-    trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
-    dataset4 = SmartTrafficDataset(trajs_edge,mode="task4")
+    # trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
+    dataset4 = SmartTrafficDataset(None,mode="task4",trajs_path='/datadisk/yanshou/SmartTrafficFramework/data/simulation/task4_data_one_by_one/')
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=1,shuffle=True, num_workers=4)
-    agent = DQNAgent(device,memory_device, memory_len, 1, n_layer, n_embd, n_head,wait_quantization, cfg['dropout'])
+    agent = DQNAgent(device,memory_device, memory_len, n_layer, n_embd, n_head,wait_quantization, cfg['dropout'])
     train4(agent, cfg, data_loader4, epochs = epochs, log_dir = cfg['log_dir'])
 
 

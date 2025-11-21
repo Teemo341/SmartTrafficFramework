@@ -1000,7 +1000,7 @@ class SpatialTemporalMultiAgentModel(nn.Module):
         self.use_twl = use_twl
         self.time_weighted_loss = time_weighted_loss
         self.register_buffer("time_weight",_comp_time_weight(time_weighted_loss,block_size).requires_grad_(False))
-        print(f"Model: {self.time_weight/self.time_weight.mean()=}")
+        # print(f"Model: {self.time_weight/self.time_weight.mean()=}")
         
         
         self.vocab_size = vocab_size

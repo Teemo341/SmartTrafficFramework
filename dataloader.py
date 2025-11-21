@@ -135,7 +135,8 @@ class SmartTrafficDataset(Dataset):
                 else:
                     idx = np.arange(0,len(self.trajs))#.astype(np.int)
                     choice  = np.random.choice(idx,size = self.task4_num)
-                    results = np.sum(self.trajs[choice],axis=0)
+                    selected_trajs = [self.trajs[i] for i in choice]
+                    results = np.sum(selected_trajs,axis=0)
                     return torch.tensor(results, dtype=torch.int)
             if self.trajs is None:
                 trajs = np.load(self.traj_path+str(idx+1)+'.npy')
