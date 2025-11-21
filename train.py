@@ -13,6 +13,7 @@ from task4.train import train as train4
 from torch.utils.data import SequentialSampler
 from utils import read_city, get_task4_data,adj_m2adj_l,generate_node_type
 from tqdm import tqdm
+from device_selection import get_local_device
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1' 
 sys.path.append('..')
 sys.path.append('../data')
@@ -38,8 +39,8 @@ if __name__ == '__main__':
     parser.add_argument('--mask_ratio', type=float, default=0.0)
     parser.add_argument('--wait_quantization', type=int, default=15)
     parser.add_argument('--dropout', type=float, default=0.1)
-    parser.add_argument('--device', type=str, default='cuda:0')
-    parser.add_argument('--memory_device', type=str, default='cuda:0')
+    parser.add_argument('--device', type=str, default=get_local_device(0))
+    parser.add_argument('--memory_device', type=str, default=get_local_device(0))
     parser.add_argument('--max_len', type=int, default=122)
     parser.add_argument('--vocab_size', type=int, default=181)
     parser.add_argument('--learning_rate', type=float, default=0.001)

@@ -306,7 +306,7 @@ if __name__ == '__main__':
     #configs
     # cfg1 = {
     #         "vocab_size": 180+1,
-    #         "device": "cuda:0",
+    #         "device": get_local_device,
     #         "block_size": dataset1.max_len //2,
     #         "n_embd": 64,
     #         "n_head": 4,
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     #         'model_save_path': "weights/model_task1.pth",
     #         }
     # cfg2 = {
-    #     'device':'cuda',
+    #     'device':get_local_device,
     #     'block_size':dataset2.max_len //2, # max length of trajectory
     #     'n_embd':64,
     #     'n_head':4,
@@ -332,7 +332,7 @@ if __name__ == '__main__':
     #     'model_save_path': "weights/model_task2.pth"
     #     }
     # cfg2 = {
-    #     'device':'cuda',
+    #     'device':get_local_device,
     #     'block_size':dataset2.max_len-1, # max length of trajectory
     #     'n_embd':20,
     #     'n_head':4,
@@ -355,7 +355,7 @@ if __name__ == '__main__':
     #     'n_head' : 4,
     #     'n_layer' : 2,
     #     'dropout' : 0.1,
-    #     'device' :"cuda",
+    #     'device' :get_local_device,
     #     "block_size":dataset3.max_len //2,
     #     'weight_quantization_scale': 20,
     #     'use_adj_table':True,

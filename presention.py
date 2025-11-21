@@ -11,6 +11,7 @@ from dataloader import simulation2adj,adj_m2adj_l
 import networkx as nx
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 from process_data import read_traj
+from device_selection import get_local_device
 
 def merge_and_remove_zeros(lst):
     if not lst:
@@ -257,7 +258,7 @@ def task3_show(real_load,predic_load):
 if __name__ == '__main__':
     cfg1 = {
             "vocab_size": 180+1,
-            "device": "cuda:0",
+            "device": get_local_device(0),
             "block_size": 122 //2,
             "n_embd": 64,
             "n_head": 4,
@@ -271,7 +272,7 @@ if __name__ == '__main__':
             'use_ne':True
             }
     # cfg2 = {
-    #     'device':'cuda',
+    #     'device':get_local_device,
     #     'block_size':122 //2, # max length of trajectory
     #     'n_embd':64,
     #     'n_head':4,
@@ -287,7 +288,7 @@ if __name__ == '__main__':
     #     'model_save_path': "weights/model_task2_1.pth"
     #     }
     cfg2 = {
-        'device':'cuda',
+        'device':get_local_device,
         'block_size':21-1, # max length of trajectory
         'n_embd':20,
         'n_head':4,
@@ -309,7 +310,7 @@ if __name__ == '__main__':
         'n_head' : 4,
         'n_layer' : 2,
         'dropout' : 0.1,
-        'device' :"cuda",
+        'device' :get_local_device,
         "block_size":122 //2,
         'weight_quantization_scale': 20,
         'use_adj_table':True,

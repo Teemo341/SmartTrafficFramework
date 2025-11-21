@@ -87,6 +87,8 @@ def task3_presention(ratio=None):
     with torch.no_grad():
         for(j, (condition, time_step, special_mask, adj_table)) in tqdm(enumerate(dataloader.test_loader)):
             # return trajectory: [B x N x T], special_mask: [B x N x T], adj_table: [B x N x V x 4 x 2]
+            if j >=100:
+                break
 
             # random choice a traj as input, the rest as condition
             shuffled_indices = torch.randperm(condition.size(1))

@@ -160,6 +160,7 @@ cython_debug/
 # tensorboard
 *.tfevents.*
 events.out.tfevents.*
+./lightning_logs/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

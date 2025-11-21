@@ -89,6 +89,7 @@ def train(agent:DQNAgent, cfg, dataloader, epochs = 10, log_dir = './log'):
     mask_ratio = cfg['mask_ratio']
     wait_quantization = cfg['wait_quantization']
     device = cfg['device']
+    log_dir = cfg['model_save_path'] if cfg['model_save_path'] is not None else log_dir
 
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(agent.optimizer, epochs)
     agent.model = agent.model.to(device)
@@ -188,11 +189,12 @@ def train(agent:DQNAgent, cfg, dataloader, epochs = 10, log_dir = './log'):
         with open(os.path.join(log_dir, 'lr.pkl'), 'wb') as f:
             pickle.dump(logger_lr, f)
         
-        print(f'Epoch: {epoch:<6}  |  Time: {(time.time()-epoch_time)/60:<7.2f}m  |  Loss {np.mean(loss_epoch)}\n')
+        loss_epoch = torch.tensor(loss_epoch)
+        print(f'Epoch: {epoch:<6}  |  Time: {(time.time()-epoch_time)/60:<7.2f}m  |  Loss {torch.mean(loss_epoch)}\n')
 
-        if np.mean(loss_epoch) < best_loss:
-            print(f'Best Model saved, best loss: {best_loss} -> {np.mean(loss_epoch)}')
-            best_loss = np.mean(loss_epoch)
+        if torch.mean(loss_epoch) < best_loss:
+            print(f'Best Model saved, best loss: {best_loss} -> {torch.mean(loss_epoch)}')
+            best_loss = torch.mean(loss_epoch)
             torch.save(agent.model.state_dict(), os.path.join(log_dir, 'best_model.pth'))
             
 class lightning_wrapper(pl.LightningModule):

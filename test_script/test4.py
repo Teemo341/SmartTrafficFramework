@@ -53,7 +53,13 @@ def train_presention(device='cuda:2',epochs=4):
 
     # trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
     dataset4 = SmartTrafficDataset(None,mode="task4",trajs_path='/datadisk/yanshou/SmartTrafficFramework/data/simulation/task4_data_one_by_one/')
-    data_loader4 = SmartTrafficDataloader(dataset4,batch_size=1,shuffle=True, num_workers=4)
+    dataset4 = SmartTrafficDataset(None, mode="task4", trajs_path='/datadisk/yanshou/SmartTrafficFramework/data/simulation/task4_data_one_by_one/')
+    total = len(dataset4)
+    num_samples = min(4, total)
+    idx = np.random.choice(total, num_samples, replace=False).tolist()
+    dataset4 = torch.utils.data.Subset(dataset4, idx)
+    data_loader4 = SmartTrafficDataloader(dataset4, batch_size=1, shuffle=True, num_workers=4)
+    print(len(data_loader4))
     agent = DQNAgent(device,memory_device, memory_len, n_layer, n_embd, n_head,wait_quantization, cfg['dropout'])
     train4(agent, cfg, data_loader4, epochs = epochs, log_dir = cfg['log_dir'])
 
@@ -193,15 +199,15 @@ def pass_rate(wait, light):
 def test_presention(num, method, save_path = './UI_element/task4'):
     iteration = 0
     seed = 0
-    load_dir = './task4/log/best_model.pth'
+    load_dir = 'weights/best/jinan/task4/best_model.pth'
     batch_size = 64
     device = 'cuda'
     memory_device = 'cuda'
     memory_len = 2000
-    n_layer = 8
-    n_embd = 128
+    n_layer = 6
+    n_embd = 64
     n_head = 4
-    wait_quantization = 20
+    wait_quantization = 15
     mask_ratio = 0.0
     task_4_num = np.ceil(num/1000).astype(int) # 1000 is the number of samples in one task4 dataset
     
