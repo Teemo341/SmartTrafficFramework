@@ -231,7 +231,7 @@ class SmartTrafficDataset(Dataset):
             return traj_, time_step, reagent_mask , self.adj_l.unsqueeze(0).repeat(traj_.shape[0],1,1,1)
 
     
-    def __getattribute__(self, name: str) -> torch.Any:
+    def __getattribute__(self, name: str):
         return super().__getattribute__(name)
 
 class SmartTrafficDataloader(DataLoader):
