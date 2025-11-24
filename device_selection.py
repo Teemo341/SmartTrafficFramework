@@ -11,13 +11,13 @@ except Exception as e:
 
 try:
     if torch.musa.is_available():
-        global_device = 'mps'
+        global_device = 'musa'
 except Exception as e:
     pass
 
 try:
     if torch.mps.is_available():
-        global_device = 'musa'
+        global_device = 'mps'
 except Exception as e:
     pass
 
