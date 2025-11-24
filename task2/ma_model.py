@@ -543,7 +543,8 @@ class SpatialTemporalCrossMultiAgentModel(nn.Module):
         #pos_emb = self.position_embedding_table(torch.arange(T, device=self.device)).view(1, T, 1, -1) # (1, T, 1, C)
         idx = np.random.choice(np.arange(self.window_size))
         mask = self.sawtooth_mask[idx:idx + T, idx:idx + T]
-        pos_index = torch.bincount(mask.nonzero().transpose(0, 1)[0]) - 1
+        # Use row-wise sum instead of torch.bincount to avoid crashes when some rows have no True entries
+        pos_index = (mask.long().sum(dim=1) - 1).clamp(min=0, max=self.window_size - 1)
         # postional embedding
         pos_emb = self.position_embedding_table(pos_index).view(1, T, 1, -1) # (1, T, 1, C)
         # sawtooth mask

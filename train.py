@@ -7,8 +7,8 @@ import pickle
 import argparse
 import random
 from task1.test1 import train as train1
-from task2.process_task2 import train as train2
-from task3.train_mae import train as train3
+from task2.process_task2 import train as train3
+from task3.train_mae import train as train2
 from task4.train import train as train4
 from torch.utils.data import SequentialSampler
 from utils import read_city, get_task4_data,adj_m2adj_l,generate_node_type
@@ -82,19 +82,6 @@ if __name__ == '__main__':
 
     elif args.task_type == 1:
         cfg = vars(args)
-        trajs_node_notrepeat = None
-        dataset = SmartTrafficDataset(trajs_node_notrepeat,mode="task2",
-                                      trajs_path=cfg['trajs_path'],
-                                      adjcent_path=cfg['adjcent'],
-                                      vocab_size=args.vocab_size,T=args.T,max_len=args.max_len)
-        
-        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,x=cfg['traj_num'],y=1000000,num_workers=4)
-
-        cfg['block_size'] = cfg['T']
-        train2(cfg, data_loader)
-
-    elif args.task_type == 2:
-        cfg = vars(args)
         trajs_node_repeat = None
         dataset = SmartTrafficDataset(trajs_node_repeat,mode="task3",
                                       trajs_path=cfg['trajs_path'],
@@ -107,7 +94,20 @@ if __name__ == '__main__':
         train_dataloader = data_loader.get_train_data()
         print(len(train_dataloader))
         cfg['block_size'] = cfg['T']
-        train3(cfg, train_dataloader)
+        train2(cfg, train_dataloader)
+
+    elif args.task_type == 2:
+        cfg = vars(args)
+        trajs_node_notrepeat = None
+        dataset = SmartTrafficDataset(trajs_node_notrepeat,mode="task2",
+                                      trajs_path=cfg['trajs_path'],
+                                      adjcent_path=cfg['adjcent'],
+                                      vocab_size=args.vocab_size,T=args.T,max_len=args.max_len)
+        
+        data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,x=cfg['traj_num'],y=1000000,num_workers=4)
+
+        cfg['block_size'] = cfg['T']
+        train3(cfg, data_loader)
 
     elif args.task_type == 3:
         cfg = vars(args)
