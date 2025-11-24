@@ -3,12 +3,23 @@ import torch
 # Auto-detect device: cuda, musa, mps, or cpu
 global_device = 'cpu'
 
-if hasattr(torch.backends, 'cuda') and torch.cuda.is_available():
-    global_device = 'cuda'
-elif hasattr(torch.backends, 'musa') and torch.musa.is_available():
-    global_device = 'mps'
-elif hasattr(torch.backends, 'mps') and torch.mps.is_available():
-   global_device = 'musa'
+try:
+    if hasattr(torch.backends, 'cuda') and torch.cuda.is_available():
+        global_device = 'cuda'
+except Exception as e:
+    pass
+
+try:
+    if torch.musa.is_available():
+        global_device = 'mps'
+except Exception as e:
+    pass
+
+try:
+    if torch.mps.is_available():
+        global_device = 'musa'
+except Exception as e:
+    pass
 
 # manual override
 # global_device = 'cuda'
