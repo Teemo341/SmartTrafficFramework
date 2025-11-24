@@ -685,7 +685,45 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
                 adj = self.adj_embed(weighted_adj[0].unsqueeze(-1)) + self.geolocation_embedding.to(x.device)
 
         #! control bvec bv1c b11c
-        adj = self.adj_pooling(adj) # (B, 1, 1, C) or others
+        try:
+            adj = self.adj_pooling(adj) # (B, 1, 1, C) or others
+        except:
+            # manual adaptive avg pooling fallback (supports output_size with Nones)
+            out_size = getattr(self.adj_pooling, 'output_size', (None, None, None))
+
+            if isinstance(out_size, int):
+                d_out, e_out, _ = (out_size, out_size, None)
+            elif isinstance(out_size, tuple) and len(out_size) == 3:
+                d_out, e_out, _ = out_size
+            else:
+                d_out, e_out = None, None
+
+            B, V, E, C = adj.shape
+
+            def adaptive_avg_along(x: torch.Tensor, L_out: int | None, dim: int) -> torch.Tensor:
+                if L_out is None or L_out == x.shape[dim]:
+                    return x
+                L_in = x.shape[dim]
+                # PyTorch adaptive pool binning rule
+                chunks = []
+                for i in range(L_out):
+                    start = math.floor(i * L_in / L_out)
+                    end = math.ceil((i + 1) * L_in / L_out)
+                    size = max(end - start, 1)
+                    chunks.append(x.narrow(dim, start, size).mean(dim=dim, keepdim=True))
+                return torch.cat(chunks, dim=dim)
+
+            # pool along V then E (C stays untouched)
+            adj = adaptive_avg_along(adj, d_out, dim=1)
+            adj = adaptive_avg_along(adj, e_out, dim=2)
+
+            # if the pooling module has affine params, apply them to include in gradient
+            weight = getattr(self.adj_pooling, 'weight', None)
+            bias = getattr(self.adj_pooling, 'bias', None)
+            if weight is not None:
+                adj = adj * weight
+            if bias is not None:
+                adj = adj + bias
 
         if condition is not None:
             condition = self.token_embedding_table(condition.int())  # (B, N, T, C)
