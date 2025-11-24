@@ -91,7 +91,6 @@ if __name__ == '__main__':
         data_loader = SmartTrafficDataloader(dataset,batch_size=args.batch_size,shuffle=False,x=cfg['traj_num'],y=1000000,num_workers=4)
 
         cfg['block_size'] = cfg['T']
-        print(cfg)
         train2(cfg, data_loader)
 
     elif args.task_type == 2:
