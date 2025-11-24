@@ -685,9 +685,9 @@ class no_diffusion_model_cross_attention_parallel(nn.Module):
                 adj = self.adj_embed(weighted_adj[0].unsqueeze(-1)) + self.geolocation_embedding.to(x.device)
 
         #! control bvec bv1c b11c
-        try:
+        if not 'musa' in self.device:
             adj = self.adj_pooling(adj) # (B, 1, 1, C) or others
-        except:
+        else:
             # manual adaptive avg pooling fallback (supports output_size with Nones)
             out_size = getattr(self.adj_pooling, 'output_size', (None, None, None))
 
