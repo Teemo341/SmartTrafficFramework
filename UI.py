@@ -6,9 +6,12 @@ import queue
 import numpy as np
 import gradio as gr
 from PIL import Image
+
+from device_selection import global_device
 from test_script.test1 import test_presention1 as fun_1
 from test_script.test2 import task2_test as fun_3
 from test_script.test3 import test_presentation_lightning as fun_2
+from test_script.test3 import test_presentation as fun_2_musa
 from test_script.test4 import test_presention as fun_4
 
 # 功能函数
@@ -43,9 +46,12 @@ def vol_pred(num, observation_ratio):
         print("subprocess finished.")
 
     # 运行任务2
-    run_task2(num, observation_ratio, save_path = f'./UI_element/task2')
-    vol_real_path = f'./UI_element/task2/videos/real/video.mp4'
-    vol_pred_path = f'./UI_element/task2/videos/pred/video.mp4'
+    if 'musa' in global_device:
+        vol_real_path, vol_pred_path = fun_2_musa(num, observation_ratio, save_path = f'./UI_element/task2')
+    else:
+        run_task2(num, observation_ratio, save_path = f'./UI_element/task2')
+        vol_real_path = f'./UI_element/task2/videos/real/video.mp4'
+        vol_pred_path = f'./UI_element/task2/videos/pred/video.mp4'
 
     return vol_real_path, vol_pred_path
 
