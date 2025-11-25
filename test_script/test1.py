@@ -370,8 +370,10 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
 
     # generate traj
     if generate_type == 'pred':
-        o,d = torch.tensor(o),torch.tensor(d)
-        e1, e_1 = torch.tensor(e1),torch.tensor(e_1)
+        o = torch.from_numpy(o.astype(np.int64)).long()
+        d = torch.from_numpy(d.astype(np.int64)).long()
+        e1 = torch.from_numpy(e1.astype(np.int64)).long()
+        e_1 = torch.from_numpy(e_1.astype(np.int64)).long()
         traj = test_presention((o-1,d-1),(e1,e_1))
         # print(traj.shape)
         # print(traj)
