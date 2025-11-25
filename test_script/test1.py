@@ -252,9 +252,7 @@ def train_presention(batch_size=64,epochs=4,lr = 0.001,device='cuda:1'):
     cfg['learning_rate'] = lr
     cfg['device'] = device
     dataset1 = SmartTrafficDataset(None,mode="task1",trajs_path=cfg['trajs_path_train'],T=cfg['T'],max_len=cfg['max_len']) 
-    data_loader1 = SmartTrafficDataloader(dataset1,batch_size=cfg['batch_size'],shuffle=True, num_workers=4).get_test_data()
-    from train import train1
-    train1(cfg, data_loader1)        
+    data_loader1 = SmartTrafficDataloader(dataset1,batch_size=cfg['batch_size'],shuffle=True, num_workers=4).get_test_data()    
 
 def test_presention(x=None,edge=None):
 
@@ -356,24 +354,25 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
     # traj = test_presention((o-1,d-1),(e1,e_1))
 
     # make od
-    all_numbers = np.random.choice(np.arange(1, 23313), size=num*2, replace=False)
-    
-    # 重组为10对（二维数组）
-    pairs = all_numbers.reshape(num, 2)
-    e1 = pairs[:,0:1]
-    e_1 = pairs[:,1:2]
-    o = np.zeros_like(e1)
-    d = np.zeros_like(e_1)
+    device = cfg.get('device', 'cpu')
+    # 生成不重复的随机数（1 到 23312）
+    all_numbers = torch.randperm(23312, device=device)[:num * 2] + 1
+
+    # 重组为 num 对
+    pairs = all_numbers.view(num, 2)
+    e1 = pairs[:, 0:1]
+    e_1 = pairs[:, 1:2]
+
+    # 初始化 o, d
+    o = torch.zeros_like(e1, dtype=torch.long, device=device)
+    d = torch.zeros_like(e_1, dtype=torch.long, device=device)
+
     for i in range(num):
-        o[i,:] = map_dict[str(e1[i,:].item())][0]
-        d[i,:] = map_dict[str(e_1[i,:].item())][1]
+        o[i, 0] = map_dict[str(int(e1[i, 0].item()))][0]
+        d[i, 0] = map_dict[str(int(e_1[i, 0].item()))][1]
 
     # generate traj
     if generate_type == 'pred':
-        o = torch.from_numpy(o.astype(np.int64)).long()
-        d = torch.from_numpy(d.astype(np.int64)).long()
-        e1 = torch.from_numpy(e1.astype(np.int64)).long()
-        e_1 = torch.from_numpy(e_1.astype(np.int64)).long()
         traj = test_presention((o-1,d-1),(e1,e_1))
         # print(traj.shape)
         # print(traj)
