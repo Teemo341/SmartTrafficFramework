@@ -137,7 +137,7 @@ def test_presentation(num, observe_ratio, save_path=None):
     # Load model
     vocab_size = 8909
     n_embd, n_embd, n_layer, n_head, block_size, dropout, use_adj_table, weight_quantization_scale = args.n_embd, args.n_embd, args.n_layer, args.n_head, args.block_size, args.dropout, args.use_adj_table, args.weight_quantization_scale
-    model = torch.load(weight_path)
+    model = torch.load(weight_path, weights_only=False)
     model.to(device)
     model.eval()
 
@@ -299,7 +299,7 @@ def test_presentation_lightning(num, observe_ratio, save_path=None):
     # Load model
     vocab_size = 8909
     n_embd, n_embd, n_layer, n_head, block_size, dropout, use_adj_table, weight_quantization_scale = args.n_embd, args.n_embd, args.n_layer, args.n_head, args.block_size, args.dropout, args.use_adj_table, args.weight_quantization_scale
-    model = torch.load(weight_path)
+    model = torch.load(weight_path, weights_only=False)
     model.eval()
 
     # Load data
