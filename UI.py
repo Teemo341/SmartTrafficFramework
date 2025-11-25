@@ -166,7 +166,7 @@ if __name__ == "__main__":
             with gr.Column(scale=1) as left_panel:
                 with gr.Group(visible=False) as task2_panel_left:
                     gr.Markdown("## 在途量预测")
-                    task2_num = gr.Slider(label="车辆数量", minimum=0, maximum=100000, value=10000, step = 1)
+                    task2_num = gr.Slider(label="车辆数量", minimum=0, maximum=100000, value=1000, step = 1)
                     task2_ratio = gr.Slider(label="卡口比例", minimum=0.0, maximum=1.0, value=0.5)
                     task2_btn = gr.Button("开始预测")
             with gr.Column(scale=3) as right_panel:

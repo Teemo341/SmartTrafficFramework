@@ -400,6 +400,7 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
 
     elif generate_type == 'dj':
         dj = []
+        o, d = o.cpu().numpy(), d.cpu().numpy()
         for i in tqdm(range(len(o))):
             success = False
             attempts = 0
@@ -417,7 +418,8 @@ def test_presention1(num=10, generate_type = 'pred', save_path = None):
                     d[i][0] = map_dict[str(e_1_new)][1]
                     attempts += 1
                     if attempts > 100:  # 防止死循环
-                        raise RuntimeError("无法生成连通的od对，请检查数据或增加尝试次数")
+                        print(f"Failed to find a path for index {i} after 100 attempts, skipping.")
+                        break
         
         print('Djs:',dj)
         video_dir = plot_video(dj,fig_size=20, save_video_path=f'{save_path}/dj')
