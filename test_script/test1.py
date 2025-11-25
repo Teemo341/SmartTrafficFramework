@@ -1,3 +1,4 @@
+from device_selection import global_device
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 from task1.test1 import define_model
 import torch
@@ -271,7 +272,9 @@ def test_presention(x=None,edge=None):
         o,d = x
 
     model = define_model(cfg)
-    model.load_state_dict(torch.load(weights_path))
+    state_dict = torch.load(weights_path, map_location='cpu')
+    model.load_state_dict(state_dict)
+    model.to(global_device)
 
     model.eval()
     if edge is None:

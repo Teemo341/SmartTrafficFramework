@@ -227,4 +227,7 @@ if __name__ == "__main__":
 
     # 启动
     #demo.launch(server_port=8388,auth=("admin", "admin123"))
-    demo.launch(server_port=8388,share=True)
+    if 'musa' in global_device:
+        demo.launch(server_name="0.0.0.0",server_port=8888)
+    else:
+        demo.launch(server_port=8388,share=True)
