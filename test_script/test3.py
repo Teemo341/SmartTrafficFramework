@@ -8,6 +8,7 @@ if TASK3_PATH not in sys.path:
     sys.path.insert(0, TASK3_PATH)
 os.environ['PYTHONPATH'] = TASK3_PATH + os.pathsep + os.environ.get('PYTHONPATH', '')
 
+from device_selection import get_local_device
 from task3.model_mae import no_diffusion_model_cross_attention_parallel as task3_model
 import argparse
 import pickle
@@ -30,7 +31,7 @@ import time
 
 
 weight_path = 'weights/best/jinan/task3/best_model.pth'
-device = 'cuda:3'
+device = get_local_device(2)
 args_path = 'weights/best/jinan/task3/args.pkl'
 #load argparse from pkl
 with open(args_path, 'rb') as f:

@@ -14,6 +14,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 sys.path.append('..')
 sys.path.append('../data')
 
+from device_selection import get_local_device
 from task4.DQN import DQNAgent
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader, read_node_type
 from process_data import read_traj
@@ -24,8 +25,8 @@ load_dir = './task4/log/best_model.pth'
 save_frame_path = './task4/video/frames'
 save_video_path = "./task4/video"
 batch_size = 1
-device = 'cuda:2'
-memory_device = 'cuda:2'
+device = get_local_device(3)
+memory_device = get_local_device(3)
 memory_len = 2000
 n_layer = 6
 n_embd = 64
@@ -49,7 +50,7 @@ cfg = {
 
 }
 
-def train_presention(device='cuda:2',epochs=4):
+def train_presention(device=get_local_device(3),epochs=4):
 
     # trajs_edge = read_traj('data/simulation/trajectories_10*10_repeat.csv')
     dataset4 = SmartTrafficDataset(None,mode="task4",trajs_path='/datadisk/yanshou/SmartTrafficFramework/data/simulation/task4_data_one_by_one/')
@@ -201,8 +202,8 @@ def test_presention(num, method, save_path = './UI_element/task4'):
     seed = 0
     load_dir = 'weights/best/jinan/task4/best_model.pth'
     batch_size = 64
-    device = 'cuda'
-    memory_device = 'cuda'
+    device = get_local_device(3)
+    memory_device = get_local_device(3)
     memory_len = 2000
     n_layer = 6
     n_embd = 64

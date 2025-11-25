@@ -1,3 +1,4 @@
+from device_selection import get_local_device
 from train import train2
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 import numpy as np
@@ -31,7 +32,7 @@ cfg = {
     'batch_size': 600,
     'learning_rate': 0.001,
     'epochs': 3,
-    'device': 'cuda:2',
+    'device': get_local_device(1),
     'adjcent': 'data/jinan/adjcent.npy'
 }
 cfg['block_size'] = cfg['T']

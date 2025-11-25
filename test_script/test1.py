@@ -1,4 +1,4 @@
-from device_selection import global_device
+from device_selection import get_local_device
 from dataloader import SmartTrafficDataset, SmartTrafficDataloader
 from task1.test1 import define_model
 import torch
@@ -29,7 +29,7 @@ cfg = { 'T':60,
         'model_save_path':'weights/jinan/task1',
         'trajs_path_train':'data/jinan/edge_traj_test1/',
         'trajs_path':'data/jinan/edge_traj_repeat_one_by_one/',
-        'device':global_device,
+        'device':get_local_device(0),
         'n_head':8,    
         }
 cfg['block_size'] = cfg['T']
