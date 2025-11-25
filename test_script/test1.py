@@ -29,7 +29,7 @@ cfg = { 'T':60,
         'model_save_path':'weights/jinan/task1',
         'trajs_path_train':'data/jinan/edge_traj_test1/',
         'trajs_path':'data/jinan/edge_traj_repeat_one_by_one/',
-        'device':'cuda:1',
+        'device':global_device,
         'n_head':8,    
         }
 cfg['block_size'] = cfg['T']

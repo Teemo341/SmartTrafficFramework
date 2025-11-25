@@ -27,11 +27,37 @@ except Exception as e:
 
 print(f"Detected device: {global_device}")
 
-def get_local_device(number: int=0) -> str:
-    local_divice = global_device
-    if local_divice in ['cuda', 'musa']:
-        local_divice = f"{local_divice}:{number}"
-    return local_divice
+def get_local_device(index: int = 0) -> str:
+    global_device
+
+    # sanitize index
+    try:
+        idx = int(index)
+    except Exception:
+        idx = 0
+    if idx < 0:
+        idx = 0
+
+    if global_device == 'cuda':
+        count = torch.cuda.device_count()
+        if count > 0:
+            if idx >= count:
+                idx = 0
+            return f'cuda:{idx}'
+        return 'cpu'
+
+    if global_device == 'musa':
+        count = torch.musa.device_count()
+        if count > 0:
+            if idx >= count:
+                idx = 0
+            return f'musa:{idx}'
+        return 'cpu'
+
+    if global_device == 'mps':
+        return 'mps'
+
+    return 'cpu'
 
 if __name__ == "__main__":
     print(f"Using device: {global_device}")
