@@ -103,7 +103,7 @@ def test_presention(num=1,od=None):
     cfg['model_read_path'] = weights_path
  
     task2_model = get_model(cfg)
-    task2_model.load_state_dict(torch.load(weights_path))
+    task2_model.load_state_dict(torch.load(weights_path,map_location=task2_model.device))
     task2_model.eval()
     task2_model.to(cfg['device'])
     adjcent_path = cfg['adjcent']
@@ -269,7 +269,7 @@ def task2_test(num, generate_type = 'pred', save_path = f'./UI_element/task3'):
         adj_values = adj_values.unsqueeze(0).repeat(cfg['batch_size'],1,1)
         cfg['model_read_path'] = weights_path
         task2_model = get_model(cfg)
-        task2_model.load_state_dict(torch.load(weights_path))
+        task2_model.load_state_dict(torch.load(weights_path,map_location=task2_model.device))
         task2_model.eval()
         task2_model.to(cfg['device'])
         for i in range(batch_num):

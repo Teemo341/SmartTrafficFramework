@@ -218,7 +218,7 @@ def test_presention(num, method, save_path = './UI_element/task4'):
     data_loader4 = SmartTrafficDataloader(dataset4,batch_size=batch_size,shuffle=True, num_workers=4)
 
     agent = DQNAgent(device, memory_device, memory_len, n_layer, n_embd, n_head, wait_quantization, 0.1)
-    agent.model.load_state_dict(torch.load(load_dir))
+    agent.model.load_state_dict(torch.load(load_dir, map_location=device))
     agent.model = agent.model.to(device)
 
     ids = filter()

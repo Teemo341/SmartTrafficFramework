@@ -272,7 +272,7 @@ def test_presention(x=None,edge=None):
         o,d = x
 
     model = define_model(cfg)
-    model.load_state_dict(torch.load(weights_path,map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(weights_path,map_location=model.device))
 
     model.eval()
     if edge is None:
