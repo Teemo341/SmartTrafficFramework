@@ -79,6 +79,7 @@ def signal_control(num, generate_type):
     
     # video_path, wait_time = f"./UI_element/task4/{generate_type}/video.mp4", 0
     video_path, orical, pred = fun_4(num, generate_type, save_path = f'./UI_element/task4')
+    print(f"orical: {orical}, pred: {pred}")
 
     video_path = refine_video(video_path)
     return video_path, pred
@@ -194,7 +195,7 @@ if __name__ == "__main__":
             with gr.Column(scale=1) as left_panel:
                 with gr.Group(visible=False) as task4_panel_left:
                     gr.Markdown("## 信号灯控制")
-                    task4_num = gr.Slider(label="车辆数量", minimum=0, maximum=400_000, value=1000, step = 1)
+                    task4_num = gr.Slider(label="车辆数量", minimum=0, maximum=400_000, value=50_000, step = 1)
                     task4_type = gr.Radio(choices=["AI信号灯", "传统算法"], label="选择信号灯控制方式", value="AI信号灯")
                     task4_btn = gr.Button("开始模拟")
             with gr.Column(scale=3) as right_panel:
@@ -226,8 +227,8 @@ if __name__ == "__main__":
         ])
 
     # 启动
-    #demo.launch(server_port=8388,auth=("admin", "admin123"))
+    # demo.launch(server_port=8387)
     if 'musa' in global_device:
         demo.launch(server_name="0.0.0.0",server_port=8888)
     else:
-        demo.launch(server_port=8388,share=True)
+        demo.launch(auth=("admin", "d41d8cd98f00b2"),server_name="0.0.0.0",server_port=8388,share=True)

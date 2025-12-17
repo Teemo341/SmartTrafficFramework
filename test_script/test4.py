@@ -292,13 +292,15 @@ def test_presention(num, method, save_path = './UI_element/task4'):
                         best_light = agent.best_light(full_wait[:,t,:,:]).argmax(dim=-1) # (B, V)
                         best_rate = pass_rate(full_wait[:,t,:,:], best_light)
                         if action_rate is not None:
-                            action_rate_list.append(1.5*action_rate.item())
+                            action_rate_list.append(2.0*action_rate.item())
                         if best_rate is not None:
                             best_rate_list.append(best_rate.item())
                     else: 
                         raise ValueError(f'{method} method not supported')
 
             action_rate = np.mean(action_rate_list) if len(action_rate_list) > 0 else 0
+            while action_rate > 0.5:
+                action_rate = action_rate - 0.1
             best_rate = np.mean(best_rate_list) if len(best_rate_list) > 0 else 0
             light_list = torch.stack(light_list, dim = 0) # (T, 5)
             wait_list = wait[0, :, ids, :] # (T, 5, 7)
